@@ -3,45 +3,44 @@ title: CV Manuel Guevara
 draft: false
 tags: []
 ---
- 
 # Manuel Guevara
 
 Full-Stack Developer ASP.NET Core | C# | JAVA | Angular | ReactJS
-Buenos Aires, Buenos Aires Province, Argentina
+Buenos Aires, Buenos Aires Province, Argentina 📍
 
 ---
 
-## Contact
+## 📞 Contact
 
-* **Mobile:** +584141167417
-* **Email:** manuel_guevarac@outlook.com
-* **LinkedIn:** [linkedin.com/in/manuelaguevarac](https://www.linkedin.com/in/manuelaguevarac)
+* **Mobile:** +584141167417 📱
+* **Email:** manuel_guevarac@outlook.com 📧
+* **LinkedIn:** [linkedin.com/in/manuelaguevarac](https://www.linkedin.com/in/manuelaguevarac) 🔗
 
 ---
 
-## Summary
+## 📝 Summary
 
 Results-oriented Full-Stack Developer specializing in scalable, high-performance software solutions using Microsoft technologies (.NET, C#, Azure). Proven expertise is complemented by strong frontend development skills in React and Angular. Highly adaptable, with a solid foundation in software principles enabling rapid learning and productivity with new tools and frameworks. Possesses a keen eye for detail, ensuring application quality through thorough testing, debugging, and code refactoring for optimal performance and maintainability. Experienced in deploying fully functional applications that drive business growth. Eager to leverage comprehensive technical skills to deliver exceptional results.
 
 ---
 
-## Top Skills
+## ✨ Top Skills
 
 * Azure DevOps Services
 * .NET Architecture
-* Microsoft Azure
+* Microsoft Azure ☁️
 * APIs and Microservices
 * C#
 * ASP.NET Core
 * ReactJS
+* Angular
 * Node.js
-* SQL Server
-* Angular (Mentioned in Summary)
-* Java (Mentioned in Title)
+* SQL Server 💾
+* Java
 
 ---
 
-## Experience
+## 👨‍💻 Experience
 
 **Globant**
 *Software Engineer*
@@ -81,7 +80,7 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 
 ---
 
-## Education
+## 🎓 Education
 
 **Universidad Central de Venezuela**
 *Economista, Economics*
@@ -93,18 +92,17 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 
 ---
 
-## Languages
+## 🌐 Languages
 
 * Español (Native or Bilingual Proficiency)
 * English
 
 ---
 
-## Certifications
+## 📜 Certifications
 
 * INGLES COMO LENGUA EXTRANGERA
 * Getting and Cleaning Data
 * Responsive Web Design
 * EF SET Certificate
 * APIs and Microservices (Free Code Camp - Implied from Full Stack Cert)
-
