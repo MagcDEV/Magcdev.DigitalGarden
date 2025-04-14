@@ -15,6 +15,7 @@ Buenos Aires, Buenos Aires Province, Argentina 📍
 * **Mobile:** +584141167417 📱
 * **Email:** manuel_guevarac@outlook.com 📧
 * **LinkedIn:** [linkedin.com/in/manuelaguevarac](https://www.linkedin.com/in/manuelaguevarac) 🔗
+* **CV in PDF:** [Manuel Guevara CV](https://drive.google.com/file/d/1wJFFjjE44yQtZWas8ftTsdfz_kIIuUkB/view?usp=sharing) 📄
 
 ---
 
@@ -37,6 +38,7 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 * Node.js
 * SQL Server 💾
 * Java
+* Event-Driven Architecture
 
 ---
 
@@ -46,11 +48,14 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 *Software Engineer*
 *May 2024 - Present*
 *Buenos Aires Province, Argentina*
+* Developed a decoupling application using .NET and C#, implementing an event-driven architecture (producers/consumers) to isolate a legacy database, enabling secure access for third-party applications.
+* Currently contributing to a large-scale engagement management application utilized by Deloitte consultants.
 
 **Accenture**
 *Senior Dotnet Developer*
 *December 2023 - May 2024 (6 months)*
 *Buenos Aires Province, Argentina*
+* Worked on a home banking application for Banco Galicia, developing and maintaining microservices using .NET and C#.
 
 **Infosoft CA**
 *Programador full stack*
@@ -86,10 +91,6 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 *Economista, Economics*
 *(2007 - 2021)*
 
-**Free Code Camp**
-*Full Stack Web Development Certification, Computer Software Engineering*
-*(2016 - 2022)*
-
 ---
 
 ## 🌐 Languages
@@ -101,8 +102,8 @@ Results-oriented Full-Stack Developer specializing in scalable, high-performance
 
 ## 📜 Certifications
 
-* INGLES COMO LENGUA EXTRANGERA
+* [INGLES COMO LENGUA EXTRANGERA](https://drive.google.com/file/d/166bgxLeqQfQ_3pN_Rk9aGfVc0OZb0nJA/view?usp=sharing)
+* [EF SET Certificate](https://cert.efset.org/3uvJNp)
 * Getting and Cleaning Data
 * Responsive Web Design
-* EF SET Certificate
-* APIs and Microservices (Free Code Camp - Implied from Full Stack Cert)
+* APIs and Microservices
