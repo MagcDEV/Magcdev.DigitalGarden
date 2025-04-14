@@ -1,7 +1,7 @@
 ---
-title: CV Manuel Guevara
+title: Manuel Guevara CV
 draft: false
-tags: []
+tags:
 ---
 # Manuel Guevara
 
