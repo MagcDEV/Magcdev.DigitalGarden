@@ -1,0 +1,1 @@
+A mechanism where a new class acquires the properties and behaviors of an existing class.
