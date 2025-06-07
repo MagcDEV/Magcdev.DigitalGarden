@@ -111,7 +111,6 @@ OrderService: Order placed and saved.
 */
 ```
 
-
 ### **Favor composition over inheritance**
 
 When you are designing your classes and need to reuse functionality or extend behavior, you should lean toward using composition (building classes by including instances of other classes) rather than inheritance (deriving a new class from an existing base class).
@@ -125,20 +124,25 @@ When you are designing your classes and need to reuse functionality or extend be
 Defines a family of algorithms, encapsulates each one, and makes then interchangeable. Strategy lets the algorithm vary independently from clients that use it.
 
 ---
+
 ## Chapter 2
 
 The Observer pattern defines a one-to-many dependency between objects so that when on object (the subject or observable) changes its state, all its dependents (the observers) are notified and updated automatically.
 
-##### Problem it solves:
+##### Problem it solves
+
 it addresses the issue of needing to maintain consistency between related objects without making then tightly coupled. Imagine you have and object whose state is interesting to other objects. You want these other objects to be updated whenever this state changes, but you don't want the primary object to know about the concrete classes of these depended objects. This promotes loose coupling, which is a cornerstone of good software design.
 
 #### Advantages
+
 - Loose Coupling
 - Dynamic Relationships
 - Broadcast Communication
 - Reusability
 - Improved Modularity
+
 #### Disadvantages
+
 - Unexpected Updates
 - Memory Leaks
 - Notification Overhead
@@ -146,7 +150,7 @@ it addresses the issue of needing to maintain consistency between related object
 - Subject State management
 - Potential for "God" Subjects
 
-### Example:
+### Example
 
 ```csharp
 using System;
@@ -357,3 +361,95 @@ public class ObserverPatternDemo
 ```
 
 ## Chapter 3
+
+The Decorator pattern is a structural pattern uset to dynamically add new behavior or responsibilities to objects without modifying their existing code. It´s a flexible alternative to subclassing for extending functionality.
+
+##### Key Concepts
+
+- Component: The interface or abstract class definig the operations.
+- ConcreteComponent: The core class that implements the Component.
+- Decorator: An abstract class that implements the Component interface and has a reference to a Component object.
+- ConcreteDecorator: Extends the Decorator and adds new behavior.
+
+This pattern is usefull to follow the Open/Closed solid principle an to add responsabilities to individual objects and not to entire class.
+
+##### Example
+
+1. Component Interface
+
+```csharp
+public interface ICoffee
+{
+    string GetDescription();
+    double GetCost();
+}
+```
+
+2. ConcreteComponent
+
+```csharp
+public class SimpleCoffee : ICoffee
+{
+    public string GetDescription() => "Simple Coffee";
+    public double GetCost() => 5.0;
+}
+```
+
+3. Decorator Base Class
+
+```csharp
+public abstract class CoffeeDecorator : ICoffee
+{
+    protected ICoffee _coffee;
+
+    public CoffeeDecorator(ICoffee coffee)
+    {
+        _coffee = coffee;
+    }
+
+    public virtual string GetDescription() => _coffee.GetDescription();
+    public virtual double GetCost() => _coffee.GetCost();
+}
+```
+
+4. ConcreteDecorators
+
+```csharp
+public class MilkDecorator : CoffeeDecorator
+{
+    public MilkDecorator(ICoffee coffee) : base(coffee) { }
+
+    public override string GetDescription() => _coffee.GetDescription() + ", Milk";
+    public override double GetCost() => _coffee.GetCost() + 1.5;
+}
+
+public class SugarDecorator : CoffeeDecorator
+{
+    public SugarDecorator(ICoffee coffee) : base(coffee) { }
+
+    public override string GetDescription() => _coffee.GetDescription() + ", Sugar";
+    public override double GetCost() => _coffee.GetCost() + 0.5;
+}
+```
+
+5. Usage
+
+```csharp
+class Program
+{
+    static void Main()
+    {
+        ICoffee coffee = new SimpleCoffee();
+        Console.WriteLine($"{coffee.GetDescription()} - ${coffee.GetCost()}");
+
+        coffee = new MilkDecorator(coffee);
+        coffee = new SugarDecorator(coffee);
+
+        Console.WriteLine($"{coffee.GetDescription()} - ${coffee.GetCost()}");
+    }
+}
+```
+
+🖨️ Output
+Simple Coffee - $5.0
+Simple Coffee, Milk, Sugar - $7.0
