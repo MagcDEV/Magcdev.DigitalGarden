@@ -451,5 +451,203 @@ class Program
 ```
 
 🖨️ Output
+
+```bash
 Simple Coffee - $5.0
 Simple Coffee, Milk, Sugar - $7.0
+```
+
+## Chapter 4
+
+The Factory Pattern provides an interface for creating object in asuperclass but allows subclasses to alter the type of objects that will be created.
+
+There are two main types:
+
+- Simple Factory (not a formal pattern, but a common practice)
+- Facotry Method Pattern (a formal design pattern)
+
+##### Why use the Factory Pattern?
+
+- To encapsulate object creation logic
+- To avoid tight coupling between code and specific classes
+- To follow the Open/Closed Principle (open for extension, closed for modification)
+
+##### Example of Single Factory
+
+1. Product Interface and Concrete Products
+
+```csharp
+public abstract class Pizza
+{
+    public abstract void Prepare();
+    public virtual void Bake() => Console.WriteLine("Baking pizza...");
+    public virtual void Cut() => Console.WriteLine("Cutting pizza...");
+    public virtual void Box() => Console.WriteLine("Boxing pizza...");
+}
+
+public class CheesePizza : Pizza
+{
+    public override void Prepare() => Console.WriteLine("Preparing Cheese Pizza");
+}
+
+public class PepperoniPizza : Pizza
+{
+    public override void Prepare() => Console.WriteLine("Preparing Pepperoni Pizza");
+}
+```
+
+2. Simple Factory
+
+```csharp
+public class SimplePizzaFactory
+{
+    public Pizza CreatePizza(string type)
+    {
+        return type switch
+        {
+            "cheese" => new CheesePizza(),
+            "pepperoni" => new PepperoniPizza(),
+            _ => throw new ArgumentException("Unknown pizza type")
+        };
+    }
+}
+```
+
+3. Client Code (Pizza Store)
+
+```csharp
+public class PizzaStore
+{
+    private readonly SimplePizzaFactory _factory;
+
+    public PizzaStore(SimplePizzaFactory factory)
+    {
+        _factory = factory;
+    }
+
+    public Pizza OrderPizza(string type)
+    {
+        Pizza pizza = _factory.CreatePizza(type);
+        pizza.Prepare();
+        pizza.Bake();
+        pizza.Cut();
+        pizza.Box();
+        return pizza;
+    }
+}
+```
+
+4. Usage
+
+```csharp
+class Program
+{
+    static void Main()
+    {
+        var factory = new SimplePizzaFactory();
+        var store = new PizzaStore(factory);
+
+        store.OrderPizza("cheese");
+        store.OrderPizza("pepperoni");
+    }
+}
+```
+
+##### Example of Factory Method
+
+1. Product Interface and Concrete Products
+
+```csharp
+public abstract class Pizza
+{
+    public abstract void Prepare();
+    public virtual void Bake() => Console.WriteLine("Baking pizza...");
+    public virtual void Cut() => Console.WriteLine("Cutting pizza...");
+    public virtual void Box() => Console.WriteLine("Boxing pizza...");
+}
+
+public class NYStyleCheesePizza : Pizza
+{
+    public override void Prepare() => Console.WriteLine("Preparing NY Style Cheese Pizza");
+}
+
+public class ChicagoStyleCheesePizza : Pizza
+{
+    public override void Prepare() => Console.WriteLine("Preparing Chicago Style Cheese Pizza");
+}
+```
+
+2. Creator (Abstract Pizza Store)
+
+```csharp
+public abstract class PizzaStore
+{
+    public Pizza OrderPizza(string type)
+    {
+        Pizza pizza = CreatePizza(type);
+        pizza.Prepare();
+        pizza.Bake();
+        pizza.Cut();
+        pizza.Box();
+        return pizza;
+    }
+
+    // Factory Method
+    protected abstract Pizza CreatePizza(string type);
+}
+```
+
+3. Concrete Creators
+
+```csharp
+public class NYPizzaStore : PizzaStore
+{
+    protected override Pizza CreatePizza(string type)
+    {
+        return type switch
+        {
+            "cheese" => new NYStyleCheesePizza(),
+            _ => throw new ArgumentException("Unknown pizza type")
+        };
+    }
+}
+
+public class ChicagoPizzaStore : PizzaStore
+{
+    protected override Pizza CreatePizza(string type)
+    {
+        return type switch
+        {
+            "cheese" => new ChicagoStyleCheesePizza(),
+            _ => throw new ArgumentException("Unknown pizza type")
+        };
+    }
+}
+```
+
+4. Usage
+
+```csharp
+class Program
+{
+    static void Main()
+    {
+        PizzaStore nyStore = new NYPizzaStore();
+        PizzaStore chicagoStore = new ChicagoPizzaStore();
+
+        nyStore.OrderPizza("cheese");
+        chicagoStore.OrderPizza("cheese");
+    }
+}
+```
+
+### 🆚 Key Differences
+
+| Feature                 | Simple Factory                                                | Factory Method Pattern                                           |
+|-------------------------|---------------------------------------------------------------|------------------------------------------------------------------|
+| **Pattern Type**        | Not a formal GoF pattern                                      | Formal GoF (Gang of Four) design pattern                         |
+| **Responsibility**      | A single class handles object creation                        | Subclasses decide which class to instantiate                     |
+| **Flexibility**         | Less flexible – adding new types requires modifying the factory | More flexible – new types can be added by extending the class    |
+| **Open/Closed Principle** | Violates it – changes require modifying existing code         | Follows it – extend behavior without modifying existing code     |
+| **Inheritance**         | No inheritance involved                                       | Uses inheritance to delegate object creation                     |
+| **Use Case**            | When you want to centralize creation logic in one place       | When you want to allow subclasses to decide what to instantiate  |
