@@ -459,7 +459,7 @@ Simple Coffee, Milk, Sugar - $7.0
 
 ## Chapter 4
 
-The Factory Pattern provides an interface for creating object in asuperclass but allows subclasses to alter the type of objects that will be created.
+The Factory Pattern provides an interface for creating object in a superclass but allows subclasses to alter the type of objects that will be created.
 
 There are two main types:
 
@@ -643,11 +643,106 @@ class Program
 
 ### 🆚 Key Differences
 
-| Feature                 | Simple Factory                                                | Factory Method Pattern                                           |
-|-------------------------|---------------------------------------------------------------|------------------------------------------------------------------|
-| **Pattern Type**        | Not a formal GoF pattern                                      | Formal GoF (Gang of Four) design pattern                         |
-| **Responsibility**      | A single class handles object creation                        | Subclasses decide which class to instantiate                     |
-| **Flexibility**         | Less flexible – adding new types requires modifying the factory | More flexible – new types can be added by extending the class    |
-| **Open/Closed Principle** | Violates it – changes require modifying existing code         | Follows it – extend behavior without modifying existing code     |
-| **Inheritance**         | No inheritance involved                                       | Uses inheritance to delegate object creation                     |
-| **Use Case**            | When you want to centralize creation logic in one place       | When you want to allow subclasses to decide what to instantiate  |
+| Feature                   | Simple Factory                                                  | Factory Method Pattern                                          |
+| ------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| **Pattern Type**          | Not a formal GoF pattern                                        | Formal GoF (Gang of Four) design pattern                        |
+| **Responsibility**        | A single class handles object creation                          | Subclasses decide which class to instantiate                    |
+| **Flexibility**           | Less flexible – adding new types requires modifying the factory | More flexible – new types can be added by extending the class   |
+| **Open/Closed Principle** | Violates it – changes require modifying existing code           | Follows it – extend behavior without modifying existing code    |
+| **Inheritance**           | No inheritance involved                                         | Uses inheritance to delegate object creation                    |
+| **Use Case**              | When you want to centralize creation logic in one place         | When you want to allow subclasses to decide what to instantiate |
+
+## Chapter 5
+
+the singleton pattern ensures that a class has only one instance and provides a global point of access to it. this is useful when exactly one object is needed to coordinate actions across the system, like a configuration manager, logging service, or a connection pool.
+
+### why use singleton?
+
+- to control access to shared resources.
+- to avoid multiple instances of a class that should only have one.
+- to provide a single point of coordination or control.
+
+##### example:
+
+##### basic singleton (thread-unsafe)
+
+```csharp
+public class singleton
+
+{
+    private static singleton _instance;
+    // private constructor
+
+    private singleton()
+    {
+        console.writeline("singleton instance created.");
+    }
+
+    // public method to get the instance
+
+    public static singleton getinstance()
+    {
+        if (_instance == null)
+        {
+            _instance = new singleton();
+        }
+        return _instance;
+    }
+}
+
+```
+##### usage
+
+```csharp
+class program
+{
+    static void main()
+    {
+        singleton s1 = singleton.getinstance();
+        singleton s2 = singleton.getinstance();
+        console.writeline(s1 == s2); // true – both references point to the same instance
+    }
+}
+```
+##### Thread-Safe Singleton (with lock)
+
+```csharp
+public class ThreadSafeSingleton
+
+{
+    private static ThreadSafeSingleton _instance;
+
+    private static readonly object _lock = new object();
+
+    private ThreadSafeSingleton() { }
+	
+    public static ThreadSafeSingleton GetInstance()
+    {
+        lock (_lock)
+        {
+            if (_instance == null)
+            {
+                _instance = new ThreadSafeSingleton();
+            }
+        }
+        return _instance;
+    }
+}
+```
+
+##### Lazy Initialization with Lazy
+
+```csharp
+public class LazySingleton
+{
+    private static readonly Lazy _instance =
+
+        new Lazy(() => new LazySingleton());
+
+    private LazySingleton() { }
+
+    public static LazySingleton Instance => _instance.Value;
+}
+```
+
+## Chapter 6
