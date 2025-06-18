@@ -745,4 +745,284 @@ public class LazySingleton
 }
 ```
 
-## Chapter 6
+## Chapter 6 The Command Pattern - Encapsulating Invocation
+
+The command pattern is a way to encapsulate a request as an object, thereby allowing you to parameterize clients with different requests, queue or log requests, and support undoable operations.
+
+It turns a request into a stand-alone object that contains all the information about the request. This decouples the object that invokes the operation from the one that knows how to perform it.
+
+### Structure
+- Command: Declares an interface for executing an operation.
+- Concrete Command: implements the Command interface and defines a binding between a receiver and an action.
+- Receiver: Knows how to perform the operation.
+- Invoker: Asks the command to carry out the request.
+- Client: Creates a command object and sets its receiver.
+
+### Example in C#: Remote Control
+
+1. Command Interface
+```csharp
+public interface ICommand
+{
+	void Execute();
+	void Undo();
+}
+```
+
+2. Receiver
+```csharp
+public class Light
+{
+	public void On() => Console.WriteLine("Light is ON");
+	public void Off() => Console.WriteLine("Light is OFF");
+}
+```
+
+3. Concrete Commands
+```csharp
+public class LightOnCommand : ICommand
+{
+    private readonly Light _light;
+
+    public LightOnCommand(Light light) => _light = light;
+
+    public void Execute() => _light.On();
+
+    public void Undo() => _light.Off();
+}
+
+public class LightOffCommand : ICommand
+{
+    private readonly Light _light;
+
+    public LightOffCommand(Light light) => _light = light;
+
+    public void Execute() => _light.Off();
+
+    public void Undo() => _light.On();
+}
+```
+
+4. Invoker
+```csharp
+public class RemoteControl
+{
+    private ICommand _command;
+
+    public void SetCommand(ICommand command) => _command = command;
+
+    public void PressButton() => _command.Execute();
+
+    public void PressUndo() => _command.Undo();
+}
+```
+
+5. Client Code
+```csharp
+class Program
+{
+    static void Main()
+    {
+        var light = new Light();
+
+        var lightOn = new LightOnCommand(light);
+
+        var lightOff = new LightOffCommand(light);
+
+        var remote = new RemoteControl();
+
+        remote.SetCommand(lightOn);
+
+        remote.PressButton();  // Light is ON
+
+        remote.PressUndo();    // Light is OFF
+
+        remote.SetCommand(lightOff);
+
+        remote.PressButton();  // Light is OFF
+
+        remote.PressUndo();    // Light is ON
+    }
+}
+```
+
+## Chapter 7 The Adapter and Facade Patterns - Being Adaptive
+
+- **Adapter Pattern**: Converts one interface into another that a client expects.
+- **Facade Pattern**: Provides a simplified interface to a complex subsystem.
+
+### Adapter Pattern
+
+Allows incompatible interfaces to work together. It acts as a bridge between two incompatible interfaces.
+
+#### Structure
+- Target: The interface the client expects.
+- Adaptee: The existing interface that needs adapting.
+- Adapter: Translates the Target interface to the Adaptee.
+
+#### Example in C#: Duck and Turkey
+
+- Interfaces
+```csharp
+public interface IDuck
+{
+    void Quack();
+    void Fly();
+}
+
+public class MallardDuck : IDuck
+{
+    public void Quack() => Console.WriteLine("Quack");
+    public void Fly() => Console.WriteLine("I'm flying");
+}
+```
+
+- Adaptee
+```csharp
+public class WildTurkey
+{
+    public void Gobble() => Console.WriteLine("Gobble gobble");
+    public void Fly() => Console.WriteLine("I'm flying a short distance");
+}
+```
+
+- Adapter
+```csharp
+public class TurkeyAdapter : IDuck
+{
+    private readonly WildTurkey _turkey;
+
+    public TurkeyAdapter(WildTurkey turkey) => _turkey = turkey;
+
+    public void Quack() => _turkey.Gobble();
+
+    public void Fly()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            _turkey.Fly();
+        }
+    }
+}
+```
+
+- Usage
+```csharp
+class Program
+{
+    static void Main()
+    {
+        IDuck duck = new MallardDuck();
+
+        WildTurkey turkey = new WildTurkey();
+
+        IDuck turkeyAdapter = new TurkeyAdapter(turkey);
+
+        Console.WriteLine("The Turkey says...");
+
+        turkey.Gobble();
+        turkey.Fly();
+
+        Console.WriteLine("\nThe Duck says...");
+
+        duck.Quack();
+        duck.Fly();
+
+        Console.WriteLine("\nThe TurkeyAdapter says...");
+
+        turkeyAdapter.Quack();
+        turkeyAdapter.Fly();
+    }
+}
+```
+
+### Facade Pattern
+
+Provides a unified interface to a set of interfaces in a subsystem. It defines a higher-level interface that makes the subsystem easier to use.
+
+### Example in C#: Home Theater System
+
+- Subsystems
+```csharp
+public class Amplifier
+{
+    public void On() => Console.WriteLine("Amplifier on");
+    public void Off() => Console.WriteLine("Amplifier off");
+}
+
+public class DVDPlayer
+{
+    public void On() => Console.WriteLine("DVD Player on");
+    public void Play(string movie) => Console.WriteLine($"Playing \"{movie}\"");
+    public void Off() => Console.WriteLine("DVD Player off");
+}
+
+public class Projector
+{
+    public void On() => Console.WriteLine("Projector on");
+    public void Off() => Console.WriteLine("Projector off");
+}
+```
+
+- Facade
+```csharp
+public class HomeTheaterFacade
+{
+    private readonly Amplifier _amp;
+    private readonly DVDPlayer _dvd;
+    private readonly Projector _projector;
+
+    public HomeTheaterFacade(Amplifier amp, DVDPlayer dvd, Projector projector)
+    {
+        _amp = amp;
+        _dvd = dvd;
+        _projector = projector;
+    }
+
+    public void WatchMovie(string movie)
+    {
+        Console.WriteLine("Get ready to watch a movie...");
+
+        _amp.On();
+        _projector.On();
+        _dvd.On();
+        _dvd.Play(movie);
+    }
+
+    public void EndMovie()
+    {
+        Console.WriteLine("Shutting movie theater down...");
+        _dvd.Off();
+        _projector.Off();
+        _amp.Off();
+    }
+}
+```
+
+- Usage
+```csharp
+class Program
+{
+    static void Main()
+    {
+        var amp = new Amplifier();
+        var dvd = new DVDPlayer();
+        var projector = new Projector();
+
+        var homeTheater = new HomeTheaterFacade(amp, dvd, projector);
+
+        homeTheater.WatchMovie("Inception");
+        homeTheater.EndMovie();
+    }
+}
+```
+
+
+### ✅ Summary
+
+|  Pattern  |  Purpose                              |  Use Case                                       |
+| --------- | ------------------------------------- | ----------------------------------------------- |
+| Adapter   |  Converts one interface to another    |  Integrating legacy or third-party code         |
+| Facade    |  Simplifies a complex subsystem       |  Providing a simple API to a complex system     |
+
+
