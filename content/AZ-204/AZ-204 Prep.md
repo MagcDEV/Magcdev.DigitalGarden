@@ -82,3 +82,26 @@ tags:
 
 ### High availability
 
+## Azure App Service
+
+### Pricing Tiers
+
+- Free and Shared: offer limited resources and shared VMs, suitable for development and testing.
+- Basic: Provides dedicated VMs with more resources.
+- Standard: Adds autoscaling capabilities.
+- Premium: Offers Enhanced resources and up to 30 VM instances.
+- Isolated: provides a private virtual network with up to 100 VM instances.
+
+Multiples apps can share a services plan, but excessive apps may lead to performance issues, which can be mitigated by **scaling out** (adding more VM instances) or **scaling up** (switching to a higher tier).
+
+### Scaling
+
+- Scaling up resources involves switching to a higher pricing tire, but it´s not dynamic for varying usage patterns.
+- Scaling out/in adds or removes virtual machines based on app demand, available on Basic plans and higher.
+- Autoscaling, which automates scaling without manual intervention, is available on Standard plans and higher.
+- **Azure Monitor**: Manages autoscaling allowing users to set scale conditions and rules bases on metrics like CPU and memory usage.
+- Users can defines rules for scaling out/in, set metrics, and determine actions like adding or removing VM instances.
+- A "cool down" period prevents rapid scaling changes, allowing metrics to stabilize.
+- Multiple rules can be set, with scale-out rules taking precedence over scale-in rules to ensure resource availability.
+- Autoscaling can also be scheduled, allowing scaling to a specific instance count at set times or days.
+- Users can combine metric-based and schedule-bases scaling without conflicts by setting them for different times.
