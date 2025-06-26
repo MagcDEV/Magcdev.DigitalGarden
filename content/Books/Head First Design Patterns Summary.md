@@ -1020,9 +1020,90 @@ class Program
 
 ### ✅ Summary
 
-|  Pattern  |  Purpose                              |  Use Case                                       |
-| --------- | ------------------------------------- | ----------------------------------------------- |
-| Adapter   |  Converts one interface to another    |  Integrating legacy or third-party code         |
-| Facade    |  Simplifies a complex subsystem       |  Providing a simple API to a complex system     |
+| Pattern |  Purpose                              |  Use Case                                       |
+| ------- | ------------------------------------- | ----------------------------------------------- |
+| Adapter |  Converts one interface to another    |  Integrating legacy or third-party code         |
+| Facade  | Simplifies a complex subsystem        |  Providing a simple API to a complex system     |
 
+## Chapter 8 The Template Method Pattern - Encapsulating Algorithms
+
+Is a behavioral pattern that defines the skeleton of an algorithm in a method, deferring some steps to subclasses. It lets subclasses redefine certain steps of an algorithm without changing its structure.
+
+Is used when you have an algorithm with invariant steps, but some may vary. It promotes code reuse and enforces a consistent structure across different implementations.
+
+### Structure
+- Abstract Class: Defines the template method an the steps of the algorithm.
+- Concrete Subclasses: Override specific steps without changing the overall algorithm.
+### Example: Caffeine Beverage Preparation
+
+1. Abstract Class
+```csharp
+public abstract class CaffeineBeverage
+{
+    // Template method
+    public void PrepareRecipe()
+    {
+        BoilWater();
+        Brew();
+        PourInCup();
+        AddCondiments();
+    }
+
+    protected void BoilWater() => Console.WriteLine("Boiling water");
+
+    protected void PourInCup() => Console.WriteLine("Pouring into cup");
+
+    // Steps to be implemented by subclasses
+    protected abstract void Brew();
+    protected abstract void AddCondiments();
+}
+```
+
+2. Concrete Subclasses
+```csharp
+public class Tea : CaffeineBeverage
+{
+    protected override void Brew() => Console.WriteLine("Steeping the tea");
+
+    protected override void AddCondiments() => Console.WriteLine("Adding lemon");
+}
+
+public class Coffee : CaffeineBeverage
+{
+    protected override void Brew() => Console.WriteLine("Dripping coffee through filter");
+
+    protected override void AddCondiments() => Console.WriteLine("Adding sugar and milk");
+}
+```
+
+2. Usage
+```csharp
+class Program
+{
+    static void Main()
+    {
+        CaffeineBeverage tea = new Tea();
+
+        CaffeineBeverage coffee = new Coffee();
+
+        Console.WriteLine("Making tea...");
+
+        tea.PrepareRecipe();
+
+        Console.WriteLine("\nMaking coffee...");
+
+        coffee.PrepareRecipe();
+    }
+}
+```
+
+### Key Concepts
+- Template Method: Defines the algorithm structure
+- Hook Methods (optional): Methods with default behavior that subclasses can override.
+- Inversion of Control: The abstract class controls the algorithm, not the subclass.
+
+### Benefits
+- Promotes code reuse and consistency
+- Encourages inversion of control.
+- Makes algorithms easier to maintain and extend.
 
