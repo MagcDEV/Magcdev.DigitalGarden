@@ -1107,3 +1107,156 @@ class Program
 - Encourages inversion of control.
 - Makes algorithms easier to maintain and extend.
 
+## Chapter 9: The iterator and Composite Patterns - Well-Managed Collections
+
+- Iterator Pattern: Provides a way to access elements of a collection sequentially without exposing its underlying representation.
+- Composite Pattern: Allows you to compose objects into tree structures to represent part-whole hierarchies. It lets clients treat individual objects and compositions uniformly.
+
+### Iterator Pattern
+
+Used to traverse a collection without exposing its internal structure.
+
+#### Structure:
+- Iterator Interface: Defines methods like HasNext() and Next().
+- Concrete Iterator: implements the traversal logic.
+- Aggregate Interface: Defines a method to create an iterator.
+- Concrete Aggregate: Implements the collection and returns an iterator.
+
+#### Example: Custom Menu Iterator
+
+- Menu Item
+```csharp
+public class MenuItem
+{
+    public string Name { get; }
+    public string Description { get; }
+	
+    public MenuItem(string name, string description)
+    {
+        Name = name;
+        Description = description;
+    }
+}
+```
+
+- Iterator Interface
+```csharp
+public interface IIterator<T>
+{
+    bool HasNext();
+    T Next();
+}
+```
+
+- Concrete Iterator
+```csharp
+public class MenuIterator : IIterator<MenuItem>
+{
+    private readonly List<MenuItem> _items;
+    private int _position = 0;
+    public MenuIterator(List<MenuItem> items) => _items = items;
+    public bool HasNext() => _position < _items.Count;
+    public MenuItem Next() => _items[_position++];
+}
+```
+
+- Menu (Aggregate)
+```csharp
+public class Menu
+{
+    private readonly List _menuItems = new();
+    public void AddItem(string name, string description)
+    {
+        _menuItems.Add(new MenuItem(name, description));
+    }
+    public IIterator CreateIterator() => new MenuIterator(_menuItems);
+}
+```
+
+- Usage
+```csharp
+class Program
+{
+    static void Main()
+    {
+        var menu = new Menu();
+        menu.AddItem("Pasta", "Delicious spaghetti with marinara sauce");
+        menu.AddItem("Burger", "Beef burger with cheese");
+        var iterator = menu.CreateIterator();
+        while (iterator.HasNext())
+        {
+            var item = iterator.Next();
+            Console.WriteLine($"{item.Name}: {item.Description}");
+        }
+    }
+}
+```
+
+### Composite Pattern
+
+To treat individual objects and compositions of objects uniformly.
+
+#### Structure
+- Component: Declares the interface for all objects in the composition
+- Leaf: Represents leaf objects (no children).
+- Composite: Represents objects that have children.
+
+#### Example: Menu as a Tree
+
+- Component
+```csharp
+public abstract class MenuComponent
+{
+    public virtual void Add(MenuComponent component) => throw new NotSupportedException();
+    public virtual void Print() => throw new NotSupportedException();
+}
+```
+
+- Leaf
+```csharp
+public class MenuItemLeaf : MenuComponent
+{
+    private readonly string _name;
+    public MenuItemLeaf(string name) => _name = name;
+    public override void Print() => Console.WriteLine($"Item: {_name}");
+}
+```
+
+- Composite
+```csharp
+public class MenuComposite : MenuComponent
+{
+    private readonly List _components = new();
+    private readonly string _name;
+    public MenuComposite(string name) => _name = name;
+    public override void Add(MenuComponent component) => _components.Add(component);
+    public override void Print()
+    {
+        Console.WriteLine($"\nMenu: {_name}");
+        foreach (var component in _components)
+        {
+            component.Print();
+        }
+    }
+}
+```
+
+- Usage
+```csharp
+class Program
+{
+    static void Main()
+    {
+        var breakfastMenu = new MenuComposite("Breakfast");
+        breakfastMenu.Add(new MenuItemLeaf("Pancakes"));
+        breakfastMenu.Add(new MenuItemLeaf("Waffles"));
+        var lunchMenu = new MenuComposite("Lunch");
+        lunchMenu.Add(new MenuItemLeaf("Burger"));
+        lunchMenu.Add(new MenuItemLeaf("Salad"));
+        var allMenus = new MenuComposite("All Menus");
+        allMenus.Add(breakfastMenu);
+        allMenus.Add(lunchMenu);
+        allMenus.Print();
+    }
+}
+```

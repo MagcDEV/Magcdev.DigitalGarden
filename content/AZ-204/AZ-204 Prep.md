@@ -105,3 +105,61 @@ Multiples apps can share a services plan, but excessive apps may lead to perform
 - Multiple rules can be set, with scale-out rules taking precedence over scale-in rules to ensure resource availability.
 - Autoscaling can also be scheduled, allowing scaling to a specific instance count at set times or days.
 - Users can combine metric-based and schedule-bases scaling without conflicts by setting them for different times.
+
+### Using Deployment Slots in Azure App
+
+- Deployment slots allow for testing new app version in environments similar to production before going live.
+- By default, apps have a "Production" slot, but additional slots like "testing" and "staging" can be created
+- Cloning the production slot to a staging slot helps maintain similar configurations, enhancing testing validity.
+- New app versions are uploaded to the staging slot, not cloned, and require the "az webapp deployment source".
+- After testing, the staging slot can be swapper with the production slot, transferring app versions and settings, except for slot-specific settings.
+- Slot-specific settings, like separate  test databases, remain with their respective slots during swaps.
+- Swapping slots minimizes downtime by allowing VM instances to warm up and provides an easy rollback option if issues arises.
+- The "swap with preview" options allows testing with production settings before completing a swap, enhancing safety.
+- "Auto swap" can automate deployments as part of a DevOps process, but staging slots allow for app warm-up before production.
+- Custom warm-up configurations can be sets for apps needing initialization before serving user requests.
+- More than two slots can be used for complex configurations, such as development, testing, staging, and production.
+- Canary testing is supported by directing a small percentage of traffic to non-production slots to minimize deployment risks.
+- The number of slots available depends on the App Service Plan tier, with Standard supporting up to 5 slots and Premium/Isolated up to 20.
+---
+- **Auto Swap**: As soon as an application is deployed to a slot it automatically swaps into a target slot. This is not the same as deploying directly to the target because the application gets a warm start, and the previous release of the target slot is preserved if a rollback is required.
+- **Swap**: The most basic swap type that requires you to manually trigger the swap operation.
+- **Swap with preview**: This type is similar to a regular swap but allows you to preview the swap before completing it. Because each slot maintains its own configuration and application settings, the web app may not behave exactly as it did in the originating slot, and that is a good thing.
+---
+
+Application Insights is an application performance management (APM) service. Some of the features of Application Insights include the ability to:
+
+- Find and diagnose performance issues
+- Find and diagnose runtime exceptions
+- Monitor and alert on application health
+- Analyze customer usage
+- Create custom key performance indicator (KPI) dashboards
+---
+
+### Deploying Code from GitHub to Azure App Service
+This file contains URLs from the demos in Cloud Academy's _Deploying Code from GitHub to Azure App Service_ course.  
+
+#### Create a resource group
+```
+az group create --name webapprg --location westus
+```
+
+#### Create an App Service Plan
+```
+az appservice plan create --name asplan --resource-group webapprg --location westus --sku F1
+```
+
+#### Create a webapp
+```
+az webapp create --name <app_name> --resource-group webapprg --plan asplan
+```
+
+#### Deploy an app from GitHub to Azure App Service
+```
+az webapp deployment source config --repo-url https://github.com/Azure-Samples/html-docs-hello-world --branch master --manual-integration --name <app_name> --resource-group webapprg
+```
+
+#### URL of webapp
+https://<app_name>.azurewebsites.net
+
+---
