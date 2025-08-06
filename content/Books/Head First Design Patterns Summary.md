@@ -1260,3 +1260,8 @@ class Program
     }
 }
 ```
+
+## Chapter 10: The State Pattern - The State of Things
+
+This behavioral pattern allows an object to alter its behavior when its internal state changes, appearing as if it change its class.
+
