@@ -6,7 +6,7 @@ tags:
   - Dotnet
   - Programming
 ---
-## Create Classes and Objects in C#
+## 1. Create Classes and Objects in C#
 
 Classes are blueprints for objects. Objects are instances of classes.
 
@@ -49,7 +49,7 @@ class Program
 }
 ```
 
-## Basic Data Types and Variables
+## 2. Basic Data Types and Variables
 
 C# has value types (stored on stack) and reference types (stored on heap).
 
@@ -89,7 +89,7 @@ class DataTypesDemo
 }
 ```
 
-## Class Hierarchies and Polymorphism
+## 3. Class Hierarchies and Polymorphism
 
 Inheritance allows classes to inherit properties and methods from base classes.
 
@@ -167,7 +167,7 @@ class Program
 }
 ```
 
-## LINQ - Join, Aggregate, and Group
+## 4. LINQ - Join, Aggregate, and Group
 
 LINQ (Language Integrated Query) provides powerful data querying capabilities.
 
@@ -253,3 +253,282 @@ class LinqDemo
 	 }
 }
 ```
+
+## 5. Combining Collection Types
+
+Different collection types ca be combined to solve specific problems.
+
+```csharp
+class CollectionsCombination
+{
+	static void Main()
+	{
+		// Dictionary with List as value
+		var studentCourses = new Dictionary<string, List<string>>
+		{
+			["John"] = new List<string> {"Math", "Physics", "Chemistry"},
+			["Jane"] = new List<string> {"Biology", "Chemistry"},
+			["John"] = new List<string> {"Math", "Computer Science"}
+		};
+
+		// HashSet for unique values with fast lookup
+		var uniqueCourses = new HashSet<string>();
+		foreach(var courses in studentCourses.Values)
+		{
+			uniqueCourses.UnionWith(courses);
+		}
+
+		// Queue with custom objects
+		var taskQueue = new Queue<(string task, int priority)>
+		taskQueue.Enqueue(("Process Order", 1));
+		taskQueue.Enqueue(("Send email", 2));
+
+		// Stack with Dictionary
+		var history = new Stack<Dictionary<string, object>>();
+		history.Push(new Dictionary<string, object>
+		{
+			["Action"] = "create",
+			["Timestamp"] = DateTime.Now,
+		});
+
+		// List of Tuples
+		var coordinates = new List<(double x, double y, double z)>
+		{
+			(1.0, 2.0, 3.0),
+			(4.0, 5.0, 6.0)
+		};
+
+		// Nested collections for matrix
+		var matrix = new List<List<int>>
+		{
+			new List<int> {1, 2, 3},
+			new List<int> {4, 5, 6},
+			new List<int> {7, 8, 9}
+		};
+	}
+}
+```
+
+
+## 6. Interfaces for Loosely Coupled Code
+
+Interfaces define contracts that classes must implement.
+```csharp
+// Define interfaces
+public interface ILogger
+{
+	void Log(string message);
+	void LogError(string error);
+}
+
+public interface IDataRepository<T>
+{
+	T GetById(int id);
+	IEnumerable<T> GetAll();
+	void Add(T entity);
+	void Update(T entity);
+	void Delete(int id);
+}
+
+// Implementations
+public class ConsoleLogger : ILogger
+{
+	public void Log(string message)
+	{
+		Console.WriteLine($"[INFO] {DateTime.Now}: {message}");
+	}
+	
+	public void LogError(string error)
+	{
+		Console.WriteLine($"[ERROR] {DateTime.Now}: {error}");
+	}
+}
+
+public class FileLogger : ILogger
+{
+	private string _filePath;
+
+	public FileLogger(string filePath)
+	{
+		_filePath = filePath; 
+	}
+
+	public void Log(string message)
+	{
+		File.AppendAllText(_filePath, $"[INFO] {DateTime.Now}: {message}\n");
+	}
+	
+	public void LogError(string error)
+	{
+		File.AppendAllText(_filePath, $"[ERROR] {DateTime.Now}: {error}\n");
+	}
+}
+
+// Service using dependency injection
+public class OrderService
+{
+	private readonly ILogger _logger;
+	private readonly IDataRepository<Order> _repository; 
+
+	public OrderService(ILogger logger, IDataRepository<Order> repository)
+	{
+		_logger = logger;
+		_repository = repository;
+	}
+
+	public void ProcessOrder(Order order)
+	{
+		try
+		{
+			_repository.Add(order);
+			_logger.Log($"Order {order.Id} processed successfully");
+		}
+		catch(Exception ex)
+		{
+			_logger.LogError($"Failed to process order: {ex.Message}");
+		}
+	}
+}
+
+public class Order
+{
+	public int Id {get; set;};
+	public string Description {get; set;};
+}
+
+```
+
+## 7. Record Types
+
+Records provide a concise way to  create immutable data types.
+```csharp
+// Record declaration
+public record Person(string FirstName, string LastName, int Age);
+
+
+// Record with additional members
+public record Employee(string FirstName, string LastName, int Age, string Department) : Person(FirstName, LastName, Age)
+{
+	public decimal Salary {get; init;}
+	public string GetFullName() => $"{FirsName} {LastName}";
+}
+
+// Record struct (value type)
+public record struct Point(double X, double Y);
+
+// Mutable record
+public record MutablePerson
+{
+	public string FirstName {get; set;}
+	public string LastName {get; set;}
+}
+
+class RecordDemo
+{
+	static void Main()
+	{
+		// Creating records
+		var person1 = new Person("John", "Doe", 30)
+		var person2 = new Person("John", "Doe", 30)
+
+		// Value equality (not reference equality)
+		Console.Writeline(person1 == person2); // True
+
+		// With-expressions for non-destructive mutation
+		var person3 = person1 with {Age = 31};
+
+		// Deconstruction
+		var (firstName, lastName, age) = person1;
+
+		// ToString() is automatically implemented
+		Console.WriteLine(person1); // Person {FirstName = John, LastName = Doe, Age = 30}
+
+		// Record inheritance 
+		var employee = new Employee("Jane", "Smith", 25, "IT") {Salary = 7500m};
+	}
+}
+```
+
+## 8. LINQ - Filter, Map, and Sort
+
+LINQ provides powerful methods for data manipulation.
+```csharp
+
+```
+
+## 9 Generics
+
+Generics allow you to write type-safe, reusable code.
+```csharp
+
+```
+
+## 10. Action and Func
+
+Delegates that represent methods with specific signatures.
+```cshapr
+
+```
+
+## 11. Fundamental Type Constructs
+
+Understanding the basic building blocks of C# types.
+```csharp
+
+```
+
+## 12. Extension Methods
+Extension methods allow you to add methods to existing types.
+```csharp
+
+```
+
+## 13. Events and Delegates
+
+Events and delegates enable event-driven programming.
+```csharp
+
+```
+## 14. Exception Handling
+
+Proper exception handling ensures  robust applications.
+```csharp
+
+```
+## 15. Working with Null Values
+
+C# provides various techniques to  handle null values safely.
+```csharp
+
+```
+## 16. Asynchronous Programming
+
+Async/await pattern  for efficient asynchronous operations.
+```csharp
+
+```
+## 17. Working with Dates and Times
+
+DateTime and DateTimeOffset handling in .NET.
+```csharp
+
+```
+## 18. Map-Based Collections (Dictionary, etc.)
+
+Key-value pair collections for efficient lookups.
+```csharp
+
+```
+## 19. List-Based Collections
+
+Working with ordered collections.
+```csharp
+
+```
+## 20. Basic C# Application Constructs
+
+Understanding the fundamental building  blocks of C# applications.
+```csharp
+
+```
+
