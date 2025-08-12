@@ -1,5 +1,5 @@
 ---
-title: Example Title
+title: Csharp Skill Assessment Preparation Guide
 draft: false
 tags:
   - CSharp
@@ -453,6 +453,77 @@ class RecordDemo
 
 LINQ provides powerful methods for data manipulation.
 ```csharp
+public class Student
+{
+
+	public int Id {get; set;}
+	public string Name {get; set;}
+	public int Age {get; set;}
+	public double GPA {get; set;}
+	public string Major {get; set;}
+}
+
+class LinqOperations
+{
+	static void Main()
+	{
+		var students = new List<Student>
+		{
+			new Student {Id = 1, Name = "Alice", Age = 20, GPA = 3.2, Major = "Computer Science"};
+			new Student {Id = 2, Name = "Miguel", Age = 20, GPA = 3.2, Major = "Computer Science"};
+			new Student {Id = 3, Name = "Alberto", Age = 20, GPA = 3.2, Major = "Computer Science"};
+			new Student {Id = 4, Name = "Maicol", Age = 20, GPA = 3.2, Major = "Computer Science"};
+		}
+
+		// FILTER (Where)
+		var csStudents = students.Where(s => s.Major == "Computer Science");
+		var highGPA = students.Where(s => s.GPA > 3);
+		var complexFilter= students.Where(s => s.Major == "Computer Science" && 
+		s.GPA > 3);
+		
+		// MAP (Select)
+		var names = students.Select(s => s.Name);
+		var studentInfo = students.Select(s => new
+		{
+			s.Name,
+			s.GPA,
+			IsHonors = s.GPA > 3.7
+		});
+
+		// SelectMany (flattening)
+		// allCourses will be a IEnumerble<string> with the courses
+		/*
+		CS101
+		MATH201
+		MATH301
+		PHYS101
+		*/
+		var courses = new List<(int StudentId, List<string> Courses)>
+		{
+			(1, new List<string> {"CS101", "MATH201"}),
+			(1, new List<string> {"MATH301", "PHYS101"})
+		}
+		var allCourses = courses.SelectMany(s => s.Courses);
+
+		// SORT (OrderBy, ThenBy)
+		var sortedByGPA = students.OrderBy(s => s.GPA);
+		var sortedByGPADesc = studens.OrderByDescending(s => s.GPA);
+		var multiSort = students.OrderBy(s => s.Major).ThenByDescending(s => s.GPA);
+
+		// Combining operations
+		var result = students
+			.Where(s => s.Age >= 20)
+			.OrderByDescending(s => s.GPA)
+			.Select(s => new {s.Name, s.GPA, s.Major})
+			.Take(3);
+
+		// Query syntax alternative
+		var querySyntax = from s in students
+						where s.GPA >= 3.5
+						orderBy s.Name
+						select new {s.Name, s.GPA};
+	}
+}
 
 ```
 
