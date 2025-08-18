@@ -1179,17 +1179,145 @@ The main building blocks are:
 // Task / Task<T>, async/await, and cooperative cancellation (CancellationToken).
 ```
 
+```csharp
+class Program
+{
+	// An async method that return a Task
+	// The compiler transform it to return immediately with
+	// a task and continue later.
+	static async Task DoWorkAsync()
+	{
+		Console.WriteLine($"DoWorkAsync start (Thread {Environment.CurrentManagedThreadId})");
+
+		// Simulate asynchronous, non-blocking work
+		await Task.Delay(500);
+
+		Console.WriteLine($"DoWorkAsync end (Thread {Environment.CurrentManagedThreadId})");
+	}
+
+	static void Main()
+	{
+		Console.WriteLine("Main before call");
+		await DoWorkAsync(); // await waits asynchronously; the thread can do other work
+		Console.WriteLine("Main after call");
+	}
+}
+```
 
 ## 17. Working with Dates and Times
 
 DateTime and DateTimeOffset handling in .NET.
 ```csharp
+using System;
 
+class Example1
+{
+    static void Main()
+    {
+        DateTime nowLocal = DateTime.Now;  // Local system time (Kind.Local)
+		
+        DateTime nowUtc = DateTime.UtcNow;  // UTC time (Kind.Utc)
+		
+        DateTime unspecified = new DateTime(2025, 8, 18, 14, 30, 0); // Kind.Unspecified
+
+        Console.WriteLine(nowLocal);    // e.g., 8/18/2025 10:30:00 AM
+        Console.WriteLine(nowUtc);      // e.g., 8/18/2025 14:30:00
+        Console.WriteLine(unspecified.Kind); // Unspecified
+    }
+}
+
+// DateOnly / TimeOnly
+using System;
+
+class Example4
+{
+    static void Main()
+    {
+        var d = DateOnly.FromDateTime(DateTime.Now);    // date-only
+        var t = TimeOnly.FromDateTime(DateTime.Now);    // time-only
+
+        Console.WriteLine(d); // e.g., 2025-08-18
+        Console.WriteLine(t); // e.g., 14:30:00
+    }
+}
 ```
 ## 18. Map-Based Collections (Dictionary, etc.)
 
 Key-value pair collections for efficient lookups.
 ```csharp
+static void Main()
+{
+	// Dictionary<TKey, TValue>
+	var studentGrades = new Dictionary<string, int>
+	{
+		["Alice"] = 95,
+		["Bob"] = 87,
+		["Charlie"] = 92
+	};
+
+	// Adding and updating
+	studentGrades.Add("Diana", 88);
+	studentGrades["Eve"] = 90; // Add or update
+
+	// Accessing values
+	int aliceGrade = studentGrades["Alice"];
+
+	// Safe access with TryGetValue
+	if (studentGrade.TryGetValue("Frank", out int frankGrade))	
+	{
+		Console.WriteLine($"Frank's grade: {frankGrade}");
+	}
+	else
+	{
+		Console.WriteLine("Frank not found");
+	}
+
+	// Check if exists
+	bool hasStudent = studentGrades.ContainsKey("Alice");
+	bool hasGrade = studentGrades.ContainsValue(95);
+
+	// Iterating
+	foreach (KeyValuePair<string, int> kvp in studentGrades)
+	{
+		Console.writeLine($"{kvp.Key}: {kvp.Value}");
+	}
+
+	// Keys and Value collections
+	ICollection<string> students = studentGades.Keys;
+	ICollection<int> grades = studentGrades.Values;
+
+	// sortedDictionary (sorted by key)
+	var sortedGrades = new SortedDictionary<string, int>();
+
+	// ConcurentDictionary (thread-safe)
+	var concurrent = new ConcurrentDictionary<string, int>();
+	concurrent.TryAdd("Alice", 95);
+	concurrent.AddOrUpdate("Bob", 87, (key, oldValue) => oldValue + 1);
+	int bobGrande = concurrent.GetOrAdd("Bob", 0);
+
+	// HashSet (uinique values, fast lookup)
+	var uniqueNumbers = new HashSet<int> {1 , 2, 3, 4, 5};
+	bool added = uniqueNumbers.Add(6); // true
+	bool duplicate = uniqueNumbers.Add(3); // false
+	bool contains = uniqueNumbers.Contains(4); // true
+
+	// set operations
+	var set1 = new HashSet<int> {1, 2, 3, 4};
+	var set2 = new HashSet<int> {3, 4, 5, 6};
+
+	set1.UnionWith(set2); // set1 now contains {1, 2 ,3, 4, 5, 6}
+
+	var set3 = new HashSet<int> {1, 2, 3, 4};
+	set3.IntersecWith(set2); // set3 now contains {3, 4} 
+
+	var set4 = new HashSet<int> {1, 2, 3, 4}
+	set4.ExceptWith(set2); // set4 now contain {1, 2}
+
+	// SortedSet (sorte unique values)
+	var sortedSet = new SortedSet<string> {"banana", "apple", "cherry"};
+	// Automatically sorted: applie, banana, cherry
+		
+}
 
 ```
 ## 19. List-Based Collections
@@ -1204,4 +1332,48 @@ Understanding the fundamental building  blocks of C# applications.
 ```csharp
 
 ```
+## 21. Sealed
 
+Sealed is a C# modifier that *prevents further inheritance/overriding* 
+- When applied to class: the class cannot be inherited
+- When applied to a overriding member: it prevents any further overrides of that members in subclasses
+
+```csharp
+
+```
+
+## 21. Overriding and Overloading
+
+- **Overriding** changes the runtime behavior of an inherited member [[Polymorphism]]. It requires that a base member to be virtual/abstract/override and the derived member to use override
+
+```csharp
+class Animal
+{
+	public virtual void Speak() => Console.WriteLine("Animal speaks");
+}
+
+class Dog : Animal
+{
+	public override void Speak() => Console.WriteLine("Dog barks");
+}
+
+Animal a = new Dog();
+a.Speak() // "Dog barks"
+```
+
+- **Overloading** creates multiple methods with the same name but different parameter lists in the same type (or different signatures in derived types). Resolution happens at compile time.
+
+```csharp
+class Logger
+{
+	public void Log(string message) => Console.WriteLine(message);
+	public void Log(string message, int level) => Console.WriteLine($"[{level}] {message}");
+	public void Log(Exception ex) => Console.WriteLine(ex.Message);
+}
+
+var logger = new Logger();
+logger.Log("Hello");       // calls Log(string)
+logger.Log("hi", 2);       // calls Log(string, int)
+logger.Log(new Exception()); // calls Log(Exception)
+
+```
