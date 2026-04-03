@@ -1,19 +1,37 @@
 ---
-title: Welcome to my Digital Brain
+title: "Magcdev's Digital Garden"
 ---
-![[Cult_Mechanicus_Logo.png]]
 
-My name is Magcdev, welcome to my digital garden.
+Welcome to my digital garden — an LLM-curated knowledge base focused on software engineering, built in public.
 
-This is a space that I use to explore my ideas and save notes about the topics that raise interest in me also I pretend to use it as "second brain" in order to help in my studies.
+## How This Garden Works
 
-This will be a ever changing repository of knowledge where I document my digital and intellectual journey in public.
+This isn't a traditional blog or wiki. Raw notes, solutions, and reading highlights go into the **Sources** inbox. An LLM processes them into structured, interlinked **Wiki** pages. The wiki grows incrementally — each new source refines and expands existing knowledge. I rarely edit the wiki manually; it's the LLM's domain.
 
-My interest are:
-- Programming - Back-end programming
-- Politics - The eternal struggle for power
-- Economics - How the economy works
-- Philosophy - What is the meaning of all this?
-- OSINT & Social Engineering - Gathering intelligence from the wild.
+```
+You → drop raw notes into Sources
+LLM → compiles, cross-references, and refines the Wiki
+Quartz → renders everything as a browsable site
+```
 
-This digital garden is a changing map of knowledge feel free to explore and maybe learn something from it 🚀
+## Knowledge Areas
+
+> [!abstract] [[wiki/dsa/index|Data Structures & Algorithms]]
+> Arrays, trees, graphs, dynamic programming, and every paradigm you need for coding interviews.
+
+> [!abstract] [[wiki/patterns/index|LeetCode Patterns]]
+> 17 core patterns with Go templates, recognition heuristics, and graded problem sets.
+
+> [!abstract] [[wiki/system-design/index|System Design]]
+> Scalability, databases, caching, messaging — from fundamentals to classic interview problems.
+
+> [!abstract] [[wiki/go/index|Go Programming]]
+> Language deep-dives, concurrency patterns, standard library, and Go-specific idioms.
+
+> [!abstract] [[wiki/concepts/index|Core Concepts]]
+> SOLID, design patterns, clean code, testing, and cross-cutting engineering principles.
+
+## Raw Sources
+
+> [!info] [[sources/index|Sources Inbox]]
+> The raw data layer — LeetCode solutions, book notes, article highlights, video transcripts, and course notes awaiting LLM processing.

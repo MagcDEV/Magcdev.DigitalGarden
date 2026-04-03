@@ -1,1 +1,0 @@
-Hiding complex implementation logic and exposing only the essential features of an object for example using abstract classes and interfaces, so we can focus in what an object does rather than how it does it.
