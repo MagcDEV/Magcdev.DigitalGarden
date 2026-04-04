@@ -29,6 +29,7 @@ Recurring algorithmic patterns for coding interviews, organized by technique. Ea
 | [[wiki/patterns/k-way-merge|K-Way Merge]] | Merge sorted lists | O(n log k) |
 | [[wiki/patterns/dp-patterns|DP Patterns]] | Overlapping subproblems | Varies |
 | [[wiki/patterns/topological-sort|Topological Sort]] | Ordering with dependencies | O(V+E) |
+| [[wiki/patterns/stack-based|Stack-Based]] | Bracket matching, undo, next element | O(n) |
 | [[wiki/patterns/monotonic-stack|Monotonic Stack]] | Next greater/smaller element | O(n) |
 | [[wiki/patterns/backtracking|Backtracking]] | Constraint satisfaction | Varies |
 
@@ -36,7 +37,9 @@ Recurring algorithmic patterns for coding interviews, organized by technique. Ea
 
 > [!info] This section is updated by the LLM as you solve problems
 >
-> Problems solved: 1
-> Patterns started: 1 / 17
+> Problems solved: 3
+> Patterns started: 3 / 17
 >
+> **Two Pointers** — 1 problem solved (LC-5 ✅)
+> **Stack-Based** — 1 problem solved (LC-20 ✅)
 > **Top-K Elements** — 1 problem solved (LC-347 ✅)

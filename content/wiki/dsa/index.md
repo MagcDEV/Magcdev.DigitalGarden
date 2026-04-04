@@ -12,7 +12,7 @@ tags:
 ### Linear
 - [[wiki/dsa/arrays|Arrays & Strings]]
 - [[wiki/dsa/linked-lists|Linked Lists]]
-- [[wiki/dsa/stacks-queues|Stacks & Queues]]
+- [[wiki/dsa/stacks|Stacks]]
 - [[wiki/dsa/hash-tables|Hash Tables]]
 
 ### Non-Linear
