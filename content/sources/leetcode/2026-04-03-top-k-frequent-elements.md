@@ -6,6 +6,7 @@ difficulty: medium
 tags:
   - source
   - leetcode
+  - arrays-and-hashing
   - hash-map
   - bucket-sort
   - top-k
@@ -13,8 +14,9 @@ tags:
 date: 2026-04-03
 processed: true
 compiled_to:
-  - "[[wiki/dsa/hash-tables]]"
+  - "[[wiki/patterns/arrays-and-hashing]]"
   - "[[wiki/patterns/top-k]]"
+  - "[[wiki/dsa/hash-tables]]"
   - "[[wiki/dsa/sorting]]"
   - "[[wiki/go/leetcode-snippets]]"
 ---

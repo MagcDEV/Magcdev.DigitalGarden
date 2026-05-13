@@ -14,6 +14,7 @@ Recurring algorithmic patterns for coding interviews, organized by technique. Ea
 
 | Pattern | Key Signal | Typical Complexity |
 |---------|-----------|-------------------|
+| [[wiki/patterns/arrays-and-hashing|Arrays & Hashing]] | Counting, dedup, group, pair sum | O(n) |
 | [[wiki/patterns/sliding-window|Sliding Window]] | Contiguous subarray/substring | O(n) |
 | [[wiki/patterns/two-pointers|Two Pointers]] | Sorted array, pair finding | O(n) |
 | [[wiki/patterns/fast-slow-pointers|Fast & Slow Pointers]] | Cycle detection, middle of list | O(n) |
@@ -38,8 +39,9 @@ Recurring algorithmic patterns for coding interviews, organized by technique. Ea
 > [!info] This section is updated by the LLM as you solve problems
 >
 > Problems solved: 3
-> Patterns started: 3 / 17
+> Patterns started: 4 / 18
 >
+> **Arrays & Hashing** — 1 / 10 problems solved (LC-347 ✅)
 > **Two Pointers** — 1 problem solved (LC-5 ✅)
 > **Stack-Based** — 1 problem solved (LC-20 ✅)
 > **Top-K Elements** — 1 problem solved (LC-347 ✅)

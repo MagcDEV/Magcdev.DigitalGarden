@@ -122,7 +122,7 @@ func topKFrequent(nums []int, k int) []int {
 
 | Problem | Difficulty | Approach | Status |
 |---------|-----------|----------|--------|
-| [[sources/leetcode/2026-04-03-top-k-frequent-elements\|LC-347: Top K Frequent Elements]] | Medium | Bucket sort | ✅ |
+| [[sources/leetcode/2026-04-03-top-k-frequent-elements\|LC-347: Top K Frequent Elements]] (also in [[wiki/patterns/arrays-and-hashing\|Arrays & Hashing]]) | Medium | Bucket sort | ✅ |
 | LC-215: Kth Largest Element in an Array | Medium | Min-heap / Quickselect | ⬜ |
 | LC-692: Top K Frequent Words | Medium | Min-heap (custom comparator) | ⬜ |
 | LC-973: K Closest Points to Origin | Medium | Max-heap / Quickselect | ⬜ |
