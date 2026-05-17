@@ -24,6 +24,13 @@ content/
 │   ├── go/           ← Go language deep-dives
 │   └── concepts/     ← Cross-cutting SWE concepts
 │
+├── posts/            ← MANUEL'S OWN WRITING (human-authored blog)
+│                       Essays and articles written by Manuel himself.
+│                       LLM should NEVER rewrite the prose here. Only touch
+│                       these files when explicitly asked (typo fixes,
+│                       formatting, adding frontmatter). Treat the voice as
+│                       Manuel's own; do not LLM-ify it.
+│
 ├── assets/           ← Images and static files
 └── index.md          ← Garden homepage
 ```
@@ -91,6 +98,19 @@ date_created: 2026-04-03
 date_modified: 2026-04-03
 sources:
   - "[[sources/leetcode/2026-04-03-two-sum]]"
+---
+```
+
+### Post files (Manuel's blog)
+```yaml
+---
+title: "Post Title"
+author: "Manuel"
+date: 2026-05-17
+tags:
+  - post
+  - topic-area
+description: "One-line summary used in listings and OG cards."
 ---
 ```
 
