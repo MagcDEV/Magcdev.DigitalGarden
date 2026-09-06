@@ -1,3 +1,54 @@
 @use "./base.scss";
 
-// put your custom CSS here!
+// Nubank HTML study guides: keep the original documents full-width
+// inside the garden chrome, and give "Open full page" a real document load
+// (Quartz SPA would otherwise intercept <a href="*.html">).
+body:has(article.nubank-guides) {
+  .page {
+    max-width: 1600px;
+  }
+
+  .sidebar.right {
+    display: none;
+  }
+
+  @media all and (min-width: 1200px) {
+    #quartz-body {
+      grid-template-columns: 320px minmax(0, 1fr) 0;
+    }
+  }
+}
+
+article.nubank-guides {
+  .guide-open {
+    margin: 0 0 12px;
+  }
+
+  .guide-open button {
+    appearance: none;
+    background: var(--secondary);
+    color: var(--light);
+    border: 0;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  .guide-open button:hover {
+    background: var(--tertiary);
+  }
+
+  .guide-frame {
+    display: block;
+    width: 100%;
+    height: 90vh;
+    min-height: 720px;
+    border: 1px solid var(--lightgray);
+    border-radius: 8px;
+    background: #ffffff;
+    margin: 0 0 3rem;
+  }
+}

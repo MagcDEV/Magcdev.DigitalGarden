@@ -41,6 +41,10 @@ tags:
 - [[wiki/system-design/observability|Observability (Logs, Metrics, Traces)]]
 - [[wiki/system-design/containers|Containers & Orchestration]]
 
+## Interview deep-dives
+
+- [[wiki/system-design/nubank-study-notes|Nubank lead system design study notes]] — chargebacks, ledger, and pivot prompts (authoriser, credit limit, fraud, PIX)
+
 ## Classic Design Problems
 
 - [[wiki/system-design/url-shortener|Design: URL Shortener]]

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pivot insurance: authoriser, credit limit, fraud, PIX — Nubank lead system design study notes</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#end-result">1. The end result: one method, two families</a></li>
+    <li class="sub"><a href="#families">Money-moving vs long-running</a></li>
+    <li class="sub"><a href="#reuse">What carries over from the two big guides</a></li>
+    <li><a href="#authoriser">2. Card authorisation / credit limit</a></li>
+    <li class="sub"><a href="#auth-end">The end result</a></li>
+    <li class="sub"><a href="#auth-nouns">The nouns</a></li>
+    <li class="sub"><a href="#auth-walk">One purchase, start to finish</a></li>
+    <li class="sub"><a href="#auth-deep">The hard problem: edge availability vs balance truth</a></li>
+    <li class="sub"><a href="#auth-fail">Failures</a></li>
+    <li><a href="#fraud">3. Real-time fraud decision</a></li>
+    <li><a href="#pix">4. Sending a PIX payment</a></li>
+    <li><a href="#others">5. Four more, swapped in one table each</a></li>
+    <li><a href="#interruptions">6. The interruptions, one line each</a></li>
+    <li><a href="#cheat">7. Interview sentences</a></li>
+    <li><a href="#practice">8. Ten minutes each</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Pivot insurance: if the prompt isn't the ledger or chargebacks</h1>
+  <p class="lede">Nubank says you "design a system from scratch". The reported prompts cluster around chargebacks and the ledger, but the round also produces card authorisation, credit limits, real-time fraud and PIX. This guide gets each one to a confident stage-1 sentence and a drawn stage-4 diagram in ten minutes of prep, by reusing the pieces you already have.</p>
+  <p class="source">Compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built" and "swap the nouns" sections) and 2026 candidate reports. Third of three: read after <em>The ledger, end to end</em> and <em>The chargeback platform, end to end</em>.</p>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="end-result">1. The end result: one method, two families</h2>
+<p class="question">What you should be able to do with any prompt within the first five minutes.</p>
+
+<p class="thesis">Every prompt Nubank gives is one of two shapes. Either it moves money in milliseconds (a ledger shape: one atomic decision, one safe write path, events after) or it manages a process over days (a chargeback shape: durable case, versioned rules, side effects after commit, deadlines that can't disappear). Decide which family you're in during stage 1, say it out loud, and the rest of the hour is the seven stages with new nouns.</p>
+
+<h3 id="families">Money-moving versus long-running</h3>
+<table>
+  <tr><th></th><th>Money-moving (ledger family)</th><th>Long-running (chargeback family)</th></tr>
+  <tr><td>Prompts</td><td>Ledger, card authorisation, credit limit, PIX send, fraud decision in the payment path</td><td>Chargebacks, KYC / onboarding, lending contracts, collections, any "case" system</td></tr>
+  <tr><td>Clock</td><td>Milliseconds; a latency budget you name</td><td>Days to weeks; deadlines you store</td></tr>
+  <tr><td>Truth</td><td>Immutable entries plus an authoritative aggregate</td><td>Immutable events plus a case snapshot</td></tr>
+  <tr><td>The write</td><td>Check + write in one commit, conditional on a version</td><td>Event + snapshot + deadline + outbox in one commit, conditional on a version</td></tr>
+  <tr><td>Outside world</td><td>Card network, rail, fraud model, all with a timeout that means unknown</td><td>Network, ledger, storage, all with a timeout that means unknown</td></tr>
+  <tr><td>"Done" means</td><td>The commit</td><td>Decision and settlement both confirmed and reconciled</td></tr>
+  <tr><td>Hard problem</td><td>Consistency of the balance under latency and partition pressure</td><td>Uncertain external outcomes and missed deadlines</td></tr>
+  <tr><td>Scaling ceiling</td><td>One write authority per account; hot accounts</td><td>Manual review; people</td></tr>
+</table>
+
+<h3 id="reuse">What carries over, so you're never starting from zero</h3>
+<div class="rows">
+  <div><span>From the ledger</span><span>The atomic commit; the account version; holds versus posted versus available; idempotency keys born where the intent is born; the outbox; "timeout means unknown"; linked reversal never edit; clearing account as the waiting room; the scalability five-step.</span></div>
+  <div><span>From chargebacks</span><span>Event plus snapshot; versioned policy with the version recorded on every decision; deadlines as rows with timer plus sweeper; semantic action keys; staged uploads for documents; the reconciliation queue aged by oldest item; the interview-format section and the interruption drill.</span></div>
+  <div><span>From both</span><span>Stage order: boundary, rules, nouns, one safe write path, one hard problem, failures, rollout. The six questions per failure. Strong where you decide, eventual where you read, explicitly unknown where the world hasn't answered.</span></div>
+</div>
+
+<div class="say"><p class="label">The sentence for any unfamiliar prompt</p><p>"Before I draw anything: is this system deciding about money in real time, or running a process over days? That tells me whether I need an authoritative aggregate with a version, or a case with events, deadlines and versioned policy. Then the same seven steps."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="authoriser">2. Card authorisation and the credit limit service</h2>
+<p class="question">Prompt shapes: "Design the authorisation path for a card transaction", "Design a credit limit service", "Approve a purchase in a few hundred milliseconds". It was Nubank's first product; rehearse it once out loud.</p>
+
+<h3 id="auth-end">The end result</h3>
+<p class="thesis">The card network sends "Ana wants to spend R$80 at a petrol station" and expects approve or decline within a few hundred milliseconds, at midnight, even if the cloud link is down. The authoriser reads Ana's available limit, evaluates rules, writes a hold and the decision in one atomic step, and answers. The hold lowers her available limit but not her posted balance. Days later the merchant captures against the hold, and the ledger posts the real movement. The only thing that can go badly wrong is approving from a stale limit, because that is how the same money gets spent twice.</p>
+
+<figure>
+<svg viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Card authorisation path</title>
+<desc>The card network sends an authorisation request to the authoriser instance that owns the account. It reads the in-memory available limit, evaluates rules, writes the hold and decision atomically, and answers within the budget. After the decision, an event goes to the cloud ledger, feed and fraud signals. The cloud remains the source of truth and syncs open-to-buy to every authoriser replica through an ordered log with snapshots.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="180" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#3E4A63">Edge: answer in a few hundred ms</text>
+<g><rect x="60" y="48" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="180" y="66" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network request</text><text x="180" y="84" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana, R$80, petrol station, ref N1</text></g>
+<line x1="180" y1="104" x2="180" y2="126" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="128" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="146" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Owner for Ana's account</text><text x="180" y="164" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">One replica decides per account</text></g>
+<line x1="180" y1="184" x2="180" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="208" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="226" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Read available limit</text><text x="180" y="244" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">limit − posted − open holds</text></g>
+<line x1="180" y1="264" x2="180" y2="286" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="288" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="306" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Rules + fraud signal</text><text x="180" y="324" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Versioned; inputs recorded</text></g>
+<line x1="180" y1="344" x2="180" y2="366" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="50" y="368" width="260" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="386" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Write hold + decision, atomically</text><text x="180" y="404" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Version check; appended to the log</text></g>
+<line x1="180" y1="424" x2="180" y2="446" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="448" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="180" y="466" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Approve / decline</text><text x="180" y="484" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">No "processing" here</text></g>
+<text x="520" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#3E4A63">Cloud: the source of truth</text>
+<g><rect x="420" y="128" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="146" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Ordered log + snapshots</text><text x="520" y="164" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Syncs open-to-buy to replicas</text></g>
+<g><rect x="420" y="288" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="306" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Ledger</text><text x="520" y="324" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Posts on capture, not on auth</text></g>
+<g><rect x="420" y="368" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="386" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Feed, fraud, limits</text><text x="520" y="404" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Consumers of the decision event</text></g>
+<line x1="310" y1="396" x2="418" y2="396" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M418 156 L360 156 L360 236 L302 236" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+<path d="M520 344 L520 366" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4"/>
+<path d="M520 184 L520 286" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+<rect x="60" y="526" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="82" y="533" dominant-baseline="central" font-size="12" fill="#3E4A63">Decision path, one owner per account</text>
+<rect x="360" y="526" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="382" y="533" dominant-baseline="central" font-size="12" fill="#3E4A63">After the decision, asynchronous</text>
+</svg>
+<figcaption>The dashed line is the whole design in one arrow: the cloud is the truth, and it pushes the current open-to-buy to the replica that owns Ana's account, fast enough that the replica is never meaningfully stale. If that arrow breaks, the replica must know it is stale and refuse to approve, not guess.</figcaption>
+</figure>
+
+<h3 id="auth-nouns">The nouns</h3>
+<div class="rows">
+  <div><span>Account limit</span><span>The credit limit, posted balance, and a version. Available limit is derived: limit − posted balance − open holds, computed from ordered events.</span></div>
+  <div><span>Hold</span><span>A reservation created by an approval: amount, merchant, network reference, expiry, status (OPEN, CAPTURED, EXPIRED, REVERSED). Lowers available, not posted.</span></div>
+  <div><span>Capture</span><span>The merchant's request to settle against a hold. Cannot exceed the hold beyond the network's tolerance. This is when the ledger posts real entries.</span></div>
+  <div><span>Decision</span><span>Approve or decline with a reason code, recorded with every input it used and the rule and model versions. Auditable forever.</span></div>
+  <div><span>Limit change event / Payment event</span><span>Things that move the available limit from outside the authorisation path. Replayed in order into the aggregate; late arrivals replayed, never patched.</span></div>
+</div>
+
+<h3 id="auth-walk">One purchase, start to finish</h3>
+<ol>
+  <li><strong>Authorisation.</strong> The network sends the request with its reference N1. It reaches the authoriser instance that currently owns Ana's account (ownership is exclusive and fenced: only one replica may decide for Ana at a time). It reads Ana's available limit from memory: limit 1,000, posted 700, open holds 200, so 100 available. R$80 fits. Rules run (velocity, merchant category, a yes/no fraud signal). It writes the hold and the decision in one atomic append to the log, conditional on Ana's version, and answers "approved" inside the budget.</li>
+  <li><strong>After the decision.</strong> The decision event goes to the cloud: the ledger records the hold (no entries yet), the feed shows "R$80 pending at Petrol Station", fraud consumes the signal. Ana's available limit is now 20 everywhere within milliseconds.</li>
+  <li><strong>Capture, two days later.</strong> The merchant settles R$80 against N1. The ledger posts real entries (Ana's card account +80 owed, merchant payable −80), the hold moves to CAPTURED, posted becomes 780, holds 120, available still 100 − 80 = 20. Nothing double-counts because posted and held move together.</li>
+  <li><strong>Expiry, alternative ending.</strong> No capture arrives within the network's window. The hold expires, available goes back up by 80, an event records it. No ledger entries were ever written; nothing to reverse.</li>
+  <li><strong>Payment.</strong> Ana pays her bill. A payment event arrives, posted drops, available rises. If it arrives late or out of order, it's replayed into the ordered sequence and available is recomputed, never edited.</li>
+</ol>
+
+<h3 id="auth-deep">The hard problem: availability at the edge versus truth of the balance</h3>
+<p>The network requires the authoriser to be up when the cloud isn't. So where does the balance live? Three options; say all three, choose, and name the cost.</p>
+<table>
+  <tr><th>Option</th><th>How</th><th>Good</th><th>Cost</th></tr>
+  <tr><td>A. Central store</td><td>Every authorisation reads and writes the strongly consistent cloud database.</td><td>Simple, obviously correct.</td><td>A network hop and the database's failover time are on the critical path. During failover you decline everything.</td></tr>
+  <tr><td>B. Owned replica</td><td>Authorisers hold an in-memory copy per account, rebuilt from an ordered log plus snapshots. Exactly one replica owns each account and is the only one allowed to decide for it. The cloud stays the source of truth and pushes updates through the log.</td><td>Fast, survives a cloud outage, no database at the edge.</td><td>Ownership must be unique and fenced; a stale or unowned replica is precisely how money is spent twice. You must measure replica lag and refuse to decide when it's unknown.</td></tr>
+  <tr><td>C. Stand-in</td><td>When you're down, the network approves on your behalf under tight limits you configure.</td><td>Customers aren't declined at midnight.</td><td>You're approving blind. It's a risk decision with a measurable cost, not an engineering one.</td></tr>
+</table>
+<p>Nubank chose B, with the cloud as truth and Kafka syncing open-to-buy to every replica, and drove stand-in from about 1% of transactions to below one basis point. Say why: correctness lives in one place, speed lives at the edge, and the link between them is measured. Say the cost: fencing and lag monitoring are now safety-critical code.</p>
+
+<h3 id="auth-fail">Failures</h3>
+<table>
+  <tr><th>Failure</th><th>What you do</th></tr>
+  <tr><td>We approved, the network never got the answer</td><td>The hold exists. The network will send an advice or a reversal for N1; reconcile by its reference. Never delete the hold on our own initiative; let it expire or be reversed by the network's message.</td></tr>
+  <tr><td>Two authorisations race on Ana</td><td>Same owner, serialised, or a version check: one commits, the other re-evaluates on the new available limit. The loser may now decline. Never both approve.</td></tr>
+  <tr><td>Cloud unreachable from the edge</td><td>If the replica owns Ana and its lag is known and small, decide. If ownership or lag is unknown, fail closed above a threshold, and use stand-in only if Product and Risk accepted explicit limits. Never approve from a copy nobody owns.</td></tr>
+  <tr><td>Payment arrives late or out of order</td><td>Replay in order, recompute available, publish. No manual edit. If it changes a decision already made, that decision stands with its recorded inputs; history is evidence.</td></tr>
+  <tr><td>Capture exceeds the hold</td><td>Within network tolerance: accept, post the real amount. Beyond: reject per network rules and let the merchant dispute. Never silently widen the hold.</td></tr>
+  <tr><td>Replica lag spikes</td><td>Alert on lag per owner. Above threshold, the replica marks itself stale for affected accounts and declines with a specific reason so Ops can tell "declined because stale" from "declined because broke".</td></tr>
+</table>
+<p><strong>Metrics that page:</strong> decline-due-to-error rate, stand-in rate, replica lag by owner, oldest unreconciled authorisation, p99 of the decision path against the budget.</p>
+
+<h3>Rollout and ownership</h3>
+<p>Test cards, then small cohorts, then everyone; that is how they did it. Authoriser team owns the decision path; ledger team owns posting; Risk owns limit policy; network team owns the adapter. Biggest trade-off: sub-second availability at the edge versus strong consistency of the balance. The question to hand back: is any stand-in approval acceptable, and up to what amount?</p>
+
+<div class="recap"><p class="label">Say it in 60 seconds</p><p>We answer the network in a few hundred milliseconds with approve or decline; there is no "processing". The rule that matters is never approve from a stale available limit, because that's a double spend. An approval writes a hold and the decision atomically against the account's version; the hold lowers available, not posted. The ledger posts at capture. For availability, each account has exactly one owning replica with an in-memory copy fed from an ordered log; the cloud is the truth and pushes updates; the replica refuses to decide when its lag or ownership is unknown. Failures: the network not getting our answer means the hold exists and we reconcile by their reference; two authorisations race and the version check makes the loser re-evaluate; late payments replay, never edit.</p></div>
+
+<div class="say"><p class="label">Interview sentence</p><p>"Truth in the cloud, decisions at the edge, one fenced owner per account, and a measured link between them. A stale replica is how money gets spent twice, so unknown lag means decline, not guess."</p></div>
+
+<div class="trap"><p class="label">Avoid saying</p><p>"Post a final debit at authorisation." "Cache the limit in every replica and let them all decide." "Confuse the display balance with the authorisation balance." "Fail open by default" without naming it as a risk decision someone else owns.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="fraud">3. Real-time fraud decision in the payment path</h2>
+<p class="question">"Design a real-time fraud detection pipeline for PIX, cards and transfers." Nubank's risk platform is built on the same stack as everything else: Clojure, Datomic, Kafka.</p>
+
+<h3>The end result</h3>
+<p class="thesis">A payment is about to happen. Inside the authorisation budget, a decision service computes features, scores the payment against a versioned model and a versioned rule set, and returns allow, block, or step-up. It does not move money. Everything it decided, and every input it used, is recorded so the decision can be explained later. Slower, richer analysis runs asynchronously on the event stream and feeds back as labels and new rules. When the model is unavailable, a deterministic fallback decides, and whether that fallback is "allow" or "block" is a risk decision with a measured cost, not an engineering default.</p>
+
+<pre><code>Sync (inside the budget):   request → features (hot, from a store) → rules vN + model vM → decision + reasons → caller
+Async (on the event log):   every payment → richer features → review queues → labels → retraining → new versions
+Feedback trap:              blocked payments never produce a "was it fraud?" label; you must sample and review some</code></pre>
+
+<h3>The nouns</h3>
+<div class="rows">
+  <div><span>DecisionRequest</span><span>Who, how much, to whom, through which rail, plus the caller's idempotency key. The same request twice must return the same decision.</span></div>
+  <div><span>Feature snapshot</span><span>The exact feature values used, frozen at decision time. Recomputing them later gives different numbers; the snapshot is what makes the decision reproducible.</span></div>
+  <div><span>RuleSet version / Model version</span><span>Both versioned, both recorded on every decision. Rolling out a new version is a business event with a shadow period, not a config reload.</span></div>
+  <div><span>Decision</span><span>Allow, block, step-up (ask for a second factor), with reason codes. Recorded before it is returned.</span></div>
+  <div><span>Outcome label</span><span>What turned out to be true, arriving days later from chargebacks, customer reports and review. Joined back to the decision by id.</span></div>
+</div>
+
+<h3>Walkthrough</h3>
+<ol>
+  <li>The authoriser (or PIX orchestrator) calls the decision service with a request and its key. Budget: a slice of the authorisation budget, say 50 ms.</li>
+  <li>Features come from a hot store that async jobs keep fresh (velocity counters, device history, counterparty risk). Anything not in the store within the budget is treated as missing, and missing is a known input, not an error.</li>
+  <li>Rules vN run first (hard blocks, allow-lists), then model vM scores. Decision plus reasons plus the feature snapshot plus both versions are written, then returned. The write is small and fast; if even that is too slow, the decision is returned and the record is written from a durable local queue, never dropped.</li>
+  <li>The payment event lands on Kafka regardless of the decision. Async consumers compute richer features, route suspicious cases to review queues (a chargeback-shaped case system), and update the hot store.</li>
+  <li>Weeks later labels arrive. They join to decisions by id. Precision and recall per rail and per market are computed against them, and that is what decides the next model version.</li>
+</ol>
+
+<h3>The hard problem: where synchronous stops</h3>
+<p>Everything you'd like to know takes longer than the budget. The line is: inside the budget, only what the hot store can answer plus a model small enough to score in time; everything else async, feeding back as features for the <em>next</em> decision. Push the interviewer to name the budget and then defend what you shed first when it can't be met (usually the model, keeping the rules).</p>
+
+<h3>Failures</h3>
+<table>
+  <tr><th>Failure</th><th>What you do</th></tr>
+  <tr><td>Model service down</td><td>Deterministic fallback: rules only, with a configured default. Fail open or closed is Risk's decision per rail and amount band, made in advance and recorded. Alert on fallback rate.</td></tr>
+  <tr><td>Feature store stale</td><td>Missing features are inputs, not errors. The model was trained with missingness; the decision records which features were missing. Alert on staleness per feature.</td></tr>
+  <tr><td>Same request twice</td><td>Same key, same decision returned. Never re-score; the second score might differ and you'd have two decisions for one payment.</td></tr>
+  <tr><td>New model blocks far too much</td><td>Shadow first (score without acting), compare against the live version, roll out by cohort with a kill switch back to the previous version. Never a global switch on day one.</td></tr>
+  <tr><td>Blocked payments have no labels</td><td>Sample a small share of would-be blocks to allow or step-up, with a capped loss budget, so the model keeps learning what a block would have been. Say this unprompted; it's the mark of someone who has run one of these.</td></tr>
+</table>
+
+<div class="say"><p class="label">Interview sentence</p><p>"The decision service decides inside the budget and never moves money. Every decision records its inputs, rules version and model version so it can be explained. Degraded mode is a deterministic fallback whose direction is a risk decision, and the feedback loop has to be designed because blocked payments never label themselves."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="pix">4. Sending a PIX payment to another bank</h2>
+<p class="question">"Design PIX processing at scale." Instant, 24/7, settles in seconds through the central bank's system.</p>
+
+<h3>The end result</h3>
+<p class="thesis">We orchestrate; we do not rebuild PIX. One command from the customer produces one debit in our ledger, into a clearing account, and one submission to the rail with a stable end-to-end id. The customer sees Processing until the rail confirms; then the clearing entry is settled. A timeout from the rail means unknown: query by the same id before doing anything else. Every day, reconcile our submissions against the rail's records.</p>
+
+<pre><code>Command (key K) → ledger: Ana −100, PIX clearing +100  [one atomic commit, Processing]
+              → outbox → rail adapter sends with end-to-end id E2E-1
+Rail confirms → clearing −100, settlement account +100  [Completed]
+Rail rejects  → clearing −100, Ana +100 (linked reversal)  [Failed, money back]
+Rail silent   → query E2E-1; still unknown after bounded time → Ops queue, never a second submission</code></pre>
+
+<h3>The nouns</h3>
+<p><strong>PaymentIntent</strong> (the customer's command, its key, its state), <strong>LedgerCommand</strong> (the debit into clearing, with its own key), <strong>RailSubmission</strong> (end-to-end id, attempts, the rail's response), <strong>ReconciliationItem</strong> (sent, not yet confirmed, aged). The end-to-end id is generated once per intent and reused on every attempt; the rail dedupes on it.</p>
+
+<h3>Failures</h3>
+<ul>
+  <li><strong>Rail timeout.</strong> Unknown. Query by E2E-1. If completed: settle clearing. If rejected: reverse. If unknown after the rail's own window: Ops. Never a fresh submission with a new id; that is how a customer pays rent twice.</li>
+  <li><strong>Our commit succeeded, adapter crashed before sending.</strong> The outbox row is there; the adapter retries with the same E2E-1. Customer still sees Processing; money is in clearing, fully accounted for.</li>
+  <li><strong>Rail confirms a payment we have no record of.</strong> Reconciliation exception; never invent an intent. Investigate.</li>
+  <li><strong>10x on payday at 18:00.</strong> The ledger's hot account is PIX clearing: scope it per shard and per hour, roll up by projection. Adapters scale horizontally because every submission is keyed.</li>
+</ul>
+
+<div class="say"><p class="label">Interview sentence</p><p>"One debit per command into clearing, one submission per intent with a stable end-to-end id, Processing until the rail answers, unknown after a timeout means query before retry, and daily reconciliation against the rail's own records."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="others">5. Four more prompts, swapped</h2>
+<p class="question">Less likely, but each one is thirty seconds to a stage-1 sentence if you know which family it's in.</p>
+
+<table>
+  <tr><th>Prompt</th><th>Family and boundary</th><th>Rules that matter</th><th>Nouns</th><th>The hard problem</th></tr>
+  <tr><td>Lending / installments</td><td>Long-running. We own the loan contract and schedule; the ledger posts the money.</td><td>Schedule sums to principal plus interest; each installment posting is idempotent; contract versions are immutable, renegotiation creates a new version.</td><td>Loan, Contract version, Schedule, Installment, Posting</td><td>Recalculating after early payment or renegotiation without rewriting history; accrual jobs that must run exactly once per day (a claimed, dated run, like the batch file).</td></tr>
+  <tr><td>Account onboarding / KYC</td><td>Long-running. Steps, documents, deadlines, external checks. It is chargebacks with different nouns.</td><td>Valid transitions only; document versions immutable; every decision records actor and policy version; PII protected.</td><td>OnboardingCase, CaseEvent, Document, ExternalCheck</td><td>Uncertain external results (bureau timeouts) and re-verification when rules change: a versioned re-evaluation command, never a silent reread of config.</td></tr>
+  <tr><td>Notifications platform</td><td>Neither; a delivery service. We deliver messages for other teams; we do not decide business events.</td><td>At-least-once with dedupe by event id; consent and quiet hours; no PII in logs.</td><td>Message, Template version, Preference, DeliveryAttempt</td><td>Payday bursts and duplicates; ordering only per customer; eventual consistency is fine and you should say so.</td></tr>
+  <tr><td>Transaction history / statements</td><td>A projection of the ledger. Never the source of truth.</td><td>Rebuildable from the journal; shows Processing honestly; retained for years.</td><td>FeedItem, Statement period, Checkpoint</td><td>Rebuilding a corrupted projection while it is being read (build a new one alongside, switch atomically), and the lag the customer notices: "I paid but it's not in my list".</td></tr>
+</table>
+<p>Notice the split: prompts that move money look like the ledger; prompts that manage a long-running process look like chargebacks; two of these are neither, and saying "this one is a projection" or "this one is a delivery service, eventual consistency is fine" in stage 1 is itself a strong answer.</p>
+
+<!-- ============================================================ -->
+<h2 id="interruptions">6. The interruptions, one line each</h2>
+<p class="question">Whatever the prompt, expect one of these every ten minutes. The one-line answers, by prompt.</p>
+<table>
+  <tr><th>Interruption</th><th>Authoriser / limit</th><th>Fraud decision</th><th>PIX</th></tr>
+  <tr><td>10x volume</td><td>Decision path scales by account owner; the limit is hot accounts and replica fan-out; measure lag per owner.</td><td>Feature store reads and model serving scale horizontally; the limit is the budget, so shed the model before the rules.</td><td>Adapters scale by keyed submission; the limit is the PIX clearing account, scope it.</td></tr>
+  <tr><td>Dependency down</td><td>Cloud down: owned replica with known lag decides; unknown lag declines; stand-in only under accepted limits.</td><td>Model down: deterministic fallback, direction chosen by Risk in advance.</td><td>Rail down: money in clearing, Processing shown, submissions queued with stable ids.</td></tr>
+  <tr><td>As of three months ago</td><td>Replay holds, captures and payments to that timestamp; available limit falls out.</td><td>The decision record with its feature snapshot and versions is the answer as it was; nothing to recompute.</td><td>Sum the entries; the intent's event history shows every state it passed through.</td></tr>
+  <tr><td>Two at once</td><td>One fenced owner or version check; the loser re-evaluates.</td><td>Same key returns the same decision.</td><td>Same intent key returns the same debit; same E2E id at the rail.</td></tr>
+  <tr><td>Improve performance</td><td>Only read-evaluate-write on the path; move any cloud call off it; the biggest win is usually a synchronous call that shouldn't be there.</td><td>Precompute features async; keep the sync model small; record asynchronously from a durable local queue.</td><td>The commit is the customer's latency; rail time is Processing, not latency.</td></tr>
+</table>
+<p>The five-step scalability answer (ask what grew, name a measurable bottleneck, scale what scales, say what doesn't, protect the invariants) is in section 11 of the ledger notes and section 2 of the chargeback notes; it is identical here.</p>
+
+<!-- ============================================================ -->
+<h2 id="cheat">7. Interview sentences, collected</h2>
+<ol class="cheat">
+  <li><em>"Is this deciding about money in real time, or running a process over days? That tells me which shape I need before I draw anything."</em><span>Stage 1 for any prompt.</span></li>
+  <li><em>"We answer the network in a few hundred milliseconds with approve or decline; there is no processing state. Never approve from a stale available limit; that is a double spend."</em><span>Authoriser, stage 2.</span></li>
+  <li><em>"Truth in the cloud, decisions at the edge, one fenced owner per account, and a measured link between them. Unknown lag means decline, not guess."</em><span>Authoriser, stage 5.</span></li>
+  <li><em>"A limit is a policy decision and a real-time constraint; I separate the offline decisioning that sets it from the low-latency check that enforces it, including unsettled holds."</em><span>Credit-limit framing.</span></li>
+  <li><em>"The decision service decides inside the budget and never moves money; every decision records its inputs and versions; degraded mode is a deterministic fallback whose direction is a risk decision."</em><span>Fraud.</span></li>
+  <li><em>"Blocked payments never label themselves, so I sample a capped share of would-be blocks to keep the model honest."</em><span>Fraud, the unprompted one.</span></li>
+  <li><em>"One debit per command into clearing, one submission per intent with a stable end-to-end id, Processing until the rail answers, query before retry."</em><span>PIX.</span></li>
+  <li><em>"This one is a projection of the ledger, never the source of truth; it must be rebuildable and must show Processing honestly."</em><span>Statements / feed.</span></li>
+  <li><em>"Failed messages go to a dead-letter topic with the error attached so nothing is lost and a human can replay after the fix; a tripped circuit breaker pauses the consumer, turning a failure storm into measurable lag."</em><span>Operational pattern Nubank named; use on any prompt with Kafka.</span></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="practice">8. Ten minutes each</h2>
+<p>This is insurance, so don't over-invest. For each of the authoriser, fraud and PIX prompts, do this once with a timer:</p>
+<ol>
+  <li>Say the stage-1 sentence and name the family. (30 seconds)</li>
+  <li>Say the rules. (60 seconds)</li>
+  <li>Draw the diagram from memory and narrate the write path, naming the key on every arrow. (4 minutes)</li>
+  <li>State the hard problem and your choice with its cost. (2 minutes)</li>
+  <li>Take two interruptions from section 6. (2 minutes)</li>
+</ol>
+<p>Then go back to chargebacks and the ledger; that's where the hours should go. If a prompt arrives that isn't in this guide at all, the first sentence still works: decide the family, then the seven stages.</p>
+
+<footer>
+  Study notes compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built", the worked credit-limit prompt, and the swap table) and 2026 candidate reports. The Nubank authoriser facts (own Mastercard authoriser in data centres, in-memory state rebuilt from a Kafka log plus snapshots, cloud as source of truth, stand-in driven below one basis point) are from the guide's summary of Nubank's engineering talks; use them as evidence for the way of thinking, not as claims about current components.
+</footer>
+</main>
+</div>
+</body>
+</html>

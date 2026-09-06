@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The ledger, end to end — Nubank lead system design study notes</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  a { color: var(--strong); }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 68ch);
+    gap: 56px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 48px 32px 120px;
+  }
+  nav.toc {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a {
+    display: block;
+    padding: 5px 0 5px 14px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 {
+    font-size: 44px;
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 20px;
+    max-width: 22ch;
+  }
+  header.hero p.lede {
+    font-size: 21px;
+    line-height: 1.5;
+    margin: 0 0 20px;
+    color: var(--ink-soft);
+  }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+  header.hero .source a { color: var(--ink-soft); }
+
+  h2 {
+    font-size: 30px;
+    line-height: 1.2;
+    font-weight: 500;
+    margin: 72px 0 8px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+  }
+  h2 + p.question {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    font-style: italic;
+  }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--paper-tint);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  pre {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.55;
+    background: var(--paper-tint);
+    border: 1px solid var(--rule);
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 20px;
+    border-radius: 4px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis {
+    font-size: 22px;
+    line-height: 1.45;
+    padding: 4px 0 4px 22px;
+    border-left: 4px solid var(--strong);
+    margin: 0 0 32px;
+  }
+
+  .say {
+    background: var(--strong-bg);
+    color: var(--strong-ink);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 28px 0;
+  }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+
+  .trap {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-radius: 6px;
+    padding: 14px 20px;
+    margin: 24px 0;
+  }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0; }
+
+  .recap {
+    background: var(--eventual-bg);
+    color: var(--eventual-ink);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 28px 0;
+  }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 12ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+
+  .cheat li { margin-bottom: 14px; }
+  .cheat li em { color: var(--ink); }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); font-style: normal; margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#end-result">1. The end result</a></li>
+    <li class="sub"><a href="#nouns">The six nouns</a></li>
+    <li class="sub"><a href="#walkthrough">One transfer, start to finish</a></li>
+    <li class="sub"><a href="#failures">Three failure moments</a></li>
+    <li class="sub"><a href="#clearing">Cross-shard: the clearing account</a></li>
+    <li class="sub"><a href="#stages">Mapping to the 7 stages</a></li>
+    <li><a href="#command">2. The transfer command and the key</a></li>
+    <li><a href="#validate">3. Validation and the account version</a></li>
+    <li><a href="#commit">4. The single atomic commit</a></li>
+    <li><a href="#success">5. Why success returns from the commit</a></li>
+    <li><a href="#outbox">6. The outbox worker, and Kafka down</a></li>
+    <li><a href="#kafka">7. Why Kafka is not the truth</a></li>
+    <li><a href="#projections">8. Projections and drift</a></li>
+    <li><a href="#cheat">9. Interview sentences</a></li>
+    <li><a href="#followups">10. Follow-up answers</a></li>
+    <li><a href="#scaling">11. Scalability and performance probes</a></li>
+    <li><a href="#practice">12. Practice next</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>The ledger, end to end</h1>
+  <p class="lede">How every piece of Nubank's authoritative-ledger design fits together, written to be understood first and then practised backwards through the seven interview stages.</p>
+  <p class="source">Compiled from a study session on 4 September 2026, working from the <em>Nubank Lead System Design Study Guide</em> (Mock A: authoritative ledger and transfers). Each section is one question that was asked; the diagram nodes in section 1 correspond to sections 2 through 8.</p>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="end-result">1. The end result</h2>
+<p class="question">Explain in simple terms the design of the ledger: how all the pieces work together, so I can work from the beginning and practise mock interviews.</p>
+
+<p class="thesis">The ledger is a notebook where every money movement is written as a pair of balancing lines, saved in one single database commit, and only after that commit does the rest of the world get told about it.</p>
+
+<p>Everything else in the design is a consequence of that sentence. Here is the complete system you would arrive at by the end of the interview:</p>
+
+<figure>
+<svg viewBox="0 0 680 570" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ledger transfer flow</title>
+<desc>A transfer command goes through an idempotency check, validation, and one atomic database commit that returns success; an outbox worker then publishes the event to Kafka, which feeds projections like the transaction feed and notifications.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="180" y="40" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Transfer command</text><text x="300" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana sends Bruno R$10, key K1</text></g>
+<line x1="300" y1="96" x2="300" y2="118" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="180" y="120" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Idempotency check</text><text x="300" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Seen key K1? Return old result</text></g>
+<line x1="300" y1="176" x2="300" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="180" y="200" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Validate</text><text x="300" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Currency, funds, version</text></g>
+<line x1="300" y1="256" x2="300" y2="278" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="150" y="280" width="300" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">One atomic commit</text><text x="300" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Entries + balances + key + outbox</text></g>
+<line x1="300" y1="336" x2="300" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="180" y="360" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Return success</text><text x="300" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Money is durable now</text></g>
+<line x1="450" y1="308" x2="478" y2="308" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="480" y="280" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="560" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox worker</text><text x="560" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Retries until sent</text></g>
+<line x1="560" y1="336" x2="560" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="480" y="360" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="560" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Kafka</text><text x="560" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Spreads the news</text></g>
+<line x1="560" y1="416" x2="560" y2="438" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<g><rect x="480" y="440" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="560" y="458" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Projections</text><text x="560" y="476" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Feed, alerts, fraud</text></g>
+<rect x="180" y="516" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="202" y="523" dominant-baseline="central" font-size="12" fill="#3E4A63">Strongly consistent: this is where money lives</text>
+<rect x="180" y="540" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="202" y="547" dominant-baseline="central" font-size="12" fill="#3E4A63">Eventually consistent: news about money, rebuildable</text>
+</svg>
+<figcaption>The write path (left column) is synchronous and strongly consistent. The customer's answer leaves at "Return success". Everything to the right happens afterwards and may be late without ever making that answer false.</figcaption>
+</figure>
+
+<h3 id="nouns">The six nouns</h3>
+<p>Think of a paper ledger book:</p>
+<div class="rows">
+  <div><span>Account</span><span>A bucket of value in one currency, with a version number: a counter that goes up on every change.</span></div>
+  <div><span>Transaction</span><span>The business event: "Ana sent Bruno R$10", stamped with the client's idempotency key. Nubank calls it a <em>movement</em>; either word is fine.</span></div>
+  <div><span>Entry</span><span>One signed line against one account. The R$10 transfer is two entries: Ana −10, Bruno +10. They always sum to zero. Entries are never edited; a mistake is fixed with a new, opposite entry that points at the wrong one.</span></div>
+  <div><span>Account aggregate</span><span>The cheat-sheet summary so you don't re-add years of entries every time Ana pays: posted balance, held amount, available balance, version. It must always be rebuildable from the entries.</span></div>
+  <div><span>Hold</span><span>A reservation (card authorization) that lowers <em>available</em> without touching <em>posted</em>.</span></div>
+  <div><span>Outbox row</span><span>A note saying "publish this event later."</span></div>
+</div>
+
+<h3 id="walkthrough">One transfer, start to finish</h3>
+<ol>
+  <li>Ana's app sends the command with key <code>K1</code>. Because the network can deliver it twice, the key is the thing that makes "twice" harmless.</li>
+  <li>The ledger looks up <code>K1</code>. If it already exists with the same payload, it returns the original result and stops. Same key, different payload → deterministic error, never processed.</li>
+  <li>It checks: accounts exist, same currency, Ana has R$10 <em>available</em> (not just posted), and her account version is the one it read. Two concurrent debits can't both win; one of them sees a stale version and retries.</li>
+  <li>In <strong>one database transaction</strong> it writes: the transaction, both entries, the updated aggregates for Ana and Bruno, the idempotency record, and the outbox row. All or nothing. This is the whole trick: if the key and the money were saved in separate steps, a crash between them would let money move twice.</li>
+  <li>Commit succeeds → Ana gets "done". Not because Kafka got a message. Because the database committed.</li>
+  <li>Afterwards, a worker reads the outbox and publishes to Kafka. Consumers build the transaction feed, send the push notification, feed fraud models. If Kafka is down for six hours, money is still right; the outbox just catches up. Consumers deduplicate because they may see a message twice.</li>
+</ol>
+
+<h3 id="failures">Why it's shaped this way: the three failure moments</h3>
+<ul>
+  <li>Timeout <em>before</em> commit: nothing moved, a retry with <code>K1</code> is just a first attempt.</li>
+  <li>Timeout <em>after</em> commit: the retry with <code>K1</code> returns the same answer. You never infer the outcome from a timeout, and you never send a fresh key.</li>
+  <li>After commit but event lost: the outbox republishes.</li>
+</ul>
+<p>And the one rule that protects everything: if the ledger can't verify available funds (shard down, failover in progress), it <strong>refuses the debit</strong> rather than approving from a cache. A few seconds of "try again" beats an unrecoverable loss.</p>
+
+<h3 id="clearing">The one extension: when payer and payee live in different databases</h3>
+<p>You can't update two databases in one commit, so you add a <strong>clearing account</strong> as a waiting room.</p>
+<pre><code>Leg A (Ana's shard):   Ana      −10    Clearing +10    key = transferId:legA
+Leg B (Bruno's shard): Clearing −10    Bruno    +10    key = transferId:legB</code></pre>
+<p>Each leg has its own stable key, and a durable progress record says which leg is done. Between legs the customer sees <em>Processing</em>, the money is fully accounted for (it's in clearing), and if leg B can never complete, policy decides whether to reverse leg A with a new linked entry. You monitor clearing by amount <em>and</em> by age of the oldest item.</p>
+
+<h3 id="stages">How this maps back to the 7 stages for your mocks</h3>
+<p>The end picture above is stage 4 plus the stage 5 extension. Working backwards:</p>
+<table>
+  <tr><th>Stage</th><th>What you do</th></tr>
+  <tr><td>1. Clarify</td><td>Decide you <em>are</em> the ledger (not a wallet on top of one, not a PIX adapter). Agree what must finish before "done", whether a Processing state is allowed, and rough scale.</td></tr>
+  <tr><td>2. Invariants</td><td>State the rules the picture enforces: balanced entries, effectively-once, immutable history, no debit from stale funds, distinct authorize / post / clear / settle, every external movement reconcilable.</td></tr>
+  <tr><td>3. Domain model</td><td>Introduce the six nouns, and nothing else.</td></tr>
+  <tr><td>4. Architecture</td><td>The diagram: one strongly consistent write boundary, outbox, Kafka for news, projections for reads.</td></tr>
+  <tr><td>5. Deep dive</td><td>The cross-shard transfer with a clearing account; compare with staying unpartitioned and with 2PC.</td></tr>
+  <tr><td>6. Failures</td><td>Point at each arrow and ask: what committed, what retries with which key, what can duplicate, what does the customer see, which metric pages someone, what is the safe operator action.</td></tr>
+  <tr><td>7. Roadmap</td><td>One transfer type, one country, shadow the old ledger, small cohort with a kill switch, partition only when a measurement says so.</td></tr>
+</table>
+
+<div class="say"><p class="label">The one sentence that ties it together</p><p>"Money becomes durable in the atomic store; events describe that fact afterwards."</p></div>
+<p>If you can say that and defend why the idempotency key lives inside the same commit, most of the follow-up questions in the guide fall out naturally.</p>
+
+<!-- ============================================================ -->
+<h2 id="command">2. The transfer command and the idempotency key</h2>
+<p class="question">What exactly is in a transfer command, and why does the client generate the idempotency key?</p>
+
+<h3>What's in the command</h3>
+<pre><code>{
+  "idempotency_key": "K1",
+  "source_account": "acc_ana",
+  "destination_account": "acc_bruno",
+  "amount": 1000,
+  "currency": "BRL",
+  "type": "INTERNAL_TRANSFER",
+  "reference": "Rent split",
+  "requested_at": "2026-09-04T14:02:11Z"
+}</code></pre>
+<p>Plus, from the transport layer rather than the body: the authenticated caller (which app, which customer, which service) and an optional expected account version if you want the client to participate in concurrency control.</p>
+<ul>
+  <li><strong>Amount is an integer in minor units</strong> (1000 = R$10.00), never a float. Floats round; money doesn't.</li>
+  <li><strong>Currency is explicit</strong> even for a single-currency product, because the ledger balances within a currency and the day you add a second one you don't want to migrate every command.</li>
+  <li><strong>Type</strong> decides which posting rule applies: an internal transfer is two entries; a PIX-out is three (customer, clearing, and later the rail's settlement account); a purchase may carry a fee leg.</li>
+  <li><strong>No balances, no entries, no transaction id.</strong> The client says what it <em>wants</em>; the ledger decides what gets <em>written</em>. The transaction id is minted by the ledger on commit and returned in the response.</li>
+</ul>
+
+<h3>Why the client generates the key</h3>
+<p>Because the client is the only party that knows whether it is retrying.</p>
+<p>Play out the alternative. The ledger generates the key on arrival. Ana taps "send", the request reaches the ledger, it commits, and the response is lost in the network. Her app sees a timeout and retries. The ledger receives what looks like a brand-new request, mints a new key, and moves R$10 again. The server had no way to know these two arrivals were the same intent.</p>
+<p>Now the client generates it. Ana taps "send", the app generates <code>K1</code> <em>once</em> and stores it locally, and every retry of that tap carries <code>K1</code>. First arrival commits and stores <code>K1</code> with the result. Second arrival finds <code>K1</code>, returns the original transaction. If the app crashes mid-retry and restarts, it still has <code>K1</code> on disk and can ask "what happened to K1?" and the ledger answers with certainty.</p>
+<p>The general principle: <strong>the identity of a business intention must be born where the intention is born.</strong> For the mobile app that's the tap. For an internal service calling the ledger it's derived from <em>its</em> own durable state: a chargeback platform uses <code>case_id:PROVISIONAL_CREDIT:v1</code>, a transfer saga uses <code>transfer_id:LEG_B</code>. Never <code>uuid()</code> on each retry.</p>
+
+<h3>What the ledger does with it</h3>
+<p>The key is scoped: unique on <code>(caller, idempotency_key)</code>, so two different apps can both use "K1" without colliding. Stored alongside it: a hash of the payload and the resulting transaction id. On arrival:</p>
+<ul>
+  <li>Key not found → process normally, store the key in the same commit.</li>
+  <li>Key found, payload hash matches → return the stored transaction, don't touch money.</li>
+  <li>Key found, payload hash differs → return a deterministic conflict error. The caller reused one identity for two different intentions; that's a client bug or misuse, and the safe move is to process neither the new payload nor overwrite the old result.</li>
+</ul>
+<p>Keys need a retention window (say 24–72 hours for customer-initiated commands, longer for service commands) so the table doesn't grow forever, and that window has to be longer than any plausible retry horizon.</p>
+
+<h3>What the interviewer is testing</h3>
+<p>Whether you can separate <em>transport delivery</em> from <em>business effect</em>. Kafka, HTTP and the mobile network can all deliver a message twice; that's normal and unfixable. Effectively-once isn't something the network gives you. It's something the ledger <em>makes true</em> by keying every command on an identity chosen by whoever formed the intent.</p>
+
+<div class="say"><p class="label">Interview sentence</p><p>"The client owns the key because only the client knows a retry is a retry. The ledger stores the key atomically with the posting, so the same key always returns the same transaction and a conflicting payload is rejected, never reinterpreted."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="validate">3. Validation and the account version</h2>
+<p class="question">What does the ledger validate before committing, and why is the account version needed? (Asked four times; the "Validate" box in the diagram fires it on every tap.)</p>
+
+<h3>What gets validated</h3>
+<ol>
+  <li><strong>Idempotency key.</strong> Seen before with the same payload → return the old result; same key, different payload → conflict.</li>
+  <li><strong>Accounts.</strong> Both exist, are open, and are allowed to post this kind of entry (a customer account can't debit the fee-income account, for example).</li>
+  <li><strong>Currency.</strong> Both legs and the transaction are in the same currency and ledger book. Cross-currency is two linked balanced transactions plus rate/rounding accounts, never one "R$10 = $2" sum.</li>
+  <li><strong>Available funds.</strong> Ana's <em>available</em> balance (posted minus open holds) covers R$10. Not posted balance, because a card hold may already be reserving part of it.</li>
+</ol>
+<p>All of this happens inside the same database transaction as the write, reading the current committed state, not a cache.</p>
+
+<h3>Why the account version</h3>
+<p>Picture two requests hitting Ana's account at the same instant: a R$80 transfer to Bruno and a R$80 card purchase. Ana has R$100. Both read "available = 100", both pass validation, both write. Ana is now at −60 and the invariant "no debit from stale funds" just broke, even though each request individually did everything right.</p>
+<p>The version is a counter on the account aggregate that increments on every change. Every write is conditional:</p>
+<pre><code>UPDATE account
+   SET balance = 20, version = 419
+ WHERE id = 'acc_ana' AND version = 418;</code></pre>
+<p>The first request wins and bumps the version to 419. The second request's update matches zero rows, so its whole transaction rolls back. It then re-reads (available is now 20), re-validates, and fails cleanly with insufficient funds.</p>
+<p>So the version turns "read then write" into "read then write <em>only if nothing changed since I read</em>." It's optimistic concurrency: no long-held locks, no deadlocks between shards, and a retry is cheap because nothing committed.</p>
+
+<h3>Two things interviewers push on</h3>
+<ul>
+  <li><em>Why not just row-lock?</em> You can. <code>SELECT ... FOR UPDATE</code> on the account row serializes the same way. Version is friendlier when contention is low; locking is simpler when you already hold a transaction. For multi-account transactions, lock in a deterministic order (say, by account id) so two transfers Ana→Bruno and Bruno→Ana can't deadlock.</li>
+  <li><em>Why not use timestamps?</em> Clocks on different machines disagree. The version is the authoritative ordering per account; wall-clock time is metadata. This also matters for late-arriving events: a balance is a cumulative sum over ordered entries, so order is part of correctness.</li>
+</ul>
+
+<h3>What the version is <em>not</em></h3>
+<p>It isn't a global sequence number and it isn't a timestamp. It's per account, which is exactly why it scales: Ana's version and Bruno's version never contend with each other, and a busy merchant account can't slow down a quiet one. When a transaction touches two accounts you check both versions in the same commit, locking them in a fixed order (by account id) so opposite-direction transfers can't deadlock.</p>
+
+<div class="recap">
+  <p class="label">60-second recap, as you'd say it in the room</p>
+  <p>Inside the same transaction it checks the idempotency key, that both accounts exist and may take this entry type, that currency and book match, and that available funds (posted minus holds) cover the amount.</p>
+  <p>Two R$80 debits race against Ana's R$100. Both read available = 100, both pass the check. Without a version, both commit and Ana is at −60. With a version, each write is <code>WHERE version = 418</code>; the first wins and bumps to 419, the second matches zero rows, rolls back, re-reads available = 20, and fails cleanly. The version converts "read then write" into "write only if nothing changed since I read."</p>
+</div>
+
+<div class="say"><p class="label">Interview sentence</p><p>"The hold check, funds check and aggregate update are atomic with the account version, so two concurrent debits can both read the same balance but only one can commit against it."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="commit">4. The single atomic commit</h2>
+<p class="question">What rows are written together, and why must they be in one transaction?</p>
+
+<h3>The five rows</h3>
+<p>For "Ana sends Bruno R$10, key K1", one <code>BEGIN ... COMMIT</code> writes:</p>
+<ol>
+  <li><strong>Transaction</strong>: <code>tx_9182</code>, type INTERNAL_TRANSFER, amount 1000 BRL, status POSTED, created_at.</li>
+  <li><strong>Two entries</strong>: (<code>tx_9182</code>, acc_ana, −1000) and (<code>tx_9182</code>, acc_bruno, +1000). Together they sum to zero.</li>
+  <li><strong>Two account aggregate updates</strong>: Ana: posted 10000 → 9000, available recomputed, version 418 → 419. Bruno: posted +1000, version bumped. Each <code>UPDATE ... WHERE version = &lt;what I read&gt;</code>.</li>
+  <li><strong>Idempotency record</strong>: (caller, "K1", payload_hash, tx_9182). Unique constraint on (caller, key).</li>
+  <li><strong>Outbox row</strong>: event TRANSFER_POSTED, payload, partition key acc_ana, published_at NULL.</li>
+</ol>
+<p>The reads that gate the writes (key lookup, account status, currency, available funds) happen inside the same transaction, so they see committed state and the conditional update guards against anyone changing it underneath you.</p>
+
+<h3>Why one transaction, row by row</h3>
+<p>Take each pair out of the commit and watch what a crash in the gap does:</p>
+<table>
+  <tr><th>If you split…</th><th>…a crash in the gap produces</th></tr>
+  <tr><td>Entries without aggregate</td><td>Journal says Ana has 9000, balance row says 10000. The next debit is authorized against money that's gone.</td></tr>
+  <tr><td>Aggregate without entries</td><td>Balance dropped by 10 with no record of why. Auditors can't explain it, reconciliation can't rebuild it, no reversal target.</td></tr>
+  <tr><td>Money without key</td><td>Commit succeeds, crash before saving K1. Retry with K1 → never seen → processed again → R$20 moved. The most common way ledgers double-post.</td></tr>
+  <tr><td>Key without money</td><td>K1 saved, crash before posting. Retry finds K1, returns "already done" for a transaction that doesn't exist. Ana sees "Sent"; nothing moved.</td></tr>
+  <tr><td>Money without outbox</td><td>Transfer committed, event never exists. Feed, notification and fraud never see it, and there is nothing to retry.</td></tr>
+  <tr><td>Outbox without money</td><td>Worker publishes TRANSFER_POSTED for a transfer that rolled back. Downstream acts on a ghost.</td></tr>
+</table>
+<p>Every gap is a distinct class of financial bug. One transaction removes all six at once, which is why the guide's opening architecture insists on a single strongly consistent write boundary before any talk of sharding.</p>
+
+<h3>What "atomic" buys you that nothing else does</h3>
+<p>Atomicity means the database either applies all five writes or none. Combined with the unique constraint on the key and the conditional update on the version, you get three guarantees from one primitive:</p>
+<ul>
+  <li><strong>Effectively-once</strong>: the key and the money are inseparable.</li>
+  <li><strong>Balance integrity</strong>: entries and aggregate can never disagree at rest.</li>
+  <li><strong>Guaranteed publication</strong>: an event exists if and only if the money moved.</li>
+</ul>
+<p>Try to get those from three separate systems (a KV store for keys, a DB for balances, Kafka for events) and you're writing a distributed transaction or a saga to glue them, for a problem one Postgres transaction already solves.</p>
+
+<h3>When it stops being one transaction</h3>
+<p>The moment Ana and Bruno live in different databases. Then you can't get the two aggregate updates into one commit, and you introduce the clearing account: leg A (Ana → clearing) is one atomic commit in Ana's shard with all its own rows, leg B (clearing → Bruno) is another in Bruno's. Each leg is internally atomic; the transfer as a whole is a saga with a durable progress record. The invariant "every leg is one atomic commit" never changes; only the number of legs does.</p>
+
+<div class="say"><p class="label">Interview sentence</p><p>"In one commit I write the transaction, its entries, both account aggregates with a version check, the idempotency record and the outbox row. Splitting any of them creates a specific financial bug: double-posting, an unexplained balance, or a lost event. One atomic boundary is the cheapest place to prove correctness."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="success">5. Why success returns from the commit</h2>
+<p class="question">Why does the ledger return success from the database commit and not from Kafka?</p>
+
+<p>Because "success" has to mean something the bank can stand behind, and only the commit makes that true.</p>
+
+<h3>What Ana is being told</h3>
+<p>When her app shows "Sent", the promise is: your balance went down, Bruno's went up, and neither of those can be undone by a crash. The database commit is the exact moment that promise becomes true. Before it, nothing has happened; after it, both entries, both balances and the idempotency record are on disk together. There's no more honest point to say "done."</p>
+<p>Kafka receiving the event adds nothing to that promise. The event is a <em>report</em> that the transfer happened. Waiting for the report before confirming the fact is backwards.</p>
+
+<h3>What goes wrong if you wait for Kafka</h3>
+<ul>
+  <li><strong>Availability coupling.</strong> Kafka slow → every transfer slow. Kafka down → every transfer fails, even though the ledger is healthy and the money already moved. You've made a messaging outage into a banking outage.</li>
+  <li><strong>Lying to the customer.</strong> Worse: the commit succeeded, Kafka timed out, so you return an error. Ana sees "failed", but R$10 left her account. She retries with a <em>new</em> key (because her app thinks the first one failed), and now she's sent R$20. Returning failure after a real commit is the most dangerous thing a ledger can do.</li>
+  <li><strong>Latency for no gain.</strong> A synchronous publish adds a network round trip to a broker on the critical path, for a step the customer doesn't need before seeing "Sent."</li>
+</ul>
+
+<h3>What goes wrong if you return success <em>before</em> the commit</h3>
+<p>The mirror mistake: some designs ack the request, drop it on a queue and process later. Now "Sent" means "we'll try." If the queue consumer later finds insufficient funds, you have to walk back a confirmation you already gave. For money that's not acceptable unless the product explicitly designed a <em>Processing</em> state for it, which is exactly what you do for <em>external</em> rails where you genuinely don't control the outcome.</p>
+
+<h3>The rule this protects</h3>
+<p>Success is a business state, not an HTTP 200. Define it as "the local financial commitment required by the product promise is durable." For an internal transfer that's debit and credit committed. For a PIX-out it's the debit plus a durable <em>Processing</em> record: you return "accepted", not "completed", because the external leg isn't yours to promise.</p>
+<p>In the diagram: commit → return success → outbox worker publishes → Kafka → projections. The customer's response leaves at step two. Everything after is asynchronous and can be late without ever making step two false.</p>
+
+<div class="say"><p class="label">Interview sentence</p><p>"Money becomes durable at the commit; that is the only moment where 'success' is true and irreversible. Events describe that fact afterwards, so tying the customer's answer to Kafka would couple availability to messaging and risk telling the customer 'failed' after money already moved."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="outbox">6. The outbox worker, and Kafka down for hours</h2>
+<p class="question">How does the outbox worker work, and what happens if Kafka is down for hours? (Asked twice.)</p>
+
+<h3>How the outbox worker works</h3>
+<p>The outbox is just a table in the same database as the ledger. When the transfer commits, one of the rows written in that same transaction is:</p>
+<pre><code>outbox(id, event_type, payload, aggregate_id, created_at, published_at = NULL)</code></pre>
+<p>Because it's in the same commit, the rule is airtight: there is never a money movement without its outbox row, and never an outbox row without its money movement.</p>
+<p>A separate worker runs a loop:</p>
+<ol>
+  <li>Read a batch of rows where <code>published_at IS NULL</code>, oldest first (ordered by an increasing id, so it's a queue).</li>
+  <li>Publish each one to Kafka, using the account or transaction id as the partition key so events for one account stay ordered.</li>
+  <li>When Kafka acknowledges, mark the row published (or delete it).</li>
+  <li>If the publish fails, do nothing. The row stays unpublished and gets picked up next loop.</li>
+</ol>
+<p>That's it. The worker is dumb on purpose. Its only job is "keep retrying until Kafka says yes."</p>
+<ul>
+  <li><strong>Duplicates are expected.</strong> The worker can crash after Kafka acked but before marking the row. On restart it republishes. So the guarantee is <em>at-least-once</em>, and every consumer must be idempotent, usually by remembering the event id it last applied. Nubank said exactly this in their QCon talk: they don't rely on exactly-once; every consumer dedupes on a correlation id.</li>
+  <li><strong>One worker per partition, or a lease.</strong> If two workers scan the same table they double-publish constantly. Either run one instance per ledger shard, or have workers claim rows with a short lease (<code>SELECT ... FOR UPDATE SKIP LOCKED</code> is the common Postgres trick).</li>
+</ul>
+
+<h3>Kafka down for six hours</h3>
+<p>Nothing about money breaks. Ana's transfer committed, her balance is right, Bruno's balance is right, a retry with the same key still returns the same answer. Customers can keep transferring the whole time.</p>
+<p>What does break is everything downstream of Kafka:</p>
+<ul>
+  <li>The transaction feed in the app is stale: Bruno doesn't see the incoming R$10 in his history yet (his <em>balance</em> is right, because that's read from the ledger).</li>
+  <li>Push notifications don't go out.</li>
+  <li>Fraud scoring, analytics and any integrations see nothing.</li>
+  <li>The outbox table grows for six hours. At a few hundred TPS that's millions of rows, fine for a database, but you watch disk and you may need backpressure if it goes on for days.</li>
+</ul>
+<p>When Kafka returns, the worker drains the backlog oldest-first. Ordering is preserved per partition key, consumers dedupe, and the feed catches up. Nobody edits anything by hand.</p>
+
+<h3>What pages on-call</h3>
+<p>Not "Kafka is down"; the Kafka team already knows. The ledger team alerts on <strong>oldest unpublished outbox row age</strong>. That single number catches Kafka outages, a stuck worker, a bad batch that keeps failing, everything. Pair it with backlog count so you can see the trend.</p>
+
+<div class="trap"><p class="label">The trap the interviewer is setting</p><p>They want to see if you'll say "roll back the transfer because the event didn't go out." Never. Committed money is a fact; the event is a description of the fact, and descriptions can be late. The reverse trap is making the customer's success depend on Kafka being up, which turns a messaging outage into a banking outage.</p></div>
+
+<div class="say"><p class="label">Interview sentence</p><p>"Money remains correct; feeds and notifications go stale. The outbox backlog grows, publication resumes in order when Kafka returns, and consumers deduplicate. I alert on outbox age, not on Kafka health."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="kafka">7. Why Kafka is not the source of truth</h2>
+<p class="question">Why is Kafka not the source of truth in the ledger design?</p>
+
+<p>Because Kafka can't give you the one thing a ledger needs: a single atomic decision that covers the balance check, the entries, the idempotency record and the new balance together.</p>
+
+<h3>What "source of truth" has to do</h3>
+<p>When Ana sends R$10, someone has to decide, in one indivisible step: <em>does she have it, has this command already been processed, and if both are fine, write the two entries and the new balances.</em> If any part of that is split from the rest, a crash in the gap creates money that moved twice or a balance that doesn't match its history.</p>
+<p>A relational database does this natively; that's what a transaction with a unique constraint and a conditional update <em>is</em>.</p>
+<p>Kafka is an append-only log of messages. It's excellent at durably recording "this happened" and fanning it out in order. It has no concept of "check Ana's current balance and reject if insufficient", no unique constraint on an idempotency key, no conditional write against a version. To get those you'd have to build a consumer that reads the log, maintains state, and enforces the rules, at which point <em>that consumer's store</em> is the source of truth and Kafka is just the pipe into it.</p>
+
+<h3>Three concrete failures if Kafka were the truth</h3>
+<ol>
+  <li><strong>Two concurrent debits.</strong> Both producers publish "debit Ana 80". Kafka happily stores both. Nobody rejected the second one, because nothing in the publish path knew Ana's balance. The overdraft is now durably recorded and you find out later.</li>
+  <li><strong>Duplicate delivery.</strong> Producers retry, consumers rebalance; the same message can appear twice. Kafka's "exactly-once" is scoped to Kafka-to-Kafka processing and doesn't extend to your database write. So you still need idempotency in the consumer: you've moved the hard problem, not removed it.</li>
+  <li><strong>Availability coupling.</strong> If "success" means "Kafka acked the message", then a Kafka outage becomes a banking outage. If "success" means "the database committed", Kafka can be down for hours and customers keep transferring.</li>
+</ol>
+
+<h3>The honest version of event sourcing</h3>
+<p>An interviewer may push: "but Nubank is event-driven, isn't event sourcing the truth?" Fair. An event-sourced ledger is possible, but the events still need per-account ordering, a uniqueness check on command identity, snapshots, and controlled replay, and the component that enforces those is a database with an atomic write boundary, not the bus. Nubank's own description matches this: they call their Datomic transaction function the place where check-and-write is one ACID operation; Kafka carries messages between services and every consumer dedupes on a correlation id.</p>
+
+<h3>The division of labor</h3>
+<div class="rows">
+  <div><span>Database commit</span><span>The <em>decision</em>. Money becomes durable here.</span></div>
+  <div><span>Outbox row</span><span>Written in that same commit: the <em>promise</em> to tell others.</span></div>
+  <div><span>Kafka</span><span>The <em>distribution</em>: feeds, notifications, fraud, analytics, other services.</span></div>
+  <div><span>Projections</span><span>Built from Kafka; rebuildable. If one drifts you replay from the journal, never the other way around.</span></div>
+</div>
+
+<div class="say"><p class="label">Interview sentence</p><p>"Kafka distributes facts; it can't provide the local atomic boundary that ties the balance check, the entries and the idempotency key into one decision. The database commit is the business decision and the outbox publishes it afterwards."</p></div>
+<div class="trap"><p class="label">Avoid saying</p><p>"Kafka gives us exactly-once so we're safe." It doesn't, and the interviewer will know.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="projections">8. Projections, and what happens when one drifts</h2>
+<p class="question">What are projections in the ledger design, and what happens if one drifts from the journal?</p>
+
+<h3>What a projection is</h3>
+<p>A read model built <em>from</em> the ledger's events, shaped for one specific question. The journal (transaction + entries) is the truth, but it's shaped for correctness, not for reading. Nobody wants to sum ten years of entries to render a transaction list.</p>
+<p>So you consume the events Kafka delivers and build derived views:</p>
+<ul>
+  <li><strong>Transaction feed</strong>: "show Bruno his last 50 movements", denormalized with the counterparty name and a description.</li>
+  <li><strong>Notification state</strong>: what has been pushed, to whom.</li>
+  <li><strong>Search / Ops index</strong>: find a transfer by reference, amount, date range.</li>
+  <li><strong>Analytics and fraud features</strong>: spend per merchant per day, velocity counters.</li>
+  <li><strong>Monthly statement</strong>: a snapshot rebuilt from entries, then frozen.</li>
+</ul>
+<p>Each one can live in whatever store suits it (Postgres, Elasticsearch, a columnar warehouse), be eventually consistent, and be thrown away and rebuilt. That last property is the whole point: a projection is a <em>cache of a computation over the journal</em>.</p>
+
+<h3>The one thing that is not a projection</h3>
+<p>The account aggregate (posted, held, available, version). It looks like a derived view, since it's a sum over entries, but it's updated <em>in the same commit</em> as the entries and it's used to authorize spending. That makes it part of the authoritative write state, not a projection. If the interviewer asks "isn't the balance just a projection?", the answer is: conceptually yes, operationally no. It's strongly consistent and lives inside the write boundary, because you can't approve a debit from something eventually consistent.</p>
+
+<h3>Drift: two very different situations</h3>
+<p><strong>A true projection drifts</strong> (feed shows a transfer Bruno didn't receive, statement total is off by R$10):</p>
+<ul>
+  <li>Nobody's money is wrong. The journal is right; the view is stale or buggy.</li>
+  <li>Cause is usually a skipped or double-applied event, a consumer bug, or a replay that started at the wrong offset.</li>
+  <li>Fix: rebuild. Truncate the projection, replay events from the journal (or Kafka from the beginning if retention allows), let it catch up. Consumers are idempotent so replaying is safe.</li>
+  <li>Never fix a projection by editing ledger entries. You'd be changing the truth to match the copy.</li>
+  <li>Detect it continuously: a reconciliation job compares projection totals against journal totals per account per day, and alerts on any mismatch.</li>
+</ul>
+<p><strong>The account aggregate disagrees with the journal</strong> (available says 70, entries sum to 60):</p>
+<ul>
+  <li>This is an incident, not a stale cache. Something authorized spending against a wrong number, or a write path bypassed the transaction.</li>
+  <li>Stop or isolate writes on the affected accounts first. You don't keep approving debits from a balance you know is wrong.</li>
+  <li>Recompute the expected aggregate from entries. Investigate how the gap appeared (bug, manual edit, partial failover).</li>
+  <li>Repair through an audited command with a reason code and four-eyes approval, never <code>UPDATE account SET balance = 60</code>. The repair itself becomes a recorded event.</li>
+  <li>Then reconcile again to confirm, and add the detection that would have caught it earlier (sequence numbers per account, totals check on every commit or on a short cadence).</li>
+</ul>
+
+<div class="say"><p class="label">Interview sentence</p><p>"Projections are rebuildable read models fed by the outbox events; if one drifts, I replay from the journal and never touch entries. The account aggregate is different: it's inside the atomic write boundary because it authorizes spending, so a mismatch there is an incident: isolate, recompute, audited repair, then reconcile."</p></div>
+<div class="trap"><p class="label">The trap</p><p>Treating those two as the same. Saying "just rebuild the balance from Kafka" tells the interviewer you'd authorize debits from an eventually consistent source.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="cheat">9. Interview sentences, collected</h2>
+<p class="question">Every "say it in one breath" line from the sections above, in the order you'd need them.</p>
+<ol class="cheat">
+  <li><em>"Before choosing storage, I want to establish whether this is the authoritative ledger, a wallet over an existing ledger, or orchestration around payment rails."</em><span>Stage 1: boundary before boxes.</span></li>
+  <li><em>"The client owns the key because only the client knows a retry is a retry. The ledger stores the key atomically with the posting, so the same key always returns the same transaction and a conflicting payload is rejected, never reinterpreted."</em><span>Command and idempotency.</span></li>
+  <li><em>"The hold check, funds check and aggregate update are atomic with the account version, so two concurrent debits can both read the same balance but only one can commit against it."</em><span>Validation and version.</span></li>
+  <li><em>"In one commit I write the transaction, its entries, both account aggregates with a version check, the idempotency record and the outbox row. Splitting any of them creates a specific financial bug."</em><span>The atomic commit.</span></li>
+  <li><em>"Money becomes durable at the commit; that is the only moment where 'success' is true and irreversible. Events describe that fact afterwards."</em><span>Why success comes from the commit; also the thesis for the whole design.</span></li>
+  <li><em>"Money remains correct; feeds and notifications go stale. The outbox backlog grows, publication resumes in order when Kafka returns, and consumers deduplicate. I alert on outbox age, not on Kafka health."</em><span>Outbox and Kafka outage.</span></li>
+  <li><em>"Kafka distributes facts; it can't provide the local atomic boundary that ties the balance check, the entries and the idempotency key into one decision."</em><span>Kafka is not the truth.</span></li>
+  <li><em>"Projections are rebuildable read models; if one drifts I replay from the journal and never touch entries. The account aggregate is inside the write boundary because it authorizes spending, so a mismatch there is an incident."</em><span>Projections and drift.</span></li>
+  <li><em>"Because the balance is a cumulative function of ordered entries, I need a stable order per account and a way to handle late-arriving events by replay, not by editing."</em><span>From the guide's "What Nubank built" section; use when ordering comes up.</span></li>
+</ol>
+
+<h3>Three things never to say</h3>
+<ul>
+  <li>"Kafka gives us exactly-once." It doesn't; your ledger makes the effect happen once.</li>
+  <li>"Roll back the transfer because the event didn't go out." Committed money is a fact.</li>
+  <li>"Just rebuild the balance from Kafka." That authorizes debits from an eventually consistent source.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="followups">10. Follow-up answers</h2>
+<p class="question">The eight follow-ups the interviewer is most likely to push on, each answered the way you'd say it, then the reasoning behind it.</p>
+
+<h3>Row lock versus version</h3>
+<p><strong>Short answer.</strong> Both serialize concurrent writes to one account; they differ in when they pay for it. A row lock (<code>SELECT ... FOR UPDATE</code>) pays up front: the second transaction waits until the first commits, then sees the new balance. A version pays on conflict: both read freely, the second one's conditional update matches zero rows, rolls back, and retries. I default to the version because ledger contention is low and I never want a long-held lock spanning anything slow; I'd switch to locking for a hot account where retry storms would cost more than waiting.</p>
+<p><strong>Why.</strong> Under optimistic concurrency, a lost race costs one wasted read-validate cycle. Under pessimistic locking, every race costs waiting time for the loser and a lock the database has to manage, and if any code path holds that lock across a network call the whole account stalls. Locks also open the door to deadlocks between transactions touching two accounts, which versions can't cause. The version is also a free correctness check on the aggregate itself: any write that bypasses the versioned update path stands out.</p>
+<p><strong>Alternative.</strong> A per-account command queue (one consumer per account key) gives ordering without either mechanism; it's what you reach for when contention is high and you already have partitioned messaging.</p>
+
+<h3>Why not timestamps</h3>
+<p><strong>Short answer.</strong> A timestamp tells you when a machine thought something happened; it cannot tell you whether two writes conflicted. Two servers can stamp two debits with times that differ by microseconds in either direction, and neither stamp prevents both from committing. The version is a per-account counter that only advances on commit, so it is the authoritative order of that account's history. Wall-clock time is metadata, useful for reporting, not for correctness.</p>
+<p><strong>Why.</strong> Clocks drift, jump backwards after NTP corrections, and differ across regions. A balance is a cumulative sum over ordered entries, so if order is wrong the balance is wrong. Version numbers also handle late-arriving events cleanly: an event that shows up out of order is replayed into the sequence, not patched into place by its timestamp.</p>
+
+<h3>Deterministic lock ordering for multi-account transactions</h3>
+<p><strong>Short answer.</strong> When one transaction touches two accounts, always acquire them in the same order, for example by ascending account id. Then Ana→Bruno and Bruno→Ana both lock Ana's row first, one waits for the other, and neither can deadlock.</p>
+<p><strong>Why.</strong> A deadlock needs a cycle: transaction 1 holds A and wants B while transaction 2 holds B and wants A. If every transaction acquires resources in one global order, no cycle can form. With versions instead of locks, the equivalent rule is to check both versions in the same commit; there's nothing to deadlock on, but you still read both accounts before writing either so the conditional updates see a consistent pair.</p>
+<p><strong>Interview follow-up.</strong> "What about a transaction with five legs, fees and tax?" Same rule: sort all account ids, lock in that order, write all entries, check they sum to zero, commit.</p>
+
+<h3>What a conflicting payload on a reused key returns</h3>
+<p><strong>Short answer.</strong> A deterministic conflict error, typically HTTP 409 or an explicit <code>IDEMPOTENCY_KEY_CONFLICT</code>, that says "this key was already used with a different request" and includes the original transaction id for reference. The new payload is not processed, and the stored result is not overwritten.</p>
+<p><strong>Why.</strong> The key is a promise from the client that "same key" means "same intention". If the payload differs, the client has broken the promise, and the ledger has no safe way to know which intention is real. Processing the new one could move money the client never meant to move again; overwriting the old result would lie about what already happened. Rejecting both is the only outcome that can't cause financial harm, and it surfaces the client bug immediately instead of hiding it.</p>
+<p><strong>How.</strong> Store a hash of the canonicalized payload alongside the key. On arrival with a known key, compare hashes. Equal: return the stored transaction. Different: conflict. The comparison happens inside the same transaction as the lookup, so two concurrent arrivals with the same new key resolve through the unique constraint, not through a race.</p>
+
+<h3>Why the aggregate is not a projection</h3>
+<p><strong>Short answer.</strong> Because it authorizes spending. A projection is a read model that may lag and can be rebuilt; the account aggregate (posted, held, available, version) is written in the same commit as the entries and is read to decide whether a debit is allowed. Conceptually it's a sum over entries; operationally it's part of the authoritative write state.</p>
+<p><strong>Why.</strong> The invariant "never debit from stale funds" only holds if the number you check is the number the commit is about to change. If the aggregate were an eventually consistent projection, two debits could both read an old balance and both be approved before the projection caught up. Keeping it in the write boundary is what turns the funds check into a conditional write. The cost is that every posting updates the aggregate row, which is why a busy account contends on itself; the version handles that.</p>
+<p><strong>The tell.</strong> A rebuildable thing is a projection. The aggregate <em>can</em> be rebuilt from entries, but if you ever have to, that's an incident with isolate, recompute, audited repair, reconcile, not a routine replay.</p>
+
+<h3>What the outbox alert is</h3>
+<p><strong>Short answer.</strong> Age of the oldest unpublished outbox row, paired with backlog count for trend. Page when age crosses the threshold that would make projections unacceptably stale for the product, not on Kafka health.</p>
+<p><strong>Why.</strong> That single number covers every way publication can stop: Kafka down, worker crashed, a poison row that fails every retry, a lease that never expires, a partition with no consumer. Kafka health alone misses all but the first. Backlog count alone misses a stuck head-of-queue row when volume is low. Age of the oldest row catches both.</p>
+<p><strong>The rest of the on-call board.</strong> Stuck transfer age, clearing imbalance and age of the oldest clearing item, posting error rate, account-version conflict rate, reconciliation mismatch count, replica and failover health.</p>
+
+<h3>Why 2PC is an option to evaluate rather than a taboo</h3>
+<p><strong>Short answer.</strong> Two-phase commit does deliver what the clearing account can't: an all-or-nothing result across two databases with no visible intermediate state. I'd evaluate it when the platform supports it reliably and the product genuinely cannot accept a Processing state. I'd avoid it as the default across independent partitions because it blocks participants while they wait for the coordinator, has painful recovery when the coordinator dies mid-protocol, and is weakly supported across heterogeneous services. Clearing is my default because its in-between state is explicit, observable and operable.</p>
+<p><strong>Why the interviewer asks.</strong> They're checking whether you reason from criteria or from slogans. "2PC is bad" is a slogan. The criteria are: correctness (both give it), latency (2PC adds a round trip and a prepare phase), blocking (2PC holds locks on both sides while it coordinates), operability (a stuck 2PC transaction needs manual resolution of in-doubt state; a stuck clearing item is a visible row with an age), and customer experience (2PC has no Processing state; clearing does). The one factor that can flip the decision is whether Product can accept Processing.</p>
+<p><strong>Same reasoning, different context.</strong> If they ask why a real-time payment rail doesn't use 2PC: payer and payee are in different write authorities, so each leg is made locally atomic and idempotent, progress is kept durable, and a later leg that can't finish is compensated with a new posting.</p>
+
+<h3>How the clearing account keeps a cross-shard transfer accounted for between legs</h3>
+<p><strong>Short answer.</strong> At every moment, every unit of money has exactly one owner. Before leg A, Ana owns R$10. After leg A commits, the clearing account owns R$10 and Ana's entries and aggregate say so. After leg B commits, Bruno owns it. There is never a moment where the R$10 has left Ana and not yet arrived anywhere; it is sitting, visibly, in clearing.</p>
+<pre><code>Before:   Ana 100          Clearing   0          Bruno 50      total 150
+Leg A:    Ana  90          Clearing  10          Bruno 50      total 150   ← customer sees Processing
+Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← Completed</code></pre>
+<p><strong>What makes it safe.</strong></p>
+<ul>
+  <li><strong>Each leg is one atomic commit</strong> in its own shard, with its own entries, aggregate updates, idempotency key and outbox row. Everything from section 4 applies to each leg.</li>
+  <li><strong>Per-leg keys</strong>: <code>transferId:legA</code> and <code>transferId:legB</code>, enforced uniquely on the shard that owns the leg. A worker retrying leg B after a timeout gets the prior posting back, never a second credit.</li>
+  <li><strong>A durable transfer record</strong> says which leg is done. The transfer state advances only after the destination shard acknowledges the durable commit of leg B.</li>
+  <li><strong>The customer sees the truth</strong>: the payer sees the debit with the transfer marked Processing; the receiver does not see funds yet. Neither side sees Completed before leg B is durable. Define a processing SLA and an escalation path for it.</li>
+  <li><strong>If leg B can never complete</strong>, after bounded retries and dependency recovery, policy decides: keep pending, route to manual repair, or reverse leg A with a new linked posting that moves the R$10 from clearing back to Ana. The committed debit is never deleted, and you never compensate automatically while the external outcome is still unknown.</li>
+  <li><strong>Clearing is monitored like a customer account</strong>: scoped by currency, rail and possibly partition so no single row becomes globally hot; every item aged; reconciled gross and net; alerts on both total amount and age of the oldest item. Every clearing entry maps back to a transfer id, so the balance is always explainable.</li>
+</ul>
+<p><strong>The interview sentence.</strong> "Between legs the money is in clearing, which is a real account with real entries, so the books balance at every instant. The customer sees Processing rather than a lie, and if leg B fails we compensate with a new posting, never by deleting the debit."</p>
+
+<!-- ============================================================ -->
+<h2 id="scaling">11. When they push on scalability and performance</h2>
+<p class="question">A Lead candidate who did not pass Nubank's architecture round in late 2025 reported the questions were mostly about scalability and how to improve performance. Candidates in 2026 describe an interruption roughly every ten minutes: "volume goes up tenfold", "a dependency is down", "reproduce a balance as of three months ago". This is how to take those for the ledger.</p>
+
+<h3>The five-step answer, every time</h3>
+<ol>
+  <li><strong>Ask what grew.</strong> Transactions per second, accounts, entries per account, countries, or read traffic? "Tenfold" with no noun is a trap; supply the noun if they don't.</li>
+  <li><strong>Name the bottleneck with a number you'd measure.</strong> Posting p99, account-version conflict rate, oldest outbox row, replica lag, failover time, entries per account for the hottest account.</li>
+  <li><strong>Scale what scales.</strong> Everything idempotent and stateless: outbox publishers, projection builders, reconciliation jobs, read serving from projections.</li>
+  <li><strong>Say what doesn't, and why.</strong> One write authority per account (that's the invariant, not a limitation to apologise for), hot accounts, and the failover time of the authoritative store, which is your availability ceiling.</li>
+  <li><strong>Protect the invariants while you scale.</strong> Balanced entries, effectively-once, immutable history, never debit from a stale balance. Any "optimisation" that bends one of those is a bug with better latency.</li>
+</ol>
+
+<h3>What each part of the ledger does under load</h3>
+<table>
+  <tr><th>Part</th><th>Scales by</th><th>Limit to name</th><th>What you'd do</th></tr>
+  <tr><td>Posting path</td><td>One write authority per account. Partition by customer or account when a measured number crosses a threshold: lock contention, storage, failover time, residency.</td><td>The single database's write throughput and, more importantly, its failover time.</td><td>Start with one store and measure. Tag every transaction with the customer id from day one so the split is possible later. When you partition, cross-customer transfers become the explicit hard problem: clearing account and compensation.</td></tr>
+  <tr><td>Hot accounts</td><td>They don't. A merchant settlement account, fee-income, tax-payable or a clearing account can take thousands of entries a minute against one aggregate row.</td><td>Version conflicts pile up on one row; every retry re-reads and re-validates.</td><td>Scope the account: clearing per currency, rail and partition; fee-income per day or per shard; sub-accounts rolled up by a projection. Or accept serialisation on that one row with a per-account queue, since throughput per account is what a single row can do. Never a global lock.</td></tr>
+  <tr><td>Reads</td><td>Balance reads come from the aggregate row (one indexed read). Everything else, feed, statements, search, analytics, from projections that scale on any store.</td><td>Reads that need the authoritative balance must hit the write authority; that's the funds check and nothing else.</td><td>Move every non-authorising read to a projection. Nubank's own line: aggregating on the transactional database did not scale, so analytics lives in a separate environment fed from the log.</td></tr>
+  <tr><td>Outbox publisher</td><td>One publisher per shard or partition; batch publishes; ordered by partition key.</td><td>Head-of-line blocking on one poison row; Kafka's own throughput per partition.</td><td>Dead-letter the poison row with its error attached, keep publishing; more partitions by account id; alert on oldest unpublished row, not on count.</td></tr>
+  <tr><td>Entries per account</td><td>Unbounded growth over years.</td><td>Rebuilding the aggregate from entries becomes slow; statements over long ranges get expensive.</td><td>Periodic checkpoints (a snapshot entry per account per period) so a rebuild replays from the last checkpoint; cold entries archived to cheaper storage but still replayable.</td></tr>
+  <tr><td>Reconciliation</td><td>Horizontally, by account range or day.</td><td>Must compare journal totals with aggregates and with external records; it's read-heavy on the authority.</td><td>Run against a replica or a projection with a known lag, then confirm mismatches against the authority. Continuous per-account totals check rather than one nightly pass.</td></tr>
+  <tr><td>Cross-shard transfers</td><td>They don't get faster with machines; each is a two-leg saga.</td><td>Clearing balance and the age of the oldest clearing item.</td><td>Partition by customer precisely because customer-to-customer interaction is low, so most transfers stay local. Monitor clearing by amount and age.</td></tr>
+</table>
+
+<h3>"How would you improve performance?"</h3>
+<p>Usually means latency on the posting path. What is on that path: key lookup, account reads, funds check, conditional update, one commit. That's it; publication, projections and notifications are already after commit. If p99 is bad, look in this order: a hot account row (version conflicts and retries), a lock held across something slow (a network call inside the transaction is the classic), an unindexed key or account lookup, and only then the database itself. The single biggest latency win in most real ledgers is taking a synchronous call out of the transaction, not tuning the database.</p>
+
+<h3>The three "improvements" that are actually bugs</h3>
+<ul>
+  <li><strong>"Cache the available balance."</strong> A cached balance is a stale balance, and authorising from it is exactly how money is spent twice. Cache display balances all you like; the funds check reads the authority.</li>
+  <li><strong>"Authorise from a read replica."</strong> Same failure with a different name. Replica lag is a stale balance.</li>
+  <li><strong>"Post asynchronously and confirm later."</strong> That turns "Sent" into "we'll try", which the product may accept for external rails with a Processing state, but never for an internal transfer.</li>
+</ul>
+
+<h3>The Nubank-flavoured interruptions and their one-line answers</h3>
+<div class="rows">
+  <div><span>10x transactions</span><span>Measure posting throughput and failover time on one store first; partition by customer at a threshold I set with load tests; tag the customer id from day one; then cross-customer transfers go through clearing.</span></div>
+  <div><span>Balance as of 3 months ago</span><span>Sum the entries up to that timestamp, or replay from the nearest checkpoint. History is append-only, so this is a query, not a project.</span></div>
+  <div><span>Database failover</span><span>Reject new debits for those seconds rather than approve from a cache; queue external work; feeds go stale; money stays right. Failover time is my availability ceiling and I say so.</span></div>
+  <div><span>Kafka down</span><span>Money remains correct, feeds go stale, outbox drains in order when it returns, consumers dedupe. Alert on outbox age.</span></div>
+  <div><span>One merchant account takes half the traffic</span><span>Scope it (per day, per shard, per rail) and roll up by projection, or serialise on it with a per-account queue. Never a global lock, never a cached balance.</span></div>
+</div>
+
+<div class="say"><p class="label">Interview sentence</p><p>"I would start with one write authority and measure. When entries throughput or failover time crosses a threshold I set with load tests, I would partition by customer because customer-to-customer interaction is low, and I would tag every transaction with the customer id from day one so the split is possible later. Then cross-customer transfers become the explicit hard problem, handled with clearing and compensation."</p></div>
+
+<div class="trap"><p class="label">Avoid saying</p><p>"Add more instances" without naming instances of what. "Cache the balance." "Read replicas for authorisation." "Shard everything" without a key. "Move to NoSQL" as if the store were the problem. Each answers a generic question the interviewer didn't ask.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="practice">12. Practice next</h2>
+<p class="question">Where this session left off.</p>
+<p>Every node in the diagram has now been opened and explained. The next step is to run the ledger mock the other way round: start at stage 1 cold, answer each stage in 30–60 seconds out loud, and take the follow-up questions the guide lists without looking. The failure-testing rhythm for stage 6 is six questions per failure:</p>
+<ol>
+  <li>What committed?</li>
+  <li>What retries, using which identity?</li>
+  <li>What can duplicate?</li>
+  <li>What does the customer see?</li>
+  <li>Which metric alerts?</li>
+  <li>What is the safe operator action?</li>
+</ol>
+<p>Follow-ups you should be able to take on this material without notes: row lock versus version; why not timestamps; deterministic lock ordering for multi-account transactions; what a conflicting payload on a reused key returns; why the aggregate is not a projection; what the outbox alert is; why 2PC is an option to evaluate rather than a taboo; and how the clearing account keeps a cross-shard transfer accounted for between legs. Model answers for all eight are in <a href="#followups">section 10</a>; try answering out loud before you read them.</p>
+
+<footer>
+  Study notes compiled from a conversation on 4 September 2026. Source material: <em>Nubank Lead System Design Study Guide</em>, Mock A. The Nubank architecture details referenced come from the guide's summary of a 2017 QCon talk and Nubank's engineering blog; use them as evidence for the way of thinking, not as claims about current components.
+</footer>
+</main>
+</div>
+</body>
+</html>
