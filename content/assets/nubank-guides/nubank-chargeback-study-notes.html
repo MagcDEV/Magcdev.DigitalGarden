@@ -135,6 +135,7 @@
     <li><a href="#rollout">12. Rollout and ownership</a></li>
     <li><a href="#cheat">13. Interview sentences</a></li>
     <li><a href="#practice">14. Practice next</a></li>
+    <li><a href="#glossary">15. Glossary, from zero</a></li>
   </ol>
 </nav>
 
@@ -726,6 +727,149 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>"We're launching in Colombia next month with a different network."</li>
 </ul>
 <p>If the interviewer changes the prompt mid-way (a loan-collections workflow, a KYC review queue, a fraud-alert case system, or the batch-file version of this one), keep the seven stages and swap the nouns: it is still a case-management system with durable obligations, versioned policy, idempotent side effects and money it asks the ledger to move.</p>
+
+<!-- ============================================================ -->
+<h2 id="glossary">15. Glossary, from zero</h2>
+<p class="question">Every term this guide uses, explained as if you'd never heard it. Grouped by theme; each entry says where the term shows up.</p>
+
+<h3>The card-dispute business</h3>
+<div class="rows">
+  <div><span>Chargeback</span><span>When a cardholder says "I didn't make this purchase" or "I paid but never got the goods", their bank can pull the money back from the merchant's bank through the card network. That reversal is a chargeback. The whole process around it is a dispute.</span></div>
+  <div><span>Issuer</span><span>The bank that gave the customer the card. Nubank is the issuer for Ana. The issuer is the one who receives the complaint and files the dispute.</span></div>
+  <div><span>Acquirer</span><span>The merchant's bank; the one that "acquires" card payments on the merchant's behalf. It receives the dispute and defends the merchant.</span></div>
+  <div><span>Card network</span><span>Visa, Mastercard, Elo. They don't hold anyone's money; they set the rules, carry the messages between issuer and acquirer, and arbitrate when the two disagree.</span></div>
+  <div><span>Reason code</span><span>A short code the network defines for why a dispute is being raised: "fraud, card not present", "goods not received", "duplicate charge". Each code has its own deadlines and evidence rules.</span></div>
+  <div><span>Representment</span><span>The merchant's reply: "here is proof the customer did buy this". It re-presents the transaction. The issuer then has a window to respond again.</span></div>
+  <div><span>Arbitration / award</span><span>When issuer and acquirer can't agree, the network decides. Its decision is the award: who wins, and for how much.</span></div>
+  <div><span>Provisional credit</span><span>Money the issuer gives the customer up front, while the dispute is still open, so they aren't out of pocket for weeks. "Provisional" because it may be taken back if the dispute is lost.</span></div>
+  <div><span>Partial win</span><span>The network awards part of the disputed amount. If Ana disputed R$300 and gets R$200, the issuer has to adjust the provisional credit by the R$100 difference.</span></div>
+  <div><span>Statutory deadline</span><span>A deadline set by law or regulation (not just network rules). Miss it and there may be legal consequences, not only a lost dispute.</span></div>
+  <div><span>Retention / legal hold</span><span>How long you must keep documents (retention), and a rule that says "don't delete this, it may be needed in a legal matter" (legal hold).</span></div>
+  <div><span>PII</span><span>Personally identifiable information: names, document numbers, addresses. Must be protected; must not leak into logs.</span></div>
+</div>
+
+<h3>How money is represented</h3>
+<div class="rows">
+  <div><span>Ledger</span><span>The system that records every movement of money and knows every balance. The chargeback platform never moves money itself; it asks the ledger to.</span></div>
+  <div><span>Entry / posting</span><span>One recorded line of money movement against one account. "Posting" is the act of writing entries. Once posted, an entry is never edited.</span></div>
+  <div><span>Posted balance</span><span>The sum of all entries on an account. The money that has actually moved.</span></div>
+  <div><span>Hold</span><span>A reservation. A card purchase first places a hold ("R$80 is spoken for") and only later becomes a real posting when the merchant settles.</span></div>
+  <div><span>Available balance</span><span>Posted balance minus open holds. The amount the customer can actually spend right now.</span></div>
+  <div><span>Linked reversal</span><span>Undoing a posting by writing a new, opposite entry that points at the original. The original stays in the history. Never done by deleting or editing.</span></div>
+  <div><span>Adjustment</span><span>A new posting for the difference between what was credited and what turned out to be owed, for example after a partial win.</span></div>
+  <div><span>Clearing account</span><span>A holding account that money sits in while a multi-step operation is in flight. It makes the "in between" state real and visible instead of the money being nowhere.</span></div>
+</div>
+
+<h3>Databases and consistency</h3>
+<div class="rows">
+  <div><span>Transaction (database)</span><span>A group of database writes that either all happen or none happen. Not to be confused with a card transaction (a purchase). In this guide, "one commit" and "one transaction" mean the database kind.</span></div>
+  <div><span>Atomic / atomic commit</span><span>"Atomic" means indivisible. An atomic commit is a transaction that finishes completely or not at all; there is no moment where half of it is saved.</span></div>
+  <div><span>Commit</span><span>The instant a database transaction becomes permanent. Before commit, nothing has happened; after, it survives crashes.</span></div>
+  <div><span>Rollback</span><span>Cancelling a transaction before commit so nothing it wrote is kept.</span></div>
+  <div><span>Row / table / column</span><span>A table is a spreadsheet-like structure; a row is one record in it; a column is one field. "A deadline is a row" means it's a saved record, not something floating in memory.</span></div>
+  <div><span>Index</span><span>A lookup structure that lets the database find rows by a column quickly, like a book's index. "Index on (status, due_at)" means "make it fast to find rows with a given status and due time".</span></div>
+  <div><span>Unique constraint</span><span>A rule the database enforces: no two rows may have the same value in this column. Used to guarantee an idempotency key or a run id can only exist once.</span></div>
+  <div><span>Conditional update</span><span>A write that only happens if some condition is still true: "update this case, but only if its version is still 7". If someone changed it in between, the update does nothing and you know.</span></div>
+  <div><span>Version (on a case or account)</span><span>A counter that goes up by one every time the record changes. Commands say "I read version 7"; the conditional update checks it's still 7. This is how two people acting at once can't both win.</span></div>
+  <div><span>Optimistic concurrency</span><span>Letting everyone read freely and only checking for conflicts at write time (with the version). "Optimistic" because you assume conflicts are rare.</span></div>
+  <div><span>Row lock / SELECT FOR UPDATE</span><span>The pessimistic alternative: grab the row so nobody else can touch it until you're done. Simpler, but people wait, and locks can deadlock.</span></div>
+  <div><span>Deadlock</span><span>Two operations each waiting for a lock the other holds, forever. Avoided by always taking locks in the same order.</span></div>
+  <div><span>Lease / claim</span><span>A short-lived ownership: "I'm working on this deadline for the next five minutes." If the worker dies, the lease expires and someone else can pick it up. Prevents two workers doing the same job.</span></div>
+  <div><span>SKIP LOCKED</span><span>A database option meaning "give me rows to work on, but skip any that another worker already grabbed". The standard way for many workers to share one queue table.</span></div>
+  <div><span>Strong consistency</span><span>Every read sees the latest committed write. What you need for anything that decides: case transitions, deadlines, money.</span></div>
+  <div><span>Eventual consistency</span><span>Reads may be a little behind for a while but will catch up. Fine for things you only look at: search, dashboards, notifications.</span></div>
+  <div><span>Source of truth / authoritative</span><span>The one place a fact is decided. Everything else is a copy that can be rebuilt from it.</span></div>
+  <div><span>Distributed transaction / 2PC</span><span>Trying to make one atomic commit across two separate databases. Two-phase commit (2PC) is the classic protocol for it: "everyone prepare", then "everyone commit". Works, but blocks and is painful to recover. This guide avoids it by giving each system its own commit and linking them with keys and events.</span></div>
+  <div><span>Saga</span><span>A multi-step operation where each step is its own commit, progress is saved, and a failed later step is undone by a compensating step (a linked reversal), not by rolling back.</span></div>
+  <div><span>Partition / shard</span><span>Splitting data across several databases by a key (case id, customer id) so each one handles a share. "Hot partition" is one shard getting far more traffic than the others.</span></div>
+  <div><span>NoSQL</span><span>Databases that aren't traditional relational tables (key-value, document stores). Often cited as a scaling fix; in this guide, "move to NoSQL" is a wrong answer because the store isn't the bottleneck.</span></div>
+  <div><span>Datomic / Clojure</span><span>Nubank's database and programming language. Datomic never overwrites data; it keeps every past value, which is why "reproduce the case as of a date" is natural for them. Clojure is a functional language on the JVM. You don't need either; you need to know why they chose them (immutability).</span></div>
+</div>
+
+<h3>Events, queues and workers</h3>
+<div class="rows">
+  <div><span>Event</span><span>A record that something happened: "case opened", "network acknowledged". Written once, never changed. The case's history is its list of events.</span></div>
+  <div><span>Snapshot / aggregate</span><span>The current summary of a case, kept alongside the events so you don't have to replay the whole history to know its state. Can always be rebuilt from the events.</span></div>
+  <div><span>Aggregate root</span><span>The one entity that owns a group of related records and is the only door for changing them. Here, the case: you change the case through commands, never by editing an event or a deadline directly.</span></div>
+  <div><span>Command</span><span>A request to change something: "open a dispute", "submit to network". Commands are validated; events are what gets recorded when a command is accepted.</span></div>
+  <div><span>Event sourcing</span><span>Storing only the events and deriving all state from them. This guide uses events plus a snapshot, which is event history without making every read replay it.</span></div>
+  <div><span>Projection / read model</span><span>A copy of data shaped for a particular question (the search index, the Ops dashboard), built from events. Can lag; can be thrown away and rebuilt.</span></div>
+  <div><span>Idempotent / idempotency</span><span>Doing the same thing twice has the same effect as doing it once. Sending "credit Ana R$300" twice must credit her once. Achieved with an idempotency key.</span></div>
+  <div><span>Idempotency key</span><span>A stable identifier that travels with a request so the receiver can recognise a repeat. Generated once where the intent is born; reused on every retry.</span></div>
+  <div><span>Semantic key</span><span>An idempotency key that names the business action, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>, instead of a random id. It tells you what is being retried.</span></div>
+  <div><span>Outbox</span><span>A table where you write "send this message later" in the same commit as the change it describes. A worker then sends it. Guarantees you never record a change without its message or a message without its change.</span></div>
+  <div><span>Kafka</span><span>A system that stores streams of messages durably and in order and lets many consumers read them. Nubank uses it to move events between services. It is not a database and not the source of truth.</span></div>
+  <div><span>Topic / partition (Kafka)</span><span>A topic is a named stream; it's split into partitions so it can be spread across machines. Messages with the same key go to the same partition, so they stay in order.</span></div>
+  <div><span>Consumer</span><span>A program that reads messages from Kafka and does something with them, like updating the search index.</span></div>
+  <div><span>At-least-once delivery</span><span>A guarantee that every message will arrive, possibly more than once. The normal case. It's why consumers must dedupe.</span></div>
+  <div><span>Dedupe (deduplicate)</span><span>Recognising and ignoring a repeat, usually by remembering the ids you've already handled.</span></div>
+  <div><span>Correlation id</span><span>An id attached to a request that follows it through every service and message, so you can trace what happened where. Nubank's consumers dedupe on it.</span></div>
+  <div><span>Worker</span><span>A background program that takes jobs from a queue or table and does them: sends a file, calls the ledger, scans a document.</span></div>
+  <div><span>Timer / scheduler</span><span>Something that fires at a set time to start work. In this guide it's a convenience, never the thing that guarantees a deadline.</span></div>
+  <div><span>Sweeper</span><span>A worker that periodically scans the database for work that should have been done (due deadlines, unpublished outbox rows) and does it. The safety net under the timer.</span></div>
+  <div><span>Queue age / lag</span><span>How long the oldest unprocessed item has been waiting. The single most useful health number for any queue.</span></div>
+  <div><span>Backpressure</span><span>Slowing down producers when consumers can't keep up, instead of letting the backlog grow without limit.</span></div>
+  <div><span>Dead-letter topic</span><span>Where a message goes when a consumer keeps failing on it, with the error attached, so it isn't lost and a human can fix and replay it.</span></div>
+  <div><span>Circuit breaker</span><span>When a downstream call keeps failing, stop calling it for a while (pause the consumer) instead of hammering it. Turns a storm of errors into a queue that drains later.</span></div>
+  <div><span>Poison row / message</span><span>One item that fails every time it's processed and would block everything behind it if you let it.</span></div>
+  <div><span>Replay</span><span>Re-reading events from the beginning (or from a checkpoint) to rebuild state. Safe because consumers are idempotent.</span></div>
+  <div><span>Fix forward</span><span>Correcting a mistake by adding new events and postings that repair it, rather than deleting or editing history.</span></div>
+</div>
+
+<h3>Files, storage and evidence</h3>
+<div class="rows">
+  <div><span>Object storage</span><span>A service for storing files (S3-style): you put bytes in, get a reference back. Built for big files; not a database.</span></div>
+  <div><span>Staged upload</span><span>Uploading a file to a temporary spot first, getting a token that identifies it, then linking it to the case in a commit. If the commit fails, the file is an orphan and gets cleaned up.</span></div>
+  <div><span>Checksum</span><span>A short fingerprint computed from a file's bytes. If the bytes change, the checksum changes. Used to prove you got the exact file you expected.</span></div>
+  <div><span>Malware scan</span><span>Checking an uploaded file for viruses or malicious content before anyone opens it.</span></div>
+  <div><span>Quarantine</span><span>Setting something aside as unusable pending review: a file that failed its scan, a file row that couldn't be parsed.</span></div>
+  <div><span>Short-lived URL</span><span>A download link that only works for a few minutes and only for the person it was issued to. How evidence is served without exposing storage.</span></div>
+  <div><span>Orphan</span><span>A file (or record) that nothing references, usually because the step that should have linked it failed.</span></div>
+  <div><span>CSV</span><span>Comma-separated values: a plain text file where each line is a record and fields are separated by commas. The simplest possible data file.</span></div>
+  <div><span>FTP / SFTP</span><span>An old, still widely used way to transfer files between organisations by uploading to and downloading from a server. Card networks still use it for batch exchange.</span></div>
+  <div><span>Batch</span><span>Processing many items together at a scheduled time instead of one at a time as they arrive.</span></div>
+  <div><span>Deterministic</span><span>Given the same inputs, always produces exactly the same output. A deterministic file build means rebuilding after a crash yields byte-for-byte the same file.</span></div>
+  <div><span>Reconciliation</span><span>Comparing two records that should agree (what we sent vs what they acknowledged; the network's award vs our decision vs the ledger's posting) and investigating every difference.</span></div>
+</div>
+
+<h3>Measuring and operating</h3>
+<div class="rows">
+  <div><span>Latency</span><span>How long one request takes, start to finish.</span></div>
+  <div><span>Throughput / TPS</span><span>How many requests per second the system handles. TPS is transactions per second.</span></div>
+  <div><span>p50, p99</span><span>Percentiles of latency. p50: half of requests are faster than this. p99: 99% are faster; only 1 in 100 is slower. Engineers watch p99 because averages hide the slow cases customers actually notice. "p99 is bad" means the slowest 1% of requests are too slow.</span></div>
+  <div><span>Critical path</span><span>The steps that must finish before the customer gets an answer. Anything on it adds latency; anything you can move off it makes the response faster.</span></div>
+  <div><span>Synchronous / asynchronous</span><span>Synchronous: the caller waits for the result. Asynchronous: the caller gets "accepted" and the work happens later. The atomic commit is synchronous; calling the card network is asynchronous.</span></div>
+  <div><span>SLA</span><span>Service level agreement: a promised limit, like "a case reaches the network within one business day". Used to define when Processing has gone on too long.</span></div>
+  <div><span>Metric</span><span>A number the system reports about itself continuously: queue age, error rate, p99.</span></div>
+  <div><span>Alert / page / on-call</span><span>An alert fires when a metric crosses a threshold. Paging means waking the on-call engineer, the person responsible for responding right now.</span></div>
+  <div><span>Dashboard</span><span>A screen of metrics for humans to watch.</span></div>
+  <div><span>Escalation</span><span>Handing a problem to someone with more authority or a different team when the normal path can't resolve it in time.</span></div>
+  <div><span>Runbook</span><span>The written steps for handling a known incident, so the person on call at 3 a.m. doesn't have to invent them.</span></div>
+  <div><span>Kill switch</span><span>A control that stops a feature or a side effect immediately (no more network submissions, no more credits) without stopping the whole system or losing saved work.</span></div>
+  <div><span>Shadow mode / shadow results</span><span>Running the new system alongside the old one on real inputs, but with all of its actions switched off: it computes what it <em>would</em> do and you record that. Then you compare its outputs (eligibility, deadlines, decisions) against what the trusted process actually did. "Shadow results" are those comparisons. You only trust the new system with real actions after the shadow results are good enough.</span></div>
+  <div><span>Cohort</span><span>A defined slice of customers (say, 1% in one city) you enable something for first, so a mistake affects few people.</span></div>
+  <div><span>Rollout / rollback</span><span>Turning something on gradually (rollout) and turning it back off if it misbehaves (rollback). Note: rolling back code is fine; "rolling back" committed money or history is not.</span></div>
+  <div><span>Precision and recall</span><span>Two ways to measure an automated decision. Precision: of the cases it flagged, how many were right? Recall: of the cases that should have been flagged, how many did it catch? You can't judge automation without both.</span></div>
+  <div><span>Four-eyes</span><span>A rule that a sensitive action needs two people: one to do it, one to approve it.</span></div>
+  <div><span>Separation of duties</span><span>Making sure the person who can request something can't also approve it, and engineers can't bypass the workflow to edit money.</span></div>
+  <div><span>Audit / audit trail</span><span>The complete record of who did what, when, and why, kept so it can be checked later by someone outside the team.</span></div>
+  <div><span>Rate limit</span><span>A cap on how many requests a caller can make per second. Mentioned in this guide only as something generic web-system designs obsess over and this round doesn't.</span></div>
+  <div><span>Cache</span><span>A fast copy of data kept close to where it's needed. Great for display, dangerous for decisions, because a copy can be stale.</span></div>
+  <div><span>CDN</span><span>Content delivery network: servers around the world that serve static files fast. Irrelevant to a dispute platform; another generic-design tell.</span></div>
+  <div><span>Horizontal scaling</span><span>Handling more load by adding more machines doing the same job. Works for anything stateless and idempotent (workers). Doesn't work for the one thing that must decide (the write authority) or for people.</span></div>
+</div>
+
+<h3>Architecture words</h3>
+<div class="rows">
+  <div><span>Adapter</span><span>A small component that translates between your system and an outside one (the network's message format, the FTP server). Only the adapter changes when the outside changes.</span></div>
+  <div><span>Hexagonal architecture</span><span>A way of organising a service so the business rules sit in the middle and every outside thing (database, network, queue) talks to them through adapters. Nubank uses it; it's why "only the adapter changes" is natural for them.</span></div>
+  <div><span>Policy / policy version</span><span>The business rules (eligibility, deadlines, evidence needed), kept as versioned, testable code or configuration. Every decision records which version it used.</span></div>
+  <div><span>Workflow engine</span><span>Software that runs multi-step processes with timers and retries for you. Useful as plumbing; must not become the owner of your business rules.</span></div>
+  <div><span>State machine / transition</span><span>A defined set of states (OPENED, SUBMITTED, WON) and the allowed moves between them (transitions). The case only moves through allowed transitions.</span></div>
+  <div><span>Invariant</span><span>A rule that must be true no matter what breaks: "entries balance", "a deadline never disappears". You state them before designing so the design is judged against them.</span></div>
+  <div><span>Boundary</span><span>What this system owns and what it merely talks to. Deciding it first stops you rebuilding the ledger or the network by accident.</span></div>
+  <div><span>Fail closed / fail open</span><span>What to do when you can't decide: refuse (closed) or allow (open). For money, closed is the safe default; open is a risk decision someone must own.</span></div>
+</div>
 
 <footer>
   Study notes compiled from the <em>Nubank Lead System Design Study Guide</em>, Mock B: card disputes and chargebacks, on 4 September 2026; interview-format and batch-file material added 6 September 2026 from Nubank's hiring page and candidate reports on Glassdoor and 1Point3Acres. Companion to <em>The ledger, end to end</em>.
