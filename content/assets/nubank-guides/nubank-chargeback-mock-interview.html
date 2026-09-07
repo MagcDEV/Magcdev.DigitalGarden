@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mock interview: the chargeback platform — Nubank lead system design</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<style>
+  .turn { margin: 0 0 22px; }
+  .turn .who { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 4px; }
+  .turn.i .who { color: var(--warn); }
+  .turn.c .who { color: var(--strong); }
+  .turn.i { border-left: 3px solid var(--warn-bg); padding-left: 16px; }
+  .turn.c { border-left: 3px solid var(--strong-bg); padding-left: 16px; }
+  .turn p { margin: 0 0 10px; }
+  .turn p:last-child { margin: 0; }
+  .draw { background: var(--paper-tint); border: 1px dashed var(--rule); border-radius: 6px; padding: 14px 18px; margin: 14px 0 26px; }
+  .draw .label { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .draw pre { background: none; border: none; padding: 0; margin: 0; font-size: 13.5px; }
+  .clock { font-size: 13px; color: var(--ink-soft); margin: 40px 0 12px; padding-top: 14px; border-top: 1px solid var(--rule); }
+  .note { font-size: 14.5px; color: var(--ink-soft); font-style: italic; margin: 0 0 18px; }
+</style>
+<body>
+<div class="page">
+
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#setup">Before you start</a></li>
+    <li><a href="#m0">0:00 Prompt and clarifying</a></li>
+    <li><a href="#m5">5:00 Rules</a></li>
+    <li><a href="#m8">8:00 Nouns</a></li>
+    <li><a href="#m11">11:00 Interruption 1</a></li>
+    <li><a href="#m13">13:00 Architecture</a></li>
+    <li><a href="#m21">21:00 Interruption 2</a></li>
+    <li><a href="#m24">24:00 Deep dive</a></li>
+    <li><a href="#m33">33:00 Interruption 3</a></li>
+    <li><a href="#m36">36:00 Failures</a></li>
+    <li><a href="#m43">43:00 Interruption 4</a></li>
+    <li><a href="#m45">45:00 Rollout</a></li>
+    <li><a href="#m50">50:00 Close</a></li>
+    <li><a href="#score">How it scored</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Mock interview: the chargeback platform, minute by minute</h1>
+  <p class="lede">A full simulated system design round for the Nubank Lead role, with every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them.</p>
+  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026.</p>
+</header>
+
+<h2 id="setup">Before you start</h2>
+<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. Timestamps are where you should be, not where you must be; if you're five minutes behind at the architecture stage, cut the deep dive, never the failures.</p>
+<p>The candidate's answers below are deliberately spoken, not written: short sentences, one idea each, said while drawing. That is the register to practise.</p>
+
+<!-- ============================================================ -->
+<p class="clock" id="m0">0:00</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Thanks for joining. We've got about 55 minutes. I'd like you to design a card dispute platform for us. Customers dispute card transactions, we handle evidence, deadlines, submission to the card network, provisional credits, and the outcome has to be audited. Multi-country. Take it wherever you think it should go; I'll interrupt when I have questions.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Great. Before I draw anything I want to pin the boundary, because this prompt can mean three different systems. Let me ask five things, quickly.</p>
+<p>First: are we the issuer, the cardholder's bank, or the acquirer, the merchant's bank? I'll assume issuer, since the customer opens the dispute with us, unless you tell me otherwise.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Issuer. We're the customer's bank.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Second: which countries and networks are in scope for the first version? Each combination changes reason codes, deadlines and evidence rules. I'd like to design so the variation lives in versioned policy and adapters, but I want to know whether you expect one or many on day one.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Brazil and Mexico, Visa and Mastercard. But design so Colombia is easy.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Understood. Third: who owns the rules? I'll assume Legal and compliance own the meaning of eligibility and deadlines, and engineering implements them as versioned, testable policy where every decision records which version it used. Fourth: does opening a case ever move money by itself, or is provisional credit a separate policy decision? I'll treat it as separate: opening creates a case; credit is a policy outcome that may or may not follow.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Both of those match how we think about it. What's the fifth?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>What already exists. I'm going to assume there's a ledger that owns money, a card transaction store, identity, object storage and a notification service. This platform integrates with them; it doesn't rebuild them. In particular, this system never moves money itself. It asks the ledger to.</p>
+<p>And one shape question: is the exchange with the network a real-time API, or scheduled files? Both exist in practice. I'll design for the real-time shape and show how a file changes it if you'd like.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Start real-time. We may come back to files.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Then my boundary sentence is: this is a case-management system for the issuer side. It coordinates four things, customer intake, evidence, deadlines, and messages to the card network, plus money actions it asks the ledger to perform. Case acceptance is synchronous; everything external, network, ledger, documents, is asynchronous with an explicit Processing state. It is not the ledger and it is not the network.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 4</p><pre>BOUNDARY
+  We are: ISSUER dispute platform  (BR, MX · Visa, MC · Colombia later)
+  We own: case, evidence, deadlines, network messages, money INTENT
+  We call: ledger (money) · card network · object storage · notifications · identity
+  Sync: accept case, validate, current state     Async: everything external (Processing)
+  Opening a case ≠ moving money.  Provisional credit = separate policy decision.</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m5">5:00</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>Before components, the rules that must hold no matter what breaks. I'll write them; they're what I'll judge the design against.</p>
+<p>One: a case only moves through valid transitions under a versioned policy. No jumping from opened to closed unless a rule permits it, and an override needs a role, a reason and an approval, recorded.</p>
+<p>Two: every action records who, why and when. There is no anonymous status change. The audit trail is the event history, not a log we bolt on.</p>
+<p>Three: deadlines are durable. A due date is a saved row that cannot disappear if every worker dies. Not an in-memory timer.</p>
+<p>Four: every money action is separately idempotent. A credit, a reversal, an adjustment: each has its own stable key, so a retry never credits twice, and one case can legitimately have several.</p>
+<p>Five: network submissions reuse a stable external reference on every retry. A fresh reference could open a second dispute at the network.</p>
+<p>Six: evidence is versioned, access-controlled and retained by policy. A replaced document is a new version linked to the old; the old bytes are never overwritten.</p>
+<p>Seven: every decision records the policy version that evaluated it, so deploying a new rule can't silently change the meaning of an old decision.</p>
+<p>The trade I'm making up front: this workflow is slow compared to authorisation, weeks not milliseconds, so I'll spend nothing on raw speed and everything on deadline, audit and money correctness.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 7</p><pre>RULES (must hold under retries, crashes, weeks)
+  1 valid transitions only, versioned policy      5 network ref stable across retries
+  2 actor + reason + time on every action         6 evidence versioned, ACL, retention
+  3 deadlines are ROWS, not timers                7 policy version recorded per decision
+  4 each money action has its own key
+  slow workflow · strict correctness</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m8">8:00</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>Six nouns, and I'll resist adding more.</p>
+<p>DisputeCase is the current summary: state, amount, country, network, reason code, owner, policy version. CaseEvent is one immutable fact in its history: opened, evidence added, submitted, acknowledged, won. Deadline is a row with a type and a status. EvidenceItem is metadata pointing at a document in object storage: object version, checksum, scan status, uploader. NetworkSubmission is the stable reference we sent and whether it was acknowledged. FinancialAction is one money step with its own ledger key.</p>
+<p>The case is the aggregate root. Everything changes through commands. Nobody edits a status column.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Why both events and a snapshot? Why not just the case row with a status?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Because a status row can only tell you where the case is, never how it got there or who did it, and this system exists to answer "how did it get there" to an auditor or a regulator. The events are the truth; the snapshot is a materialised current view so reads are one row instead of a replay. They're written in the same commit, and I can verify or rebuild the snapshot from the events at any time. It's event history plus a current aggregate, not full event sourcing where every read replays.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 10</p><pre>NOUNS                                      case = aggregate root
+  DisputeCase   snapshot: state, amount, country, network, reason, owner, policy vN, version
+  CaseEvent     immutable: OPENED, EVIDENCE_ADDED, SUBMITTED, NETWORK_ACKED, WON ...
+  Deadline      row: type, due_at, status OPEN|CLAIMED|DONE|BREACHED
+  EvidenceItem  metadata → object storage: version, checksum, scan status
+  NetworkSubmission  stable ref NB-CB-812-1, acked?
+  FinancialAction    CB-812:PROVISIONAL_CREDIT:v1  (intent here, posting in ledger)
+  events + snapshot in ONE commit; snapshot rebuildable</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m11">11:00</p>
+<p class="note">First interruption, arriving before the architecture is drawn. Take it, then return.</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Quick one. A customer taps "dispute" twice because the app was slow. Two cases?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>No, and I need two mechanisms, not one. Request idempotency handles the literal retry: the app generates a key once per tap-intent and sends the same key on the retry; the platform returns the existing case. But two separate taps are two different keys, so I also need a business uniqueness rule: for this transaction, this claimant, this reason family, while a case is live, return the existing case or a deterministic conflict. I don't use transaction id alone, because partial disputes on one transaction are legitimate.</p>
+<p>Let me get back to the shape of the system.</p></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m13">13:00</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>Here's the write path. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
+<p>Side effects happen after commit. Workers read the outbox and call the card network, the ledger, object storage, notifications. Whatever they observe comes back into the case as a new event: network acked, ledger posted transaction 9182, scan passed. So the case's own history says what actually happened outside it.</p>
+<p>Two more pieces. Deadlines: a timer wakes workers near the due time, and an independent sweeper periodically queries the deadline rows for anything due or near due and catches whatever the timer missed. Search: Operations finds cases by country, age, reason, deadline through an index built from events; it may lag; Ops opens the authoritative case by id before acting.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 18</p><pre>                 command (key, expected version)
+                          │
+              ┌───────────▼────────────┐
+              │ auth · idempotency ·    │
+              │ version check           │
+              ├────────────────────────┤
+              │ validate vs policy vN   │
+              ├────────────────────────┤     ┌──────────────┐    ┌──────────────┐
+              │ ONE COMMIT:             │────▶│ outbox       │───▶│ workers:     │
+              │  event + snapshot       │     │ rows         │    │ network      │
+              │  + deadlines            │     └──────────────┘    │ ledger       │
+              │  + idempotency record   │                         │ storage      │
+              │  + outbox rows          │◀─── observed result ────│ notify       │
+              └───────────┬────────────┘     (new CaseEvent)      └──────────────┘
+                          │
+                 return accepted STATE
+
+   deadline rows ◀── timer (fast path)      search index ◀── events (Ops discovery only)
+                 ◀── sweeper (safety net)</pre></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Why not use a workflow engine for all of this? We have one.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>I'd use it for what it's good at: timers, retries, orchestration of the steps. But the domain service still owns what a valid transition is, which policy version applies, the audit trail and the idempotency. The engine is execution infrastructure. The moment critical policy exists only as opaque workflow configuration, I can't test it, version it, or explain a decision from six months ago. So: engine underneath, domain rules on top.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>And what exactly have you committed before you tell the customer "submitted"?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>The event, the snapshot and version, the relevant deadlines, the idempotency record, and the outbox row that says "submit this". So "submitted" means "durably intended", and the case can't say submitted while forgetting that the submission still has to happen: the promise to do it is in the same commit as the state that claims it. What I have not done is wait for the network to answer. That comes back as an event.</p></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m21">21:00</p>
+<p class="note">Second interruption.</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Let's say a regulator asks: show me this case exactly as it stood on the third of June, including which rule you applied that day.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Replay the case's events up to that timestamp and show the snapshot they produce. Every event carries actor, reason, time, and the policy version in force for that decision, so "which rule applied" is in the events, not reconstructed from a deployment history. This is a query, not a project, and it's the reason I refused a mutable status row ten minutes ago.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Good. Pick a part to go deep on.</p></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m24">24:00</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>Provisional credit, because it's where long-running case state meets customer money, and where the case model and the ledger have to agree without a distributed transaction.</p>
+<p>Walkthrough. Ana disputes R$300. Policy for her product and country says she's owed provisional credit. The case commit writes a FinancialAction with key CB-812, provisional credit, v1, and an outbox row. Case state is under review; financial state is provisional credit pending. After commit, a worker sends that command to the ledger with that key. The ledger posts a balanced pair, Ana plus 300, a disputes clearing account minus 300, and returns its transaction id. The worker records provisional-credit-posted as a case event carrying that id. Ana sees the money.</p>
+<p>Now the outcome. If she wins in full, finalise: the credit stands. If she loses, a new action, reverse provisional v1, asks the ledger for a linked reversal; the original posting is untouched. If she wins R$200 of 300, one adjustment for the difference, final adjustment v2, minus 100. Never edit the credit amount.</p>
+<p>The case closes only when both are true: the workflow decision is recorded, and every required ledger action is confirmed. And at the end I reconcile three truths: the network's award, our recorded decision, and the ledger's postings. They must agree on outcome and amount.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 28</p><pre>PROVISIONAL CREDIT
+  policy says yes ─▶ commit: FinancialAction CB-812:PROVISIONAL_CREDIT:v1 + outbox
+                  ─▶ worker → ledger(key) → Ana +300 / clearing −300 → tx 9182
+                  ─▶ event PROVISIONAL_CREDIT_POSTED(tx 9182)
+
+  outcome:  WIN     → finalise (credit stands)
+            LOSS    → CB-812:REVERSE_PROVISIONAL:v1   (linked reversal, original untouched)
+            PARTIAL → CB-812:FINAL_ADJUSTMENT:v2  −100  (one posting for the difference)
+
+  case state  ≠  money state        WON = decision · SETTLED = fact
+  close only when both done · reconcile 3 truths: network award = our decision = ledger</pre></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Why is the key that specific? Why not just the case id?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Because one case legitimately needs several different money actions. If the key were the case id, the reversal would look like a retry of the credit and the ledger would correctly refuse it. The key names the business action being retried: this case, this action, this version. The ledger enforces uniqueness on it, so a retried credit returns the prior posting and a reversal is recognisably a different thing.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>The ledger call times out. Did the credit post?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>I don't know, and I don't guess. A timeout means unknown. I retry the exact same key. The ledger either returns the transaction it already posted, or posts it once now. The case stays in settlement-pending until I've observed a durable result. What I never do is treat the timeout as failure and issue a new key; that's how a customer gets credited twice.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>She spends the R$300, then loses.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>The reversal may leave her negative. Whether that's a debt, a negative available balance, or a hardship arrangement is product and regulatory policy per country, and I need that decided before launch, not at 3 a.m. Technically: record the loss, ask the ledger for the linked reversal, present a clear repayment experience. Risk can cap provisional credits or delay availability, but that's a business lever. The system can't take money that isn't there and I shouldn't design as if it could.</p></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m33">33:00</p>
+<p class="note">Third interruption: the scalability push. This is where a Lead candidate reportedly failed.</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Volume goes up tenfold. What breaks first, and how do you improve performance?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Tenfold what, is my first question: cases per day, documents per case, or operators? I'll take cases per day, and I'll answer in the order I'd actually look.</p>
+<p>What I'd measure: p99 of the command path, queue age per dependency, oldest unprocessed deadline, outbox lag, index lag.</p>
+<p>What scales by adding machines: every worker and adapter, because every side effect is idempotent and every claim is conditional. The search index, because it's a rebuildable projection. Evidence, because object storage is effectively unbounded and scanning has its own queue.</p>
+<p>What the case store does: it partitions cleanly by case id, because no transaction ever spans two cases. So the write authority scales by adding partitions, and I'd key on case id from day one so the split is possible later. The one hot shape is a single case with thousands of events, which policy should cap, and the snapshot means reads never replay it.</p>
+<p>The deadline sweeper's query is the thing I'd check first for performance: status equals open and due before now, on millions of rows. Index on status and due time, bounded batches, skip-locked claims, and let the timer take the normal path so the sweeper only sees stragglers.</p>
+<p>What does not scale by adding machines: Operations. If ten times the cases means ten times the manual reviews, that's the real ceiling. So the honest performance lever at scale is automation, and I'd decide what to automate from shadow results, precision and recall by reason and market, not from average handle time.</p>
+<p>And on latency specifically: the customer-facing path is one indexed read plus one commit. Policy evaluation is precomputed at case open. If p99 is bad, it's a hot partition, a lock held across a slow call, or a synchronous call that shouldn't be there, in that order. I would not cache the case; a cached case is exactly what lets two operators decide it twice.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p><pre>10x  → measure: p99 cmd, queue age/dependency, oldest deadline, outbox lag, index lag
+     scales: workers, adapters, index, evidence        partition: case store by case_id
+     check first: sweeper query → index (status, due_at), batches, SKIP LOCKED
+     does NOT scale: Ops  → automate from shadow results (precision/recall), not AHT
+     never: cache the case</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m36">36:00</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Let's break things. The card network times out on a submission.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Same discipline as the ledger: unknown, not failed. The network may have processed it before the response was lost. I query by the same external reference. If they support idempotent resubmission, I retry with that reference; if they don't, I escalate before I create another submission. Every attempt and response is persisted, because if this becomes a deadline dispute, the record of what we sent when is our evidence. Customer sees "sent to the network, awaiting response". What I never do is resubmit with a new reference; that can open a second dispute.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Your timer workers are down for an hour, over a batch of deadlines.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>The deadlines are rows, so nothing is lost. When workers return, or the sweeper runs, they query due and near-due rows, claim each conditionally with a lease, process idempotently, and escalate anything already breached. I measure oldest unprocessed deadline and time-to-breach, and I alert before breach, not after. If workers are down long enough that a statutory deadline is at risk, that's a page to Operations with the list, so a human can act out of cycle.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Two operators decide the same case at the same second. One says won, one says lost.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Both commands carry the expected case version. The first commits and bumps the version. The second's conditional update matches zero rows and gets a conflict. It reloads, sees the case is decided, and is rejected, or the operator consciously retries with a reason if policy allows a re-decision. The audit trail shows both attempts and one decision. Never last-write-wins.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>A policy release goes out wrong and misclassifies five thousand cases before anyone notices.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Freeze that policy version for new evaluations first. Then find affected cases by version, which I can do precisely because every decision recorded its version. Classify impact: customer harm, money moved, deadlines affected. Run an approved remediation command that appends corrective events and any required financial actions, case by case, with the reason. Notify customers and regulators as required. Reconcile every corrected case. Then the retrospective: why tests and rollout gates didn't catch it. What I don't do is rewrite the event history or bulk-edit statuses; the wrong decision happened and the record must say so.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 42</p><pre>FAILURES  (what committed · retry with which id · what duplicates · customer sees · alert · operator)
+  network timeout    → UNKNOWN; query same ref; never new ref; persist attempts; "awaiting"
+  workers down 1h    → rows survive; sweeper claims w/ lease; alert time-to-breach; Ops list
+  2 operators        → expected version; one commits, one conflicts; both in audit
+  bad policy v13     → freeze v13; find by version; fix forward w/ events; never rewrite
+  ledger timeout     → retry same key; settlement-pending until observed</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m43">43:00</p>
+<p class="note">Fourth interruption: the prompt shape changes.</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Now suppose the network isn't an API. We send a CSV by FTP four times a day and get a file back. What changes?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>The case model doesn't change. NetworkSubmission still has a stable reference; that reference becomes the row id in the file. What I add is a BatchRun, one file, one upload, one status, with an id from the date and the slot, and a reconciliation queue for rows sent but not yet answered.</p>
+<p>Outbound: at 14:00, in one transaction, claim every queued submission into run 2026-09-06-14 with a conditional update, so a duplicate scheduler claims nothing. Build the CSV deterministically from the claimed rows, checksum it, upload it under a name derived from the run id, mark the run uploaded. Every row is now awaiting answer.</p>
+<p>Inbound: download the response file, checksum it, dedupe by file id so a file delivered twice is ignored, parse row by row, quarantine bad rows without dropping the file, and turn each good row into a case command keyed by file id plus row id. So a half-processed file can be re-run safely.</p>
+<p>Failures change shape but not discipline. Upload timeout is unknown: check the remote directory for the run's file and checksum before re-uploading the same file under the same name; never rebuild with a new run id, that resends two hundred disputes. No response for two days: our cases are fine; the reconciliation queue ages, and its oldest item is what pages someone, plus escalation for any case near its deadline.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 45</p><pre>FILE VARIANT   (same nouns + BatchRun + ReconciliationItem)
+  OUT  claim QUEUED→run 2026-09-06-14 (one txn) → build CSV deterministically → checksum
+       → FTP name=run id → run UPLOADED → rows AWAITING_ANSWER
+  IN   download → checksum → dedupe file id → parse rows → bad→quarantine
+       → command per row, key = file id : row id
+  idempotent at 3 levels: row (submission ref) · file (run id/checksum) · run (unique id)
+  upload timeout = unknown → ls remote first → same file, same name · never new run id
+  alert: age of oldest unanswered row</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m45">45:00</p>
+<div class="turn i"><p class="who">Interviewer</p><p>Last few minutes. How do you get this to production, and who owns what?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Narrowly. One country, one network, one reason-code family, chosen with business data for low exposure and a cooperative Ops owner, not the biggest market. First, shadow the eligibility and deadline maths: feed production inputs to the new engine with every side effect suppressed, store its outputs separately, compare to the trusted process. Shadow must be physically unable to emit network or ledger commands. Then enable network submissions behind a kill switch, then money actions behind their own kill switch. A kill switch stops new side effects but keeps committed intents visible and lets safe acknowledgements drain; it never kills workers and loses track of what was promised.</p>
+<p>Ownership: the platform team owns case mechanics, transitions, audit, deadlines, idempotency. Legal and compliance own what the rules mean, versioned and approved. Operations owns queues and the exception procedures. Network teams own adapters and certification. The ledger team owns money and independently enforces which commands it accepts. Product owns what the customer reads and when they see money.</p>
+<p>For Colombia: centralise the mechanics and a governed policy framework; the Colombia owner publishes a versioned rule package under common contracts and tests. No fork, and no forcing every local rule into global code.</p>
+<p>The trade-off I'd flag as biggest: automation versus human review. I'd automate only what shadow results prove we can measure, gradually, with thresholds and easy escalation.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 49</p><pre>ROLLOUT  1 country · 1 network · 1 reason family
+         shadow (no side effects possible) → submissions [kill switch] → money [kill switch]
+OWNERS   platform: mechanics · legal: rule meaning · ops: queues · network: adapters
+         ledger: money · product: customer wording
+CO       central mechanics + versioned policy package per country; no fork
+TRADE    automation vs review → decide from shadow precision/recall</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m50">50:00</p>
+<div class="turn i"><p class="who">Interviewer</p><p>If you had to name the single most important decision in this design?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>That a case command commits workflow state and intent locally, in one transaction, and every external side effect happens after commit and comes back as an event. Everything else follows: audit is free because history is events; deadlines can't vanish because they're rows in that commit; money is safe because the intent is committed with its key before anyone calls the ledger; and "won" and "financially settled" stay separate because one is a decision we record and the other is a fact the ledger reports back.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Thanks. Any questions for me?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Two. In your dispute operation today, is the exchange with the networks real-time, file-based, or both? And who owns the provisional-credit policy per country, and how often does it change? Those two answers would move my design more than anything else.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="score">How it scored, and where it could have gone wrong</h2>
+<p class="question">What the interviewer heard, against the four things Nubank's round is reported to grade.</p>
+<table>
+  <tr><th>Signal</th><th>Where it showed</th><th>How a weaker answer sounds</th></tr>
+  <tr><td>Immutable facts, derived state</td><td>Events plus snapshot at minute 8; the "as of 3 June" answer at 21 was one sentence because of it; "never rewrite history" in the bad-policy answer.</td><td>"The case table has a status column and we update it." Then the regulator question needs a new logging system.</td></tr>
+  <tr><td>Idempotency, unprompted</td><td>Named the key on every arrow: request key, business uniqueness, semantic ledger keys, stable network reference, file id plus row id.</td><td>Waits to be asked; then answers "we'd add an idempotency key" without saying whose or where it lives.</td></tr>
+  <tr><td>A named consistency line</td><td>"Sync means durable acceptance"; "search may lag, Ops opens the case by id"; "awaiting answer is explicitly unknown, not failed".</td><td>"Everything strongly consistent" or "we'll use eventual consistency" with no line drawn.</td></tr>
+  <tr><td>Partial failure</td><td>Timeout equals unknown, three times, for network, ledger and file. Version conflict for the two operators. Sweeper for dead workers.</td><td>"We'd retry" without saying with which identity, or "roll back the case" after a committed side effect.</td></tr>
+  <tr><td>Scalability push (Lead bar)</td><td>Asked "tenfold what", named metrics, separated what scales from what doesn't, called Operations the ceiling, refused the cache.</td><td>"Add more instances, add a cache, move to NoSQL."</td></tr>
+  <tr><td>Recovery from interruption</td><td>Every interruption was answered and then "let me get back to" was said out loud.</td><td>Loses the thread, or ignores the interruption to finish the monologue.</td></tr>
+</table>
+
+<h3>Three places this candidate could still lose points</h3>
+<ul>
+  <li><strong>Talking through the diagram instead of drawing it.</strong> The architecture must be on the board by minute 18. If you're narrating boxes that aren't drawn, the interviewer can't check your write path.</li>
+  <li><strong>Over-answering the interruptions.</strong> Each one above is under 90 seconds. If the tenfold answer runs five minutes, you never reach rollout, and rollout is where "has shipped things" is graded.</li>
+  <li><strong>Forgetting to ask the interviewer questions at the end.</strong> Two good ones, tied to the design, are cheap and remembered.</li>
+</ul>
+
+<h3>Run it yourself</h3>
+<p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time; the point is that the answer doesn't depend on when it's asked.</p>
+
+<footer>
+  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions.
+</footer>
+</main>
+</div>
+</body>
+</html>
