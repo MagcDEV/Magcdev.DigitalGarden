@@ -43,7 +43,7 @@ tags:
 
 ## Interview deep-dives
 
-- [[wiki/system-design/nubank-study-notes|Nubank lead system design study notes]] — chargebacks, chargeback mock interview, ledger, and pivot prompts (authoriser, credit limit, fraud, PIX)
+- [[wiki/system-design/nubank-study-notes|Nubank lead system design study notes]] — Nubank's prep document decoded (numbers, v1 → v2 → v3, degradation, security, six-day plan), chargebacks, chargeback mock interview, ledger, and pivot prompts (authoriser, credit limit, fraud, PIX, ride-hailing, ad clicks)
 
 ## Classic Design Problems
 

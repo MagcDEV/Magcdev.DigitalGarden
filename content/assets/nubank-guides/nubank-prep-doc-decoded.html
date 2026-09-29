@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nubank's prep document, decoded — system design interview</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#end-result">1. The end result: what changed</a></li>
+    <li><a href="#rubric">2. What they evaluate, decoded</a></li>
+    <li><a href="#keys">3. The ten keys, with the sentence for each</a></li>
+    <li><a href="#numbers">4. Numbers: the part you were missing</a></li>
+    <li><a href="#concepts">5. Every technical concept, from zero</a></li>
+    <li class="sub"><a href="#c-dist">Distributed systems</a></li>
+    <li class="sub"><a href="#c-data">Data and storage</a></li>
+    <li class="sub"><a href="#c-scale">Scale and performance</a></li>
+    <li class="sub"><a href="#c-ops">Reliability and operations</a></li>
+    <li><a href="#v1">6. Begin simple, then iterate: chargebacks as v1 → v3</a></li>
+    <li><a href="#security">7. Security, abuse, degradation, monitoring</a></li>
+    <li><a href="#generic">8. If the prompt is generic: two sketches</a></li>
+    <li><a href="#week">9. Six days, one plan</a></li>
+    <li><a href="#questions">10. Your five minutes of questions</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero">
+  <h1>Nubank's prep document, decoded</h1>
+  <p class="lede">They sent you the rubric. This guide explains every concept it names in plain terms, shows how each one already lives in your chargeback and ledger designs, and adds the two things those designs didn't stress: rough numbers, and a v1-then-iterate storyline.</p>
+  <p class="source">Built 29 September 2026 from <em>Preparing for your System Design Interview</em> (Nubank's candidate PDF) and your three existing guides. Interview: Monday 5 October.</p>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="end-result">1. The end result: what this document changes</h2>
+<p class="question">Read this first; it re-weights your last six days.</p>
+
+<p class="thesis">The round is 60 minutes, you lead, and the conversation will "center on distributed systems, scalability, performance, and efficiency". They will grade whether you narrow the problem before drawing, whether you use rough numbers to decide, whether you start simple and iterate, and what happens on a bad day. Your chargeback design already does most of this. What it must add is arithmetic and a visible v1.</p>
+
+<h3>Five things the PDF says that the candidate reports didn't</h3>
+<ol>
+  <li><strong>The example prompts are generic.</strong> The PDF's worked example is ride-hailing and its recommended video is an ad-click aggregator. That doesn't mean your prompt won't be fintech (three 2026 candidates got chargebacks), but it means the interviewers think in general distributed-systems terms and might hand you a non-banking problem. Section 8 gives you two ten-minute sketches as insurance.</li>
+  <li><strong>Numbers are expected, and they must lead somewhere.</strong> "Precision isn't the goal; clear mathematical reasoning is." Your guides reason from invariants; they rarely say "that's 8 writes per second". Section 4 fixes that.</li>
+  <li><strong>"Drawing an architecture in the first three minutes is the most common way a strong engineer scores poorly."</strong> Your stage 1 (clarify) is exactly right. Spend the full five to eight minutes there and say the scoping decision out loud.</li>
+  <li><strong>Begin simple, then iterate.</strong> They want to hear "my first idea is X, the pros are, the cons are, we tackle that next by". Your guides present the finished design. Section 6 turns it into a v1 → v2 → v3 story.</li>
+  <li><strong>It's a two-way discussion.</strong> They welcome pushback on their suggestions. When the interviewer proposes something (a cache, a workflow engine), disagree politely with a reason if you have one. Silence reads as passivity.</li>
+</ol>
+
+<h3>How the 60 minutes maps to your seven stages</h3>
+<table>
+  <tr><th>PDF</th><th>Minutes</th><th>Your stages</th></tr>
+  <tr><td>Intros and problem statement</td><td>0–8</td><td>Listen, then stage 1: requirements, numbers, explicit scoping decision.</td></tr>
+  <tr><td>Collaborative problem-solving</td><td>8–55</td><td>Stages 2 to 7: rules, nouns, v1 sketch, its flaws, v2 architecture, one deep dive, failures with a bad-day story, scaling with numbers, rollout.</td></tr>
+  <tr><td>Your questions</td><td>55–60</td><td>Section 10.</td></tr>
+</table>
+
+<div class="say"><p class="label">The sentence to say in minute eight</p><p>"So I'll scope to the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest; I'll treat the network as an adapter and the ledger as an existing system, and come back to reporting if we have time. At roughly 70,000 cases a day this is not a throughput problem; it's a correctness, deadline and people problem, and that shapes every choice I make next."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="rubric">2. What they evaluate, decoded</h2>
+<p class="question">The PDF lists seven signals. What each means in plain terms, and where your chargeback design shows it.</p>
+
+<div class="rows">
+  <div><span>Problem breakdown</span><span><strong>Means:</strong> can you take "design a dispute platform" and split it into parts you can reason about separately? <strong>Show it:</strong> the four-part boundary sentence (intake, evidence, deadlines, network) plus "money is the ledger's job". Say the split out loud before any box exists.</span></div>
+  <div><span>Architecture fundamentals</span><span><strong>Means:</strong> every "what" has a "why", and the why is a principle, not a preference. They name immutability explicitly: in finance it gives you systems that are auditable and correct. <strong>Show it:</strong> "events are append-only, therefore the audit trail is free and 'as of 3 June' is a query". And support choices with numbers (section 4).</span></div>
+  <div><span>Scalability and performance</span><span><strong>Means:</strong> "if traffic or data goes up ten times, what breaks first and what do you do?" Their exact words. <strong>Show it:</strong> the five-step answer from your guides, now with arithmetic: what 10x actually is in writes per second and gigabytes per month.</span></div>
+  <div><span>Reliability and maintainability</span><span><strong>Means:</strong> the bad day and the long run. They list replication and recovery, graceful degradation, security and abuse, monitoring, and debugging in production. <strong>Show it:</strong> stage 6 plus section 7 of this guide, which adds the two you hadn't covered: security/abuse and debugging.</span></div>
+  <div><span>Trade-offs</span><span><strong>Means:</strong> "we're far more interested in what you gave up than in whether you picked the database we would have." <strong>Show it:</strong> every choice gets a cost said aloud: "clearing account instead of 2PC: I gain operability and lose the clean all-or-nothing; the customer sees Processing".</span></div>
+  <div><span>Collaboration</span><span><strong>Means:</strong> do you take feedback, start simple and iterate, drive the discussion, ask questions, defend your view? <strong>Show it:</strong> v1 with flaws (section 6); when they suggest something, engage with it; when they interrupt, answer and return.</span></div>
+  <div><span>Pragmatic thinking</span><span><strong>Means:</strong> real constraints are not obstacles to argue with. The network sends CSVs by FTP; Legal owns the deadline; the ledger already exists. <strong>Show it:</strong> "the counterparty decided the protocol, so I treat the file like any unreliable external call" is exactly this signal.</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="keys">3. The ten keys, with the sentence for each</h2>
+<p class="question">Their "Keys for Success", one behaviour each, and the words that demonstrate it.</p>
+
+<table>
+  <tr><th>Key</th><th>What it means</th><th>Say or do</th></tr>
+  <tr><td>Think out loud</td><td>Narrate reasoning, not just results. Silence while you think is fine for five seconds; longer, say what you're weighing.</td><td>"I'm choosing between two shapes here; let me say what each costs."</td></tr>
+  <tr><td>Start with requirements</td><td>Ask the questions that change the design; then make the scope explicit.</td><td>Your five clarifying questions, then: "I'll focus on X first because it's the harder problem; I'll come back to Y if we have time."</td></tr>
+  <tr><td>Use numbers to decide</td><td>Rough math that ends in a decision. "It'll be a lot of data" scores zero.</td><td>"70k cases a day is under one per second; the bottleneck isn't writes, it's Ops. So I invest in automation and deadlines, not in sharding."</td></tr>
+  <tr><td>Trade-offs, not optimal answers</td><td>Name what you gave up.</td><td>"Events plus snapshot cost me a second write per command; I pay it for a rebuildable audit trail."</td></tr>
+  <tr><td>Begin simple, then iterate</td><td>Show a v1, find its flaws yourself, fix them in order.</td><td>"v1: one service, one database, a status column, synchronous calls to the network. Here's what breaks. So v2…" (section 6)</td></tr>
+  <tr><td>Zoom in and out</td><td>Whole system first, then take one part apart. Not 45 minutes of either.</td><td>Diagram by minute 20; then "let me open the provisional-credit box".</td></tr>
+  <tr><td>Assume things will fail</td><td>Host dies, single point of failure, degrade instead of die, what you monitor.</td><td>"My single point of failure is the case database; here's its replication and failover, and here's what the product does during the failover window."</td></tr>
+  <tr><td>Two-way discussion</td><td>Ask, push back, defend. Respectfully.</td><td>"I'd push back on caching the case; here's the double-decision it allows. If you're thinking of read latency, I'd rather serve reads from the snapshot."</td></tr>
+  <tr><td>Keep the whiteboard clear</td><td>Boxes, arrows, labels; no walls of text.</td><td>One diagram, labelled arrows with the key each carries; side notes for numbers and failures.</td></tr>
+  <tr><td>Embrace the constraints</td><td>Don't fight the FTP file or the regulation.</td><td>"Given the file cadence, the design question becomes reconciliation, not latency."</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="numbers">4. Numbers: the part you were missing</h2>
+<p class="question">"How do you support architectural decisions with numbers (volume, latency, throughput), even as rough estimates?" Here is how, for your two designs and for any prompt.</p>
+
+<h3>The arithmetic you should have memorised</h3>
+<table>
+  <tr><th>Fact</th><th>Use</th></tr>
+  <tr><td>A day is 86,400 seconds; call it 100,000</td><td>Per-day volume ÷ 100k = per second. 8.6 million a day ≈ 100 per second.</td></tr>
+  <tr><td>A month ≈ 2.6 million seconds; a year ≈ 30 million</td><td>Storage growth: events per month × bytes per event.</td></tr>
+  <tr><td>Peak ≈ 3 to 10× average</td><td>Design for peak; say which multiplier you chose and why (payday, Black Friday).</td></tr>
+  <tr><td>1 KB ≈ a small JSON event; 1 MB ≈ a photo; 10 MB ≈ a PDF with scans</td><td>Storage per case, per transaction.</td></tr>
+  <tr><td>One Postgres node: thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB</td><td>Whether one write authority is enough.</td></tr>
+  <tr><td>One Kafka partition: tens of thousands of small messages per second</td><td>Whether the bus is ever the bottleneck (usually not).</td></tr>
+  <tr><td>Same-region network hop ≈ 1 ms; cross-region ≈ 50–150 ms; disk commit ≈ 1–10 ms</td><td>Latency budgets: what fits in 100 ms, what doesn't.</td></tr>
+  <tr><td>A human reviews maybe 30 to 60 cases a day</td><td>The Operations ceiling, in people.</td></tr>
+</table>
+
+<h3>Chargebacks, worked out loud</h3>
+<p>Say the assumptions, do the maths on the board, land on a decision.</p>
+<pre><code>Assume 100M customers, ~2B card transactions / month
+Dispute rate ~0.1%                → 2M disputes / month  ≈ 70k / day  ≈ 0.8 / s average, ~8 / s peak
+Events per case ~20 × 1 KB        → 40M events / month  ≈ 40 GB / month  ≈ 0.5 TB / year
+Evidence: 2 files × 2 MB per case → 8 TB / month         (object storage, not the database)
+Deadlines: ~3 per case            → 6M rows / month; sweeper scans the OPEN ones only
+Batch file: 70k rows / 4 slots    → ~18k rows per file; a few MB; trivial to build, painful to resend
+Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers</code></pre>
+<p><strong>The decision the numbers force:</strong> under one write per second average and tens at peak, a single well-indexed relational database is not the bottleneck and won't be at 10×. Partition by case id for isolation and failover size, not for throughput. The costs that scale badly are evidence storage (cheap, but plan retention) and human review (expensive; automation is the real lever). So the design spends its complexity on correctness, deadlines and reconciliation, and on measuring what to automate.</p>
+
+<h3>The ledger, worked out loud</h3>
+<pre><code>2B transactions / month ≈ 770 / s average, ~8k / s peak (Black Friday, payday)
+2 entries per transaction + 1 aggregate update + 1 outbox row ≈ 4 writes  → ~30k writes / s peak
+Entries 200 bytes × 4B / month ≈ 0.8 TB / month on the hot path
+Read: balance checks ≈ same as transactions; feed reads 10× that, served from projections</code></pre>
+<p><strong>The decision:</strong> 30k writes per second at peak is beyond one comfortable Postgres primary, so partitioning by customer is on the roadmap from day one, and the failover time of each partition is the availability ceiling. Cross-customer transfers then need the clearing account. Analytics never touches the transactional store.</p>
+
+<h3>The authoriser, one line</h3>
+<pre><code>Budget: the network expects an answer in a few hundred ms; a cross-region hop is 100+ → the decision must be local.
+One indexed read + one small commit ≈ 5–10 ms → fits with room; a synchronous fraud model call must fit in ~50 ms or be shed.</code></pre>
+
+<h3>The pattern for any prompt</h3>
+<ol>
+  <li>Users or entities → actions per user per day → total per day → ÷ 100k → per second → × peak factor.</li>
+  <li>Bytes per action → per day → per month → per year. Compare with what one machine holds in memory and on disk.</li>
+  <li>Latency budget → what a hop costs → what can be synchronous.</li>
+  <li>End with the sentence "so that's why I…": partition, cache, go async, precompute, or, just as validly, don't.</li>
+</ol>
+
+<div class="trap"><p class="label">Avoid</p><p>"It'll be a lot of data, so we need something scalable." And the opposite error: over-engineering a system whose numbers say one database is fine. Saying "at this volume one Postgres is enough, and here's the number that would change my mind" is a strong answer.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="concepts">5. Every technical concept they list, from zero</h2>
+<p class="question">Their "Technical Concepts to Review", each explained plainly, then how it shows up in an answer.</p>
+
+<h3 id="c-dist">Distributed systems fundamentals</h3>
+<div class="rows">
+  <div><span>Synchronous vs asynchronous</span><span><strong>What:</strong> synchronous means the caller waits for the result; asynchronous means the caller gets "accepted" and the work finishes later. <strong>When each fits:</strong> synchronous for anything the caller needs before proceeding and that is fast and local (the atomic commit). Asynchronous for anything slow, external, or failure-prone (the card network, the ledger call, sending a notification). <strong>In your answer:</strong> "acceptance is synchronous; every external step is asynchronous with an explicit Processing state." The trade: async is more resilient and faster to answer, but you now need state for "in flight" and a way to observe results.</span></div>
+  <div><span>Batch vs stream</span><span><strong>What:</strong> batch processes many items together on a schedule (the 14:00 CSV); stream processes each item as it arrives (Kafka events into the feed). <strong>Trade-offs:</strong> batch is simpler, easier to reconcile as a unit, cheap per item, but latency is the schedule and a bad file blocks many items. Stream is low latency and isolates failures per item, but ordering, duplicates and backpressure become your problem. <strong>In your answer:</strong> the network leg is batch because the counterparty said so; everything internal is stream; and you can name the moment they meet: "one command per row, keyed by file plus row".</span></div>
+  <div><span>Consistency vs availability</span><span><strong>What:</strong> when the network between machines is partitioned, you can either keep answering (available) or refuse until you're sure you have the latest data (consistent), not both. This is the CAP trade-off. <strong>In finance:</strong> for anything that decides about money you choose consistent: decline rather than approve from a possibly stale balance. For anything you only read, choose available: show a slightly stale feed. <strong>In your answer:</strong> draw the line and name it: "case transitions, deadlines, financial intent: strong. Search, notifications, dashboards: eventual. Uploaded-but-unanswered: explicitly unknown."</span></div>
+  <div><span>Idempotency and retries; at-least-once</span><span><strong>What:</strong> networks lose responses, so callers retry, so receivers see duplicates. "At-least-once delivery" is the honest guarantee: every message arrives, some twice. Idempotency is the property that a duplicate has no extra effect. You get it with a stable key chosen where the intent is born, stored atomically with the effect. <strong>How it changes a design:</strong> every boundary gets a key; every consumer dedupes; timeouts mean unknown, and you query before you retry with the same key. <strong>In your answer:</strong> name the key on every arrow, unprompted.</span></div>
+</div>
+
+<h3 id="c-data">Data and storage</h3>
+<div class="rows">
+  <div><span>Choosing a store for the access pattern</span><span><strong>Relational</strong> (Postgres, MySQL): tables, transactions across rows, unique constraints, rich queries. Choose when you need atomic multi-row writes and constraints, which is every "decide" path in finance. <strong>Key-value</strong> (Redis, DynamoDB): one key → one blob, extremely fast, no joins. Choose for lookups by id at scale: idempotency records, session state, hot counters. <strong>Document</strong> (MongoDB, DynamoDB again): flexible nested records, queried by fields. Choose for varied shapes you read whole: a case snapshot with nested evidence metadata could live here. <strong>Columnar</strong> (BigQuery, Redshift, ClickHouse): stores columns together for fast scans over billions of rows. Choose for analytics, never for the transactional path. <strong>In your answer:</strong> "relational for the case store because I need multi-row transactions and unique keys; object storage for bytes; a search index for Ops; columnar for reporting fed from events." And: "I'd stay relational for the aggregate; the numbers don't justify anything else."</span></div>
+  <div><span>Modeling around the queries</span><span><strong>What:</strong> design tables for the questions you'll ask, not just for the things that exist. <strong>Example:</strong> "find deadlines due in the next hour that nobody has claimed" needs an index on (status, due_at). "Show Ops all cases in Mexico over 20 days old" needs a projection, because the case table isn't shaped for it. <strong>In your answer:</strong> list the three or four queries the system lives on, and put an index or a projection next to each.</span></div>
+  <div><span>Partitioning and sharding</span><span><strong>What:</strong> splitting data across several databases by a key so each holds and serves a share. Partitioning is the general idea; sharding usually means doing it across separate servers. <strong>The key decides everything:</strong> queries within one key are cheap; queries across keys are expensive; transactions across keys are impossible without a saga. <strong>In your answer:</strong> "case id, because no transaction spans two cases" (chargebacks) or "customer id, because customer-to-customer interaction is low, and then cross-customer transfers go through clearing" (ledger). Always name the hot-key risk.</span></div>
+  <div><span>Schema evolution</span><span><strong>What:</strong> the shape of your data will change after launch; how do you change it without downtime or breaking old records? <strong>Rules:</strong> add fields, never repurpose them; make new fields optional with a default; write code that reads both old and new shapes for a while (expand, migrate, contract); version event types rather than editing old events; never rewrite history to fit a new schema. <strong>In your answer:</strong> "events carry a schema version; consumers accept versions N and N+1 during a rollout; the case snapshot can be rebuilt if its shape changes." This is a question interviewers use to separate people who've run systems from people who've drawn them.</span></div>
+</div>
+
+<h3 id="c-scale">Scale and performance</h3>
+<div class="rows">
+  <div><span>Horizontal vs vertical scaling, load balancing</span><span><strong>Vertical:</strong> a bigger machine. Simple, has a ceiling, one failure takes everything. <strong>Horizontal:</strong> more machines sharing the work. No ceiling in principle, but only for work that can be split: stateless services and idempotent workers scale horizontally; a single write authority doesn't without partitioning. <strong>Load balancer:</strong> the thing in front of many identical instances that spreads requests across them and stops sending to a dead one. <strong>In your answer:</strong> "workers, adapters, API instances behind a load balancer: horizontal. The case database: vertical first (the numbers allow it), partitioned by case id when failover size or isolation demands it."</span></div>
+  <div><span>Caching</span><span><strong>What:</strong> keeping a fast copy of data near where it's read. <strong>What to cache:</strong> things read far more than written and tolerant of being slightly stale: policy rules (versioned, so they're safe), reference data, a customer's rendered feed. <strong>Where:</strong> in the service's memory (fastest, per instance), in a shared cache like Redis (consistent across instances), at the edge (static content). <strong>Invalidation:</strong> the hard part. Time-based expiry (simple, stale for up to TTL), event-based (invalidate when the source changes; precise, more moving parts), or versioned keys (cache under "policy v12", so a new version is simply a new key). <strong>In your answer:</strong> "I cache policy by version and reference data with a TTL. I never cache a case for deciding, or a balance for authorising: a cached decision input is a stale decision input, and that's the double-decision bug." Saying what you won't cache is the strong part.</span></div>
+  <div><span>Where the bottleneck moves</span><span><strong>What:</strong> fixing the first bottleneck reveals the next. Add workers → the database becomes the limit. Partition the database → cross-partition operations become the limit. Automate review → the model's accuracy becomes the limit. <strong>In your answer:</strong> after any scaling change, say where the pressure goes next: "once the sweeper query is indexed, the next limit is Ops throughput, and after that, evidence scanning."</span></div>
+</div>
+
+<h3 id="c-ops">Reliability and operations</h3>
+<div class="rows">
+  <div><span>Replication and failover; the single point of failure</span><span><strong>Replication:</strong> keeping copies of the database on other machines. Synchronous replication waits for the copy to confirm before committing (no data loss, higher latency); asynchronous doesn't (fast, may lose the last moments on failover). <strong>Failover:</strong> promoting a copy to primary when the primary dies; takes seconds to a minute; during it, writes fail. <strong>SPOF:</strong> the component whose failure stops everything. <strong>In your answer:</strong> point at your own diagram: "my single point of failure is the case database's primary. Synchronous replica in another zone, automated failover, and during the failover window the API returns 'try again' for commands while reads keep working from the snapshot replica." For money: "I decline during failover rather than approve from a replica."</span></div>
+  <div><span>Graceful degradation</span><span><strong>What:</strong> when a dependency is down, the product gets worse in a controlled way instead of failing entirely. <strong>In your answer:</strong> a matrix (section 7): network down → cases still open, submissions queue, customer sees "sent, awaiting"; ledger down → case decisions continue, credits pend, customer told; search down → Ops works from a case-id list; storage down → uploads refused with a retry message, nothing else affected.</span></div>
+  <div><span>Monitoring and debugging</span><span><strong>Measure:</strong> queue age per dependency, p99 of the command path, oldest unprocessed deadline, outbox lag, error rate per dependency, reconciliation exceptions, fallback rate. <strong>Alert on:</strong> thresholds that map to customer or legal impact (time-to-breach), not on raw error counts. <strong>Debug:</strong> a correlation id on every command that follows it through every event, message and external call, so one id gives you the whole story of one case; structured logs keyed by case id; the event history itself as the primary debugging tool ("what happened to CB-812?" is a query). <strong>In your answer:</strong> "one correlation id per command, present in every log line and event; when something's wrong I read the case's events first, then the dependency dashboards."</span></div>
+  <div><span>Rolling out safely, rolling back</span><span><strong>What:</strong> turning a change on gradually (a cohort, a country, a percentage), watching metrics, and turning it off fast if they move. <strong>Rules:</strong> code rolls back; data doesn't. Deploy schema changes before the code that needs them. Feature flags and kill switches separate "deployed" from "enabled". Shadow first for anything that decides. <strong>In your answer:</strong> your stage 7, with the words "and the rollback for a bad policy version is freeze plus fix-forward, because history is immutable".</span></div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="v1">6. Begin simple, then iterate: chargebacks as v1 → v2 → v3</h2>
+<p class="question">They want to see you start with a v1, find its flaws yourself, and fix them in order. Here is the storyline; the end state is the design you already know.</p>
+
+<h3>v1: the honest first sketch (minute 10)</h3>
+<pre><code>[app] → [dispute service] → [one Postgres: cases table with a status column]
+                     ↘ calls network API synchronously
+                     ↘ calls ledger synchronously for credit
+                     ↘ cron job checks deadlines every hour</code></pre>
+<p><strong>Say the pros:</strong> one service, one database, easy to build, easy to understand, fine at 0.8 cases per second.</p>
+<p><strong>Then find the flaws yourself, in this order:</strong></p>
+<ol>
+  <li>A status column can't answer "who moved this case and why", so audit is a separate log that can disagree with the truth.</li>
+  <li>Synchronous network and ledger calls hold a database transaction open across a slow external hop; a timeout leaves the case in a state that doesn't match reality, and a retry can credit twice.</li>
+  <li>The cron job is the only guardian of legal deadlines; if it dies, deadlines die with it.</li>
+  <li>Two operators updating the same row: last write wins, silently.</li>
+</ol>
+
+<h3>v2: fix correctness (minutes 12–20)</h3>
+<pre><code>command → auth · idempotency key · expected version → validate vs policy vN
+        → ONE COMMIT: event + snapshot + deadline rows + idempotency record + outbox rows
+        → return accepted state
+outbox → workers → network / ledger / storage / notify → observed result appended as an event
+deadline rows ← timer (fast) + sweeper (safety net)
+search index ← events (Ops discovery only)</code></pre>
+<p><strong>What each change fixes:</strong> events plus snapshot fix flaw 1; commit-then-side-effects with keys fix flaw 2; deadline rows with a sweeper fix flaw 3; the expected version fixes flaw 4. <strong>What it costs:</strong> two writes per command instead of one, a worker fleet, and explicit "in flight" states the product must display. Say the cost.</p>
+
+<h3>v3: scale and operate (only when the numbers or the interviewer ask)</h3>
+<ul>
+  <li>Partition the case store by case id when failover size or isolation demands it; the numbers don't demand it for throughput.</li>
+  <li>Move Ops discovery fully to projections; add the columnar store for reporting.</li>
+  <li>The batch-file variant for networks that require it: batch runs, per-row keys, reconciliation queue.</li>
+  <li>Automation of review from shadow results, with kill switches per side effect.</li>
+</ul>
+
+<div class="say"><p class="label">The words that make this a collaboration signal</p><p>"My first idea is one service and one table with a status column. That's fine at our volume, but it has four problems I'd hit in the first month. Let me fix them in the order they'd hurt."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="security">7. Security and abuse, degradation, monitoring: the bad-day answers</h2>
+<p class="question">The PDF names "security and abuse" and "what you'd monitor and how you'd debug in production" as part of reliability. Your guides had monitoring; this adds the rest.</p>
+
+<h3>Security and abuse, for a dispute platform</h3>
+<table>
+  <tr><th>Threat</th><th>Control</th></tr>
+  <tr><td>Friendly fraud: a customer disputes purchases they made</td><td>Business uniqueness on (transaction, claimant, reason family); velocity limits on disputes per customer per period; risk signals into eligibility; provisional-credit caps and delays by risk band. This is a policy lever, and you say so.</td></tr>
+  <tr><td>Malicious evidence uploads</td><td>Staged upload, checksum, format and malware scan before EVIDENCE_READY; quarantine on failure; never serve unscanned bytes.</td></tr>
+  <tr><td>Insider abuse: an operator credits a friend</td><td>Role-based commands only; four-eyes above a threshold; amount limits per role; every action recorded with actor and reason; the ledger independently restricts which command types it accepts from this platform; engineers cannot bypass the workflow to edit money.</td></tr>
+  <tr><td>Data exposure</td><td>PII and documents encrypted at rest; short-lived signed URLs for downloads; access logged; retention and legal hold enforced; no PII in logs or in Kafka payloads beyond what consumers need.</td></tr>
+  <tr><td>API abuse from outside</td><td>Authentication on every command; per-caller rate limits at the edge (the one place rate limiting belongs); idempotency keys scoped per caller so one caller can't collide with another.</td></tr>
+  <tr><td>Replay of a captured request</td><td>The idempotency key makes a replayed request return the original result, never a second effect; signed and expiring tokens on the transport.</td></tr>
+</table>
+
+<h3>Graceful degradation matrix</h3>
+<table>
+  <tr><th>Down</th><th>Still works</th><th>Degrades to</th><th>Customer sees</th></tr>
+  <tr><td>Card network</td><td>Opening cases, evidence, decisions, credits</td><td>Submissions queue with stable references</td><td>"Sent to the network, awaiting response"</td></tr>
+  <tr><td>Ledger</td><td>Everything but money</td><td>Credits and reversals pend with their keys</td><td>"Credit approved, being applied"</td></tr>
+  <tr><td>Object storage</td><td>Everything but uploads and downloads</td><td>Upload refused with retry; existing evidence metadata intact</td><td>"Try uploading again in a few minutes"</td></tr>
+  <tr><td>Search index</td><td>All case operations by id</td><td>Ops works from queues generated from the case store</td><td>Nothing</td></tr>
+  <tr><td>Kafka</td><td>All case commands</td><td>Outbox backlog grows; feeds and notifications stale</td><td>Delayed notifications</td></tr>
+  <tr><td>Case DB primary (failover)</td><td>Reads from the snapshot replica</td><td>Commands return "try again" for the failover window</td><td>A brief retry message</td></tr>
+</table>
+
+<h3>Monitoring and debugging in one breath</h3>
+<p>"One correlation id per command, on every log line, event and external call. I measure queue age per dependency, p99 of the command path, oldest unprocessed deadline and time-to-breach, outbox lag, reconciliation exceptions, and quarantine counts. I alert on customer and legal impact, not on raw errors. When something's wrong with one case, I read its events; when something's wrong with many, I read the dependency dashboards, because external latency up with healthy queues means a dependency, and queue age up with normal latency means us."</p>
+
+<!-- ============================================================ -->
+<h2 id="generic">8. If the prompt is generic: two ten-minute sketches</h2>
+<p class="question">The PDF's own examples. Enough to open confidently; the seven stages carry the rest.</p>
+
+<h3>Ride-hailing: match riders with nearby drivers</h3>
+<p><strong>Requirements to ask</strong> (theirs, verbatim in spirit): active riders and drivers at peak, in how many cities; location freshness (every second? five?); "nearby" as distance or ETA; can two riders get the same driver; latency budget for a match; what happens when a driver stops reporting; what's out of scope (pricing, payments, routing).</p>
+<p><strong>Numbers:</strong> say 1M active drivers reporting every 3 s → ~330k location updates/s, 50 bytes each → 16 MB/s, ~1.4 TB/day. Far past one host's memory, so partition location state by geographic cell.</p>
+<p><strong>Scope sentence:</strong> "I'll focus on location ingestion and matching, since that's the hard part at this scale."</p>
+<p><strong>v1:</strong> drivers post location to a service that writes a key-value store keyed by driver; a rider request scans drivers in the city. <strong>Flaw:</strong> scanning a city per request doesn't scale. <strong>v2:</strong> index drivers by geo-cell (geohash or H3); a match queries the rider's cell and neighbours; location updates stream through Kafka partitioned by cell; matching services own cells. <strong>The invariant:</strong> one driver, one active match: a conditional claim on the driver record (a version, like your case version) so two riders can't both win. <strong>Failures:</strong> driver in a tunnel → last-known location with a staleness stamp, excluded after N seconds; matcher host dies → cells reassigned, in-flight matches retried with the same request key; hot cell (a stadium) → split the cell or add replicas for reads. <strong>Consistency line:</strong> the claim is strong; the map of nearby cars is eventual.</p>
+
+<h3>Ad-click aggregator: count clicks per ad in near real time</h3>
+<p><strong>Requirements:</strong> clicks per second at peak; how fresh must the counts be (seconds? minutes?); exactly how accurate (billing-grade or dashboard-grade); query shapes (per ad per minute, top ads); retention; out of scope (fraud detection? attribution?).</p>
+<p><strong>Numbers:</strong> 10k clicks/s average, 100k peak, 100 bytes → 10 MB/s peak, ~100 GB/day raw. Aggregated per ad per minute it's tiny.</p>
+<p><strong>v1:</strong> write every click to a database and run SUM queries. <strong>Flaw:</strong> 100k inserts/s and expensive queries. <strong>v2:</strong> clicks go to Kafka partitioned by ad id; stream processors keep per-ad-per-minute counters in memory with checkpoints, flush to a store built for time-series reads; raw clicks also land in cheap storage for reconciliation and replay. <strong>The trade:</strong> stream gives freshness; batch over the raw log gives exactness; run both and reconcile (the lambda idea), or accept at-least-once with idempotent click ids for near-exact. <strong>Failures:</strong> processor dies → replay from checkpoint, duplicates deduped by click id within a window; hot ad → split its partition or pre-aggregate at the edge; late clicks → windows stay open for a grace period, then corrections are appended, never edited (immutability again). <strong>Consistency line:</strong> the dashboard is eventual; the billing number comes from the batch reconciliation.</p>
+
+<p>Notice how much is the same as your fintech designs: a stable key per unit of work, a conditional claim for the one thing that must be exclusive, strong where you decide and eventual where you read, replay from an immutable log, corrections appended not edited. Say that resemblance out loud; it's the "architecture fundamentals" signal.</p>
+
+<!-- ============================================================ -->
+<h2 id="week">9. Six days, one plan</h2>
+<table>
+  <tr><th>Day</th><th>Do</th></tr>
+  <tr><td>Tue</td><td>Read this guide once. Memorise the arithmetic table in section 4. Do the chargeback numbers on paper without looking.</td></tr>
+  <tr><td>Wed</td><td>Run the chargeback mock with a timer, but start with the v1 sketch and its four flaws before drawing v2. Add the numbers at minute 6.</td></tr>
+  <tr><td>Thu</td><td>Ledger: section 10 follow-ups and section 11 scaling, out loud, with numbers. Then the two generic sketches from section 8, ten minutes each, whiteboard from memory.</td></tr>
+  <tr><td>Fri</td><td>Bad-day drill: for chargebacks, walk the degradation matrix and the security table aloud; name your single point of failure and its failover story. Read two posts on building.nubank.com.br, ideally a post-mortem, so you can reference how they actually handled something.</td></tr>
+  <tr><td>Sat</td><td>Full mock with someone injecting interruptions at random; include one "I'd suggest caching the case" so you practise polite pushback. Prepare your five questions (section 10).</td></tr>
+  <tr><td>Sun</td><td>Light: re-read the sentences in the cheat sheets. Check camera, mic, the whiteboard tool, and draw the chargeback diagram once in under three minutes. Sleep.</td></tr>
+  <tr><td>Mon</td><td>Five clarifying questions, numbers, scope sentence, v1, flaws, v2, one deep dive, failures, rollout, your questions.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="questions">10. Your five minutes of questions</h2>
+<p>Ask two or three, tied to what you just designed; they are remembered.</p>
+<ul>
+  <li>"In the dispute operation today, is the network exchange real-time, file-based, or both, and which side gives you the most operational pain?"</li>
+  <li>"How do you handle policy versioning across countries in practice: one platform with per-country rule packages, or separate deployments?"</li>
+  <li>"When a batch consumer fails on a message, what's your team's convention: dead-letter and replay, or pause the consumer?"</li>
+  <li>"What does the on-call rotation look like for a platform team, and what's the most common page?"</li>
+  <li>"For the Lead role, what's the split between designing, reviewing others' designs, and shipping code yourself?"</li>
+</ul>
+
+<footer>
+  Built from Nubank's <em>Preparing for your System Design Interview</em> PDF (60-minute format, seven evaluation signals, ten keys for success, technical concepts list) and the three earlier guides: <em>The ledger, end to end</em>; <em>The chargeback platform, end to end</em>; <em>Pivot insurance</em>. The volume assumptions in section 4 are illustrative; replace them with any numbers the interviewer gives you.
+</footer>
+</main>
+</div>
+</body>
+</html>

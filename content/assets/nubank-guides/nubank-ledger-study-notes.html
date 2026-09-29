@@ -219,6 +219,8 @@
     <li><a href="#cheat">9. Interview sentences</a></li>
     <li><a href="#followups">10. Follow-up answers</a></li>
     <li><a href="#scaling">11. Scalability and performance probes</a></li>
+    <li class="sub"><a href="#ledger-numbers">The numbers, worked out loud</a></li>
+    <li class="sub"><a href="#ledger-spof">Single point of failure and degradation</a></li>
     <li><a href="#practice">12. Practice next</a></li>
   </ol>
 </nav>
@@ -227,7 +229,7 @@
 <header class="hero">
   <h1>The ledger, end to end</h1>
   <p class="lede">How every piece of Nubank's authoritative-ledger design fits together, written to be understood first and then practised backwards through the seven interview stages.</p>
-  <p class="source">Compiled from a study session on 4 September 2026, working from the <em>Nubank Lead System Design Study Guide</em> (Mock A: authoritative ledger and transfers). Each section is one question that was asked; the diagram nodes in section 1 correspond to sections 2 through 8.</p>
+  <p class="source">Compiled from a study session on 4 September 2026, working from the <em>Nubank Lead System Design Study Guide</em> (Mock A: authoritative ledger and transfers). Each section is one question that was asked; the diagram nodes in section 1 correspond to sections 2 through 8. Numbers, the single point of failure, the degradation matrix, schema evolution and caching were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>).</p>
 </header>
 
 <!-- ============================================================ -->
@@ -589,6 +591,9 @@ Leg B (Bruno's shard): Clearing −10    Bruno    +10    key = transferId:legB</
   <li><em>"Kafka distributes facts; it can't provide the local atomic boundary that ties the balance check, the entries and the idempotency key into one decision."</em><span>Kafka is not the truth.</span></li>
   <li><em>"Projections are rebuildable read models; if one drifts I replay from the journal and never touch entries. The account aggregate is inside the write boundary because it authorizes spending, so a mismatch there is an incident."</em><span>Projections and drift.</span></li>
   <li><em>"Because the balance is a cumulative function of ordered entries, I need a stable order per account and a way to handle late-arriving events by replay, not by editing."</em><span>From the guide's "What Nubank built" section; use when ordering comes up.</span></li>
+  <li><em>"Two billion transactions a month is about eight thousand a second at peak and thirty thousand writes; that's past one primary, so partitioning by customer is on the roadmap from day one, and clearing handles the cross-customer case."</em><span>Numbers that end in a decision.</span></li>
+  <li><em>"My single point of failure is the write authority's primary: synchronous replica, automated failover, and during the window I reject new debits rather than approve from a replica. Failover time is my availability ceiling."</em><span>Assume things will fail.</span></li>
+  <li><em>"Events carry a schema version, consumers accept N and N+1 during a rollout, and entries are never rewritten; the aggregate is rebuilt if its shape changes."</em><span>Schema evolution.</span></li>
 </ol>
 
 <h3>Three things never to say</h3>
@@ -596,6 +601,7 @@ Leg B (Bruno's shard): Clearing −10    Bruno    +10    key = transferId:legB</
   <li>"Kafka gives us exactly-once." It doesn't; your ledger makes the effect happen once.</li>
   <li>"Roll back the transfer because the event didn't go out." Committed money is a fact.</li>
   <li>"Just rebuild the balance from Kafka." That authorizes debits from an eventually consistent source.</li>
+  <li>"It'll be a lot of data." Say the number and what it decides.</li>
 </ul>
 
 <!-- ============================================================ -->
@@ -652,9 +658,24 @@ Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← C
 </ul>
 <p><strong>The interview sentence.</strong> "Between legs the money is in clearing, which is a real account with real entries, so the books balance at every instant. The customer sees Processing rather than a lie, and if leg B fails we compensate with a new posting, never by deleting the debit."</p>
 
+<h3>How the schema evolves after launch without downtime</h3>
+<p><strong>Short answer.</strong> Add fields, never repurpose them. New fields are optional with a default. Deploy the schema change before the code that needs it, then the code that reads both shapes, then migrate, then remove the old path: expand, migrate, contract. Events carry a schema version; consumers accept N and N+1 during a rollout. Entries are never rewritten to fit a new shape; if the aggregate's shape changes, it is rebuilt from the entries. Code rolls back; data doesn't.</p>
+<p><strong>Why the interviewer asks.</strong> Nubank's prep document lists schema evolution under data and storage, and it separates people who have run a system from people who have drawn one. The trap is "we'd migrate the table", which on a ledger means a lock on the hot path or a rewrite of history.</p>
+
+<h3>What you cache, and what you never cache</h3>
+<p><strong>Short answer.</strong> Cache what is read far more than written and tolerant of being slightly stale: versioned reference data, the customer's rendered feed, fee tables under a version key. Never cache the available balance for a funds check, and never authorise from a read replica; both are a stale balance with a different name. Invalidate by version where you can (a new fee table is a new key), by event where you must, and by TTL only for display data. Saying what you won't cache is the strong part of the answer.</p>
+
 <!-- ============================================================ -->
 <h2 id="scaling">11. When they push on scalability and performance</h2>
 <p class="question">A Lead candidate who did not pass Nubank's architecture round in late 2025 reported the questions were mostly about scalability and how to improve performance. Candidates in 2026 describe an interruption roughly every ten minutes: "volume goes up tenfold", "a dependency is down", "reproduce a balance as of three months ago". This is how to take those for the ledger.</p>
+
+<h3 id="ledger-numbers">The numbers, worked out loud</h3>
+<p>Nubank's prep document expects rough arithmetic that ends in a decision. For the ledger, the arithmetic changes the answer: unlike chargebacks, this one does outgrow a single primary.</p>
+<pre><code>2B transactions / month ≈ 770 / s average, ~8k / s peak (Black Friday, payday)
+2 entries per transaction + 1 aggregate update + 1 outbox row ≈ 4 writes  → ~30k writes / s peak
+Entries 200 bytes × 4B / month ≈ 0.8 TB / month on the hot path
+Read: balance checks ≈ same as transactions; feed reads 10× that, served from projections</code></pre>
+<p><strong>The decision.</strong> Thirty thousand writes per second at peak is beyond one comfortable Postgres primary (thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB), so partitioning by customer is on the roadmap from day one, and the failover time of each partition is the availability ceiling. Cross-customer transfers then need the clearing account. Nearly a terabyte a month of entries means checkpoints and cold archiving are not optional. Analytics never touches the transactional store. Say the number that would change your mind: "if peak were under a few thousand writes a second I'd stay on one primary and measure."</p>
 
 <h3>The five-step answer, every time</h3>
 <ol>
@@ -694,11 +715,26 @@ Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← C
   <div><span>Database failover</span><span>Reject new debits for those seconds rather than approve from a cache; queue external work; feeds go stale; money stays right. Failover time is my availability ceiling and I say so.</span></div>
   <div><span>Kafka down</span><span>Money remains correct, feeds go stale, outbox drains in order when it returns, consumers dedupe. Alert on outbox age.</span></div>
   <div><span>One merchant account takes half the traffic</span><span>Scope it (per day, per shard, per rail) and roll up by projection, or serialise on it with a per-account queue. Never a global lock, never a cached balance.</span></div>
+  <div><span>Schema changes after launch</span><span>Add fields, never repurpose; new fields optional with a default; expand, migrate, contract; version event types rather than editing old events; never rewrite entries to fit a new shape.</span></div>
 </div>
 
 <div class="say"><p class="label">Interview sentence</p><p>"I would start with one write authority and measure. When entries throughput or failover time crosses a threshold I set with load tests, I would partition by customer because customer-to-customer interaction is low, and I would tag every transaction with the customer id from day one so the split is possible later. Then cross-customer transfers become the explicit hard problem, handled with clearing and compensation."</p></div>
 
 <div class="trap"><p class="label">Avoid saying</p><p>"Add more instances" without naming instances of what. "Cache the balance." "Read replicas for authorisation." "Shard everything" without a key. "Move to NoSQL" as if the store were the problem. Each answers a generic question the interviewer didn't ask.</p></div>
+
+<h3 id="ledger-spof">Your single point of failure, and the degradation matrix</h3>
+<p>Point at the diagram before they ask. The single point of failure is the write authority's primary, one per partition. Synchronous replica in another zone so failover loses no committed money; automated promotion in seconds to a minute; during that window new debits are rejected rather than approved from a replica, because a replica is a stale balance. Reads of the display balance and the feed keep working from projections. Failover time is the availability ceiling, and you say so.</p>
+<table>
+  <tr><th>Down</th><th>Still works</th><th>Degrades to</th><th>Customer sees</th></tr>
+  <tr><td>Primary (failover window)</td><td>Feed, statements, display balance from projections</td><td>New postings rejected for seconds; external work queued</td><td>"Try again in a moment" on a transfer</td></tr>
+  <tr><td>Kafka</td><td>Every posting</td><td>Outbox backlog grows; feeds, notifications and analytics go stale</td><td>A transfer that's done but not yet in the list</td></tr>
+  <tr><td>Projection store</td><td>Every posting; the funds check reads the authority</td><td>Feed unavailable, or served from the last snapshot with a lag banner</td><td>"Your history is delayed"</td></tr>
+  <tr><td>External rail (PIX, network)</td><td>Internal transfers</td><td>Money sits in clearing; submissions queue with stable ids</td><td>Processing</td></tr>
+  <tr><td>Fraud or limit service</td><td>Nothing on the posting path depends on it synchronously</td><td>Deterministic fallback whose direction Risk chose in advance</td><td>Nothing, or a decline under the conservative rule</td></tr>
+  <tr><td>One partition</td><td>Every other partition's customers</td><td>Cross-partition transfers to it wait in clearing</td><td>Processing for transfers to affected customers</td></tr>
+</table>
+<p><strong>Security and abuse, in one breath.</strong> The ledger accepts postings only from authenticated callers with a scoped command set and limits per caller, so a dispute platform can issue a provisional credit but not an arbitrary transfer. Every posting records the caller and the business key. Nobody edits entries, engineers included; a correction is a new linked posting with an approval. Idempotency keys are scoped per caller so one caller cannot replay another's, and a replayed request returns the original transaction, never a second effect. Rate limits live at the edge, not in the ledger.</p>
+<div class="say"><p class="label">Monitoring and debugging in one breath</p><p>"One correlation id per command, on every log line, event and posting. I measure posting p99, version-conflict rate per account, oldest outbox row, replica lag, clearing balance and the age of its oldest item, and reconciliation mismatches. I alert on customer and money impact, not on raw errors. For one transfer, I read its entries and events; for many, I read the dependency dashboards."</p></div>
 
 <!-- ============================================================ -->
 <h2 id="practice">12. Practice next</h2>
@@ -713,9 +749,10 @@ Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← C
   <li>What is the safe operator action?</li>
 </ol>
 <p>Follow-ups you should be able to take on this material without notes: row lock versus version; why not timestamps; deterministic lock ordering for multi-account transactions; what a conflicting payload on a reused key returns; why the aggregate is not a projection; what the outbox alert is; why 2PC is an option to evaluate rather than a taboo; and how the clearing account keeps a cross-shard transfer accounted for between legs. Model answers for all eight are in <a href="#followups">section 10</a>; try answering out loud before you read them.</p>
+<p>Nubank's own prep document, decoded in its own guide, wants numbers and a first idea before the finished design. For the ledger: say the section 11 arithmetic aloud before drawing, then present the design as an iteration. v1 is one database with a balance column updated in place, which fails audit, ordering and the double-debit race. v2 is entries plus a versioned aggregate in one commit with the outbox, and it costs a second write and a worker. v3 partitions by customer when the peak numbers demand it, with clearing for cross-partition transfers. Then take the two new follow-ups in section 10, schema evolution and caching, without notes.</p>
 
 <footer>
-  Study notes compiled from a conversation on 4 September 2026. Source material: <em>Nubank Lead System Design Study Guide</em>, Mock A. The Nubank architecture details referenced come from the guide's summary of a 2017 QCon talk and Nubank's engineering blog; use them as evidence for the way of thinking, not as claims about current components.
+  Study notes compiled from a conversation on 4 September 2026. Source material: <em>Nubank Lead System Design Study Guide</em>, Mock A. The Nubank architecture details referenced come from the guide's summary of a 2017 QCon talk and Nubank's engineering blog; use them as evidence for the way of thinking, not as claims about current components. Numbers, single point of failure, degradation, schema evolution and caching added 29 September 2026 from Nubank's candidate PDF; see <em>Nubank's prep document, decoded</em>.
 </footer>
 </main>
 </div>

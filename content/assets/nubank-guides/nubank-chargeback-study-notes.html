@@ -122,16 +122,22 @@
     <li class="sub"><a href="#vs-ledger">How it differs from the ledger</a></li>
     <li class="sub"><a href="#stages">Mapping to the 7 stages</a></li>
     <li><a href="#interview">2. How the interview will most likely go</a></li>
+    <li class="sub"><a href="#rubric">What Nubank's own prep document adds</a></li>
     <li class="sub"><a href="#scaling">Scalability and performance probes</a></li>
     <li><a href="#boundary">3. The boundary</a></li>
+    <li class="sub"><a href="#numbers">The numbers, before drawing</a></li>
     <li><a href="#invariants">4. The invariants</a></li>
     <li><a href="#model">5. The domain model</a></li>
     <li><a href="#commit">6. The atomic case commit</a></li>
+    <li class="sub"><a href="#v1">Begin simple: v1 and its four flaws</a></li>
     <li><a href="#deadlines">7. Deadlines: timer plus sweeper</a></li>
     <li><a href="#evidence">8. Evidence</a></li>
     <li><a href="#provisional">9. Provisional credit</a></li>
     <li><a href="#batch">10. Batch files to the network</a></li>
     <li><a href="#failures">11. Failures</a></li>
+    <li class="sub"><a href="#spof">Single point of failure</a></li>
+    <li class="sub"><a href="#degradation">Graceful degradation matrix</a></li>
+    <li class="sub"><a href="#security">Security and abuse</a></li>
     <li><a href="#rollout">12. Rollout and ownership</a></li>
     <li><a href="#cheat">13. Interview sentences</a></li>
     <li><a href="#practice">14. Practice next</a></li>
@@ -143,7 +149,7 @@
 <header class="hero">
   <h1>The chargeback platform, end to end</h1>
   <p class="lede">How a multi-country card dispute platform fits together: cases, evidence, deadlines, network submissions and the money it asks the ledger to move. Written to be understood first, then practised backwards through the seven interview stages.</p>
-  <p class="source">Compiled from the <em>Nubank Lead System Design Study Guide</em> (Mock B: card disputes and chargebacks), plus what 2026 candidates report about the round itself (see section 2). Companion to the ledger notes; the ledger is the system this platform sends money commands to. Updated 6 September 2026.</p>
+  <p class="source">Compiled from the <em>Nubank Lead System Design Study Guide</em> (Mock B: card disputes and chargebacks), plus what 2026 candidates report about the round itself (see section 2). Companion to the ledger notes; the ledger is the system this platform sends money commands to. Updated 6 September 2026; the numbers, the v1 storyline, the single point of failure, the degradation matrix and the security table were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>).</p>
 </header>
 
 <!-- ============================================================ -->
@@ -262,6 +268,23 @@ Batch:      case commit → outbox → row waits in a batch → file built + upl
 </ol>
 <p>The listed mistakes are the mirror image: designing a generic web system (rate limiters, CDNs, cache tiers), mutating balances or statuses in place, claiming strong consistency everywhere, and having no story for duplicate messages from the partner network.</p>
 
+<h3 id="rubric">What Nubank's own prep document adds</h3>
+<p>Nubank sends candidates a PDF, <em>Preparing for your System Design Interview</em>. It is decoded in full in <em>Nubank's prep document, decoded</em>. The five things it says that the candidate reports above don't:</p>
+<div class="rows">
+  <div><span>Generic prompts</span><span>Its worked example is ride-hailing and its recommended video is an ad-click aggregator. Chargebacks is still the most-reported prompt, but the interviewers think in general distributed-systems terms and may hand you a non-banking problem. Section 6 of the pivot guide has two ten-minute sketches as insurance.</span></div>
+  <div><span>Numbers</span><span>"Precision isn't the goal; clear mathematical reasoning is." Rough arithmetic that ends in a decision is expected. This guide reasons from invariants; section 3 now adds the arithmetic, and the scaling answer below says what tenfold actually is.</span></div>
+  <div><span>Don't draw early</span><span>Drawing an architecture in the first three minutes is, in their words, the most common way a strong engineer scores poorly. Spend the full five to eight minutes on stage 1 and say the scoping decision out loud.</span></div>
+  <div><span>Begin simple, then iterate</span><span>They want to hear "my first idea is X, its pros are, its cons are, so next I…". Section 6 now opens with the v1 sketch and its four flaws before the design you know.</span></div>
+  <div><span>Two-way discussion</span><span>They welcome pushback on their own suggestions. When the interviewer proposes a cache or a workflow engine, disagree politely with a reason if you have one. Silence reads as passivity.</span></div>
+</div>
+<p>The PDF lists seven signals rather than four: problem breakdown, architecture fundamentals (they name immutability explicitly), scalability and performance ("if traffic goes up ten times, what breaks first"), reliability and maintainability (replication and recovery, graceful degradation, security and abuse, monitoring and debugging), trade-offs ("what you gave up" over "which database you picked"), collaboration, and pragmatic thinking (real constraints such as the FTP file are not obstacles to argue with). The four above are where this design already shows them; section 11 now adds the two it lacked, degradation and security.</p>
+<table>
+  <tr><th>PDF</th><th>Minutes</th><th>Your stages</th></tr>
+  <tr><td>Intros and problem statement</td><td>0–8</td><td>Listen, then stage 1: requirements, numbers, an explicit scoping decision.</td></tr>
+  <tr><td>Collaborative problem-solving</td><td>8–55</td><td>Stages 2 to 7: rules, nouns, v1 sketch and its flaws, v2 architecture, one deep dive, failures with a bad-day story, scaling with numbers, rollout.</td></tr>
+  <tr><td>Your questions</td><td>55–60</td><td>Two or three, tied to what you just designed.</td></tr>
+</table>
+
 <h3>The hour, minute by minute</h3>
 <table>
   <tr><th>Minute</th><th>What you do</th><th>What it shows</th></tr>
@@ -285,6 +308,8 @@ Batch:      case commit → outbox → row waits in a batch → file built + upl
   <li><strong>Say what doesn't, and why.</strong> The claim step is one conditional update; the case store is a single write authority per case; Operations is people. Naming these honestly is the Lead signal.</li>
   <li><strong>Protect the invariants while you scale.</strong> Whatever you change, transitions stay validated, deadlines stay durable, keys stay stable, history stays append-only. If a "performance improvement" needs one of those to bend, it isn't one.</li>
 </ol>
+
+<p><strong>Step 2, with arithmetic.</strong> From the section 3 numbers, tenfold cases is 700,000 a day: about 8 writes per second average and 80 at peak, 400 GB of events a month, 80 TB of evidence a month, and around 5,000 reviewers if nothing is automated. Say those out loud. They show that the database is still not the problem at tenfold, that evidence retention becomes a real cost line, and that Operations is the ceiling by an order of magnitude. That is the whole argument for spending the answer on automation rather than sharding, and it is what Nubank's prep document means by "use numbers to decide".</p>
 
 <p><strong>What each part of this design does under load.</strong> Have this table in your head; draw the row they ask about.</p>
 <table>
@@ -327,6 +352,20 @@ Batch:      case commit → outbox → row waits in a batch → file built + upl
   <li>What already exists: card transaction store, identity, the ledger, object storage, notifications, network gateways. Integrate, don't rebuild.</li>
   <li>Volume, document sizes, retention, and how much of the work is manual operations.</li>
 </ul>
+
+<h3 id="numbers">The numbers, before drawing</h3>
+<p>Nubank's prep document asks how you support decisions with numbers, "even as rough estimates". Say the assumptions, do the arithmetic on the board, and land on a decision. A day is 86,400 seconds; call it 100,000, so per-day volume divided by 100k is per second. A month is about 2.6 million seconds. Peak is three to ten times average; say which multiplier you chose and why.</p>
+<pre><code>Assume 100M customers, ~2B card transactions / month
+Dispute rate ~0.1%                → 2M disputes / month  ≈ 70k / day  ≈ 0.8 / s average, ~8 / s peak
+Events per case ~20 × 1 KB        → 40M events / month  ≈ 40 GB / month  ≈ 0.5 TB / year
+Evidence: 2 files × 2 MB per case → 8 TB / month         (object storage, not the database)
+Deadlines: ~3 per case            → 6M rows / month; sweeper scans the OPEN ones only
+Batch file: 70k rows / 4 slots    → ~18k rows per file; a few MB; trivial to build, painful to resend
+Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers</code></pre>
+<p><strong>The decision the numbers force.</strong> Under one write per second average and tens at peak, a single well-indexed relational database is not the bottleneck and won't be at ten times. Partition by case id for isolation and failover size, not for throughput. The costs that scale badly are evidence storage (cheap, but plan retention) and human review (expensive, so automation is the real lever). So the design spends its complexity on correctness, deadlines and reconciliation, and on measuring what to automate. Replace every assumption with whatever the interviewer gives you; the reasoning is the score, not the figures.</p>
+<p><strong>The reference figures to have memorised.</strong> One Postgres node: thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB. One Kafka partition: tens of thousands of small messages per second. Same-region hop about 1 ms; cross-region 50 to 150 ms; a disk commit 1 to 10 ms. A small JSON event is about 1 KB, a photo about 1 MB, a scanned PDF about 10 MB. A human reviews maybe 30 to 60 cases a day.</p>
+<div class="say"><p class="label">The sentence to say in minute eight</p><p>"So I'll scope to the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest; I'll treat the network as an adapter and the ledger as an existing system, and come back to reporting if we have time. At roughly 70,000 cases a day this is not a throughput problem; it's a correctness, deadline and people problem, and that shapes every choice I make next."</p></div>
+<div class="trap"><p class="label">Avoid saying</p><p>"It'll be a lot of data, so we need something scalable." And the opposite error: over-engineering a system whose numbers say one database is fine. "At this volume one Postgres is enough, and here's the number that would change my mind" is a strong answer.</p></div>
 
 <h3>What is synchronous</h3>
 <p>Case acceptance, validation errors and the current customer-visible state return synchronously. Network submission, evidence processing and financial actions are asynchronous with explicit Processing states and SLAs. "Synchronous" means <em>durable acceptance</em>, not completion of every external step. Never block Ana's request on the card network.</p>
@@ -404,6 +443,23 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <!-- ============================================================ -->
 <h2 id="commit">6. The atomic case commit, and why side effects happen after</h2>
 <p class="question">Stage 4: the simplest correct architecture.</p>
+
+<h3 id="v1">Begin simple: the v1 you show first, and its four flaws</h3>
+<p>Nubank's prep document wants to see you start with a first idea, find its flaws yourself, and fix them in order. Don't draw the finished design at minute ten. Draw this, say its pros, then take it apart.</p>
+<pre><code>[app] → [dispute service] → [one Postgres: cases table with a status column]
+                     ↘ calls network API synchronously
+                     ↘ calls ledger synchronously for credit
+                     ↘ cron job checks deadlines every hour</code></pre>
+<p>The pros: one service, one database, easy to build, easy to understand, and fine at 0.8 cases per second. Then the flaws, in the order they would hurt in the first month:</p>
+<ol>
+  <li>A status column can't answer "who moved this case and why", so audit is a separate log that can disagree with the truth.</li>
+  <li>Synchronous network and ledger calls hold a database transaction open across a slow external hop; a timeout leaves the case in a state that doesn't match reality, and a retry can credit twice.</li>
+  <li>The cron job is the only guardian of legal deadlines; if it dies, deadlines die with it.</li>
+  <li>Two operators updating the same row: last write wins, silently.</li>
+</ol>
+<p><strong>v2 fixes correctness</strong>, and it is the design in the rest of this section: events plus snapshot fix flaw 1; commit-then-side-effects with stable keys fix flaw 2; deadline rows with a sweeper fix flaw 3; the expected version fixes flaw 4. Say what it costs: two writes per command instead of one, a worker fleet, and explicit "in flight" states the product has to display.</p>
+<p><strong>v3 scales and operates</strong>, and you only go there when the numbers or the interviewer ask: partition the case store by case id when failover size or isolation demands it (the numbers don't demand it for throughput); move Ops discovery fully to projections and add a columnar store for reporting; the batch-file variant of section 10 for networks that require it; automation of review from shadow results, with a kill switch per side effect.</p>
+<div class="say"><p class="label">The words that make this a collaboration signal</p><p>"My first idea is one service and one table with a status column. That's fine at our volume, but it has four problems I'd hit in the first month. Let me fix them in the order they'd hurt."</p></div>
 
 <h3>What a command does</h3>
 <ol>
@@ -630,8 +686,37 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <tr><td>Volume goes up tenfold</td><td>The case store scales by case id (no cross-case transactions). Workers scale horizontally because every side effect is idempotent. Search moves fully to the projection. Batch files split into numbered parts under one run. What does not scale by adding machines is Operations, so the automation-versus-review trade-off in section 12 is the real answer.</td></tr>
 </table>
 
+<h3 id="spof">Your single point of failure, named</h3>
+<p>Nubank's prep document says to assume things will fail: a host dies, a single point of failure, degrade instead of die, and what you monitor. Point at your own diagram and name it before they ask. The single point of failure here is the case database's primary. Synchronous replica in another zone, automated failover in seconds to a minute, and during the failover window the API returns "try again" for commands while reads keep working from the snapshot replica. Money follows the stricter rule: the ledger declines during its own failover rather than approving from a replica. Everything else in the diagram is either stateless and horizontal (API instances, workers, adapters, behind a load balancer) or a rebuildable projection (search, dashboards).</p>
+
+<h3 id="degradation">Graceful degradation matrix</h3>
+<p>When a dependency is down, the product gets worse in a controlled way instead of failing entirely. Have this table ready; draw the row they ask about.</p>
+<table>
+  <tr><th>Down</th><th>Still works</th><th>Degrades to</th><th>Customer sees</th></tr>
+  <tr><td>Card network</td><td>Opening cases, evidence, decisions, credits</td><td>Submissions queue with stable references</td><td>"Sent to the network, awaiting response"</td></tr>
+  <tr><td>Ledger</td><td>Everything but money</td><td>Credits and reversals pend with their keys</td><td>"Credit approved, being applied"</td></tr>
+  <tr><td>Object storage</td><td>Everything but uploads and downloads</td><td>Upload refused with retry; existing evidence metadata intact</td><td>"Try uploading again in a few minutes"</td></tr>
+  <tr><td>Search index</td><td>All case operations by id</td><td>Ops works from queues generated from the case store</td><td>Nothing</td></tr>
+  <tr><td>Kafka</td><td>All case commands</td><td>Outbox backlog grows; feeds and notifications stale</td><td>Delayed notifications</td></tr>
+  <tr><td>Case DB primary (failover)</td><td>Reads from the snapshot replica</td><td>Commands return "try again" for the failover window</td><td>A brief retry message</td></tr>
+</table>
+
+<h3 id="security">Security and abuse</h3>
+<p>The prep document lists security and abuse under reliability, and the candidate reports never mention it, so it is a cheap place to stand out. For a dispute platform the threats are specific.</p>
+<table>
+  <tr><th>Threat</th><th>Control</th></tr>
+  <tr><td>Friendly fraud</td><td>A customer disputes purchases they made. Business uniqueness on (transaction, claimant, reason family); velocity limits on disputes per customer per period; risk signals into eligibility; provisional-credit caps and delays by risk band. This is a policy lever, and you say so.</td></tr>
+  <tr><td>Malicious evidence uploads</td><td>Staged upload, checksum, format and malware scan before EVIDENCE_READY; quarantine on failure; never serve unscanned bytes.</td></tr>
+  <tr><td>Insider abuse</td><td>An operator credits a friend. Role-based commands only; four-eyes above a threshold; amount limits per role; every action recorded with actor and reason; the ledger independently restricts which command types it accepts from this platform; engineers cannot bypass the workflow to edit money.</td></tr>
+  <tr><td>Data exposure</td><td>PII and documents encrypted at rest; short-lived signed URLs for downloads; access logged; retention and legal hold enforced; no PII in logs or in Kafka payloads beyond what consumers need.</td></tr>
+  <tr><td>API abuse from outside</td><td>Authentication on every command; per-caller rate limits at the edge, the one place rate limiting belongs; idempotency keys scoped per caller so one caller can't collide with another.</td></tr>
+  <tr><td>Replay of a captured request</td><td>The idempotency key makes a replayed request return the original result, never a second effect; signed and expiring tokens on the transport.</td></tr>
+</table>
+
 <h3>The dashboard that tells dependency failure from internal backlog</h3>
 <p>Show external request latency and status per dependency (network, ledger, storage) next to internal queue age, worker throughput, error rate, lease saturation and outbox lag. External latency up while queue processing is healthy: dependency failure. Queue age up while dependency latency is normal: internal capacity or code. Add deadline and customer-impact views to both. One overall error-rate chart tells you nothing useful.</p>
+
+<div class="say"><p class="label">Monitoring and debugging in one breath</p><p>"One correlation id per command, on every log line, event and external call. I measure queue age per dependency, p99 of the command path, oldest unprocessed deadline and time-to-breach, outbox lag, reconciliation exceptions and quarantine counts. I alert on customer and legal impact, not on raw errors. When something's wrong with one case, I read its events; when something's wrong with many, I read the dependency dashboards: external latency up with healthy queues means a dependency, queue age up with normal latency means us."</p></div>
 
 <div class="recap"><p class="label">Say it in 30–60 seconds</p><p>Timeouts mean unknown, not failed. Network timeout: query the same external reference before resubmitting; a new reference could open a second dispute. Ledger timeout: retry the same action key. Timer workers down for an hour: the sweeper reads saved deadlines and escalates the ones close to breach. Two operators act at once: the expected version accepts one and rejects the other. Malware scan fails: the file stays quarantined, never "ready." A bad policy release: freeze that version, find affected cases by version, fix forward with audited events.</p></div>
 
@@ -686,6 +771,11 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li><em>"The file is a slower, batched version of an external call: durable intent before sending, a stable identity per row and per file, answers as events, unanswered work aged in a reconciliation queue."</em><span>Batch variant.</span></li>
   <li><em>"To reproduce the case as of any date I replay its events up to that timestamp; the snapshot is derived, never the truth."</em><span>The most Nubank-flavoured interruption.</span></li>
   <li><em>"Strong consistency where I decide: transitions, deadlines, financial intent, batch claims. Eventual where I only read: search, notifications, dashboards. Explicitly unknown where the world hasn't answered yet."</em><span>The consistency line, said once.</span></li>
+  <li><em>"70k cases a day is under one per second; the bottleneck isn't writes, it's Ops. So I invest in automation and deadlines, not in sharding."</em><span>Numbers that end in a decision.</span></li>
+  <li><em>"My first idea is one service and one table with a status column. It has four problems I'd hit in the first month; let me fix them in the order they'd hurt."</em><span>Begin simple, then iterate.</span></li>
+  <li><em>"My single point of failure is the case database's primary: synchronous replica, automated failover, and during the window commands get 'try again' while reads keep working."</em><span>Assume things will fail.</span></li>
+  <li><em>"I'd push back on caching the case; a cached decision input is a stale decision input. If it's read latency you're after, I'd serve Ops reads from the snapshot replica."</em><span>Two-way discussion: polite pushback with a reason.</span></li>
+  <li><em>"Events carry a schema version; consumers accept N and N+1 during a rollout; the snapshot can be rebuilt if its shape changes. I add fields, never repurpose them."</em><span>Schema evolution.</span></li>
 </ol>
 
 <h3>Things never to say</h3>
@@ -695,6 +785,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>"Resubmit to the network with a fresh reference." That can open a duplicate dispute.</li>
   <li>"The case is won, so the customer has been paid." Decision and settlement are different states.</li>
   <li>"Roll back the policy and fix the statuses." Fix forward with audited events.</li>
+  <li>"It'll be a lot of data, so we need something scalable." Say the number and what it decides.</li>
 </ul>
 
 <!-- ============================================================ -->
@@ -725,8 +816,14 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>"Two operators just decided the same case at the same second."</li>
   <li>"The response file has 4,000 rows and 300 of them are garbage."</li>
   <li>"We're launching in Colombia next month with a different network."</li>
+  <li>"I'd suggest caching the case for the Ops reads." (Push back, with a reason and an alternative.)</li>
+  <li>"Point at your diagram: what's the single point of failure, and what does the customer see during failover?"</li>
+  <li>"How do you change the event schema after launch without downtime?"</li>
 </ul>
 <p>If the interviewer changes the prompt mid-way (a loan-collections workflow, a KYC review queue, a fraud-alert case system, or the batch-file version of this one), keep the seven stages and swap the nouns: it is still a case-management system with durable obligations, versioned policy, idempotent side effects and money it asks the ledger to move.</p>
+
+<h3>The six days before the interview</h3>
+<p>The day-by-day plan is in <em>Nubank's prep document, decoded</em>, section 9. Three drills it adds to the list above: do the section 3 numbers on paper without looking; run the mock starting with the v1 sketch and its four flaws before drawing v2, with the numbers at minute five; and have someone say "I'd suggest caching the case" so you practise a polite, reasoned pushback.</p>
 
 <!-- ============================================================ -->
 <h2 id="glossary">15. Glossary, from zero</h2>
@@ -872,7 +969,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 </div>
 
 <footer>
-  Study notes compiled from the <em>Nubank Lead System Design Study Guide</em>, Mock B: card disputes and chargebacks, on 4 September 2026; interview-format and batch-file material added 6 September 2026 from Nubank's hiring page and candidate reports on Glassdoor and 1Point3Acres. Companion to <em>The ledger, end to end</em>.
+  Study notes compiled from the <em>Nubank Lead System Design Study Guide</em>, Mock B: card disputes and chargebacks, on 4 September 2026; interview-format and batch-file material added 6 September 2026 from Nubank's hiring page and candidate reports on Glassdoor and 1Point3Acres; numbers, v1 storyline, single point of failure, degradation matrix and security table added 29 September 2026 from Nubank's candidate PDF <em>Preparing for your System Design Interview</em>. Companion to <em>The ledger, end to end</em> and <em>Nubank's prep document, decoded</em>.
 </footer>
 </main>
 </div>

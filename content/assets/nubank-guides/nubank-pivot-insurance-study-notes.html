@@ -127,9 +127,12 @@
     <li><a href="#fraud">3. Real-time fraud decision</a></li>
     <li><a href="#pix">4. Sending a PIX payment</a></li>
     <li><a href="#others">5. Four more, swapped in one table each</a></li>
-    <li><a href="#interruptions">6. The interruptions, one line each</a></li>
-    <li><a href="#cheat">7. Interview sentences</a></li>
-    <li><a href="#practice">8. Ten minutes each</a></li>
+    <li><a href="#generic">6. If the prompt is generic</a></li>
+    <li class="sub"><a href="#ride">Ride-hailing</a></li>
+    <li class="sub"><a href="#adclicks">Ad-click aggregator</a></li>
+    <li><a href="#interruptions">7. The interruptions, one line each</a></li>
+    <li><a href="#cheat">8. Interview sentences</a></li>
+    <li><a href="#practice">9. Ten minutes each</a></li>
   </ol>
 </nav>
 
@@ -137,7 +140,7 @@
 <header class="hero">
   <h1>Pivot insurance: if the prompt isn't the ledger or chargebacks</h1>
   <p class="lede">Nubank says you "design a system from scratch". The reported prompts cluster around chargebacks and the ledger, but the round also produces card authorisation, credit limits, real-time fraud and PIX. This guide gets each one to a confident stage-1 sentence and a drawn stage-4 diagram in ten minutes of prep, by reusing the pieces you already have.</p>
-  <p class="source">Compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built" and "swap the nouns" sections) and 2026 candidate reports. Third of three: read after <em>The ledger, end to end</em> and <em>The chargeback platform, end to end</em>.</p>
+  <p class="source">Compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built" and "swap the nouns" sections) and 2026 candidate reports. Third of three: read after <em>The ledger, end to end</em> and <em>The chargeback platform, end to end</em>. The authoriser latency budget and the two generic sketches in section 6 were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>).</p>
 </header>
 
 <!-- ============================================================ -->
@@ -233,6 +236,7 @@
   <tr><td>C. Stand-in</td><td>When you're down, the network approves on your behalf under tight limits you configure.</td><td>Customers aren't declined at midnight.</td><td>You're approving blind. It's a risk decision with a measurable cost, not an engineering one.</td></tr>
 </table>
 <p>Nubank chose B, with the cloud as truth and Kafka syncing open-to-buy to every replica, and drove stand-in from about 1% of transactions to below one basis point. Say why: correctness lives in one place, speed lives at the edge, and the link between them is measured. Say the cost: fencing and lag monitoring are now safety-critical code.</p>
+<p><strong>The latency budget, in numbers.</strong> The network expects an answer in a few hundred milliseconds. A cross-region hop is 100 ms or more, so the decision must be local. One indexed read plus one small commit is 5 to 10 ms, which fits with room to spare; a synchronous fraud model call has to fit in about 50 ms or be shed. That arithmetic is the whole argument for option B, and Nubank's prep document expects you to say it rather than assert it.</p>
 
 <h3 id="auth-fail">Failures</h3>
 <table>
@@ -339,7 +343,45 @@ Rail silent   → query E2E-1; still unknown after bounded time → Ops queue, n
 <p>Notice the split: prompts that move money look like the ledger; prompts that manage a long-running process look like chargebacks; two of these are neither, and saying "this one is a projection" or "this one is a delivery service, eventual consistency is fine" in stage 1 is itself a strong answer.</p>
 
 <!-- ============================================================ -->
-<h2 id="interruptions">6. The interruptions, one line each</h2>
+<h2 id="generic">6. If the prompt is generic: ride-hailing and ad clicks</h2>
+<p class="question">Nubank's own prep document uses a ride-hailing example and recommends an ad-click aggregator video. Two ten-minute sketches, enough to open confidently; the seven stages carry the rest.</p>
+
+<h3 id="ride">Ride-hailing: match riders with nearby drivers</h3>
+<p><strong>Requirements to ask.</strong> Active riders and drivers at peak, in how many cities. Location freshness (every second? five?). "Nearby" as distance or as ETA. Can two riders get the same driver. Latency budget for a match. What happens when a driver stops reporting. What's out of scope: pricing, payments, routing.</p>
+<pre><code>1M active drivers reporting every 3 s → ~330k location updates / s
+50 bytes each                        → 16 MB / s, ~1.4 TB / day
+Far past one host's memory           → partition location state by geographic cell</code></pre>
+<div class="say"><p class="label">Scope sentence</p><p>"I'll focus on location ingestion and matching, since that's the hard part at this scale; pricing and payments are out of scope."</p></div>
+<p><strong>v1.</strong> Drivers post location to a service that writes a key-value store keyed by driver; a rider request scans the drivers in the city. Flaw: scanning a city per request doesn't scale, and every rider's request competes for the same rows.</p>
+<p><strong>v2.</strong> Index drivers by geo-cell (geohash or H3). A match queries the rider's cell and its neighbours. Location updates stream through Kafka partitioned by cell; matching services own cells. The invariant: one driver, one active match, enforced by a conditional claim on the driver record with a version, exactly like the case version, so two riders can't both win.</p>
+<table>
+  <tr><th>Failure</th><th>What you do</th></tr>
+  <tr><td>Driver in a tunnel</td><td>Last-known location with a staleness stamp; excluded from matching after N seconds; never shown as available on stale data.</td></tr>
+  <tr><td>Matcher host dies</td><td>Its cells are reassigned; in-flight matches are retried with the same request key, so a rider is never matched twice.</td></tr>
+  <tr><td>Hot cell (a stadium empties)</td><td>Split the cell, or add read replicas for the driver map while the claim stays on one owner.</td></tr>
+  <tr><td>Two riders, one driver</td><td>The conditional claim accepts one; the loser re-queries the cell. No double booking, no lock across cells.</td></tr>
+</table>
+<p><strong>The consistency line.</strong> The claim is strong; the map of nearby cars is eventual, and you say so.</p>
+
+<h3 id="adclicks">Ad-click aggregator: count clicks per ad in near real time</h3>
+<p><strong>Requirements to ask.</strong> Clicks per second at peak. How fresh the counts must be (seconds? minutes?). How accurate: billing-grade or dashboard-grade. Query shapes: per ad per minute, top ads. Retention. Out of scope: fraud detection, attribution.</p>
+<pre><code>10k clicks / s average, 100k peak, 100 bytes each → 10 MB / s peak, ~100 GB / day raw
+Aggregated per ad per minute                       → tiny; the raw log is the storage problem</code></pre>
+<p><strong>v1.</strong> Write every click to a database and run SUM queries. Flaw: a hundred thousand inserts a second and expensive scans on every dashboard load.</p>
+<p><strong>v2.</strong> Clicks go to Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters in memory with checkpoints and flush to a store built for time-series reads. Raw clicks also land in cheap object storage for reconciliation and replay. The trade: the stream gives freshness; a batch over the raw log gives exactness. Run both and reconcile, or accept at-least-once with idempotent click ids and dedupe within a window for near-exact.</p>
+<table>
+  <tr><th>Failure</th><th>What you do</th></tr>
+  <tr><td>Processor dies</td><td>Replay from the last checkpoint; duplicates deduped by click id within the window.</td></tr>
+  <tr><td>Hot ad</td><td>Split its partition, or pre-aggregate at the edge before Kafka.</td></tr>
+  <tr><td>Late clicks</td><td>Windows stay open for a grace period; after that, corrections are appended, never edited. Immutability again.</td></tr>
+  <tr><td>Dashboard and invoice disagree</td><td>They're allowed to, briefly: the dashboard is eventual, the billing number comes from the batch reconciliation over the raw log.</td></tr>
+</table>
+<p><strong>The consistency line.</strong> The dashboard is eventual; the billing number is exact and comes later.</p>
+
+<div class="recap"><p class="label">Say the resemblance out loud</p><p>Notice how much is the same as the fintech designs: a stable key per unit of work, a conditional claim for the one thing that must be exclusive, strong where you decide and eventual where you read, replay from an immutable log, corrections appended rather than edited. Saying that resemblance is the "architecture fundamentals" signal in Nubank's rubric: every "what" has a "why", and the why is a principle you've used before.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="interruptions">7. The interruptions, one line each</h2>
 <p class="question">Whatever the prompt, expect one of these every ten minutes. The one-line answers, by prompt.</p>
 <table>
   <tr><th>Interruption</th><th>Authoriser / limit</th><th>Fraud decision</th><th>PIX</th></tr>
@@ -352,7 +394,7 @@ Rail silent   → query E2E-1; still unknown after bounded time → Ops queue, n
 <p>The five-step scalability answer (ask what grew, name a measurable bottleneck, scale what scales, say what doesn't, protect the invariants) is in section 11 of the ledger notes and section 2 of the chargeback notes; it is identical here.</p>
 
 <!-- ============================================================ -->
-<h2 id="cheat">7. Interview sentences, collected</h2>
+<h2 id="cheat">8. Interview sentences, collected</h2>
 <ol class="cheat">
   <li><em>"Is this deciding about money in real time, or running a process over days? That tells me which shape I need before I draw anything."</em><span>Stage 1 for any prompt.</span></li>
   <li><em>"We answer the network in a few hundred milliseconds with approve or decline; there is no processing state. Never approve from a stale available limit; that is a double spend."</em><span>Authoriser, stage 2.</span></li>
@@ -363,10 +405,12 @@ Rail silent   → query E2E-1; still unknown after bounded time → Ops queue, n
   <li><em>"One debit per command into clearing, one submission per intent with a stable end-to-end id, Processing until the rail answers, query before retry."</em><span>PIX.</span></li>
   <li><em>"This one is a projection of the ledger, never the source of truth; it must be rebuildable and must show Processing honestly."</em><span>Statements / feed.</span></li>
   <li><em>"Failed messages go to a dead-letter topic with the error attached so nothing is lost and a human can replay after the fix; a tripped circuit breaker pauses the consumer, turning a failure storm into measurable lag."</em><span>Operational pattern Nubank named; use on any prompt with Kafka.</span></li>
+  <li><em>"Same shapes as the ledger: a stable key per unit of work, a conditional claim for the one exclusive thing, strong where I decide, eventual where I read, replay from an immutable log."</em><span>Any generic prompt; the architecture-fundamentals signal.</span></li>
+  <li><em>"A million drivers every three seconds is three hundred thousand updates a second, past one host, so I partition location by geo-cell."</em><span>Numbers that end in a decision, generic edition.</span></li>
 </ol>
 
 <!-- ============================================================ -->
-<h2 id="practice">8. Ten minutes each</h2>
+<h2 id="practice">9. Ten minutes each</h2>
 <p>This is insurance, so don't over-invest. For each of the authoriser, fraud and PIX prompts, do this once with a timer:</p>
 <ol>
   <li>Say the stage-1 sentence and name the family. (30 seconds)</li>
@@ -375,10 +419,11 @@ Rail silent   → query E2E-1; still unknown after bounded time → Ops queue, n
   <li>State the hard problem and your choice with its cost. (2 minutes)</li>
   <li>Take two interruptions from section 6. (2 minutes)</li>
 </ol>
+<p>Then the two generic sketches in section 6, ten minutes each, whiteboard from memory: requirements, the numbers, the scope sentence, v1 and its flaw, v2, two failures, the consistency line.</p>
 <p>Then go back to chargebacks and the ledger; that's where the hours should go. If a prompt arrives that isn't in this guide at all, the first sentence still works: decide the family, then the seven stages.</p>
 
 <footer>
-  Study notes compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built", the worked credit-limit prompt, and the swap table) and 2026 candidate reports. The Nubank authoriser facts (own Mastercard authoriser in data centres, in-memory state rebuilt from a Kafka log plus snapshots, cloud as source of truth, stand-in driven below one basis point) are from the guide's summary of Nubank's engineering talks; use them as evidence for the way of thinking, not as claims about current components.
+  Study notes compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built", the worked credit-limit prompt, and the swap table) and 2026 candidate reports. The Nubank authoriser facts (own Mastercard authoriser in data centres, in-memory state rebuilt from a Kafka log plus snapshots, cloud as source of truth, stand-in driven below one basis point) are from the guide's summary of Nubank's engineering talks; use them as evidence for the way of thinking, not as claims about current components. The latency budget and the generic sketches were added 29 September 2026 from Nubank's candidate PDF; see <em>Nubank's prep document, decoded</em>.
 </footer>
 </main>
 </div>

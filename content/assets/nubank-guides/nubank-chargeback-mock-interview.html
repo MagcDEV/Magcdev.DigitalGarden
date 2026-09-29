@@ -132,10 +132,11 @@
   <ol>
     <li><a href="#setup">Before you start</a></li>
     <li><a href="#m0">0:00 Prompt and clarifying</a></li>
+    <li><a href="#m4">4:30 Numbers and scope</a></li>
     <li><a href="#m5">5:00 Rules</a></li>
     <li><a href="#m8">8:00 Nouns</a></li>
     <li><a href="#m11">11:00 Interruption 1</a></li>
-    <li><a href="#m13">13:00 Architecture</a></li>
+    <li><a href="#m13">13:00 v1, then architecture</a></li>
     <li><a href="#m21">21:00 Interruption 2</a></li>
     <li><a href="#m24">24:00 Deep dive</a></li>
     <li><a href="#m33">33:00 Interruption 3</a></li>
@@ -151,7 +152,7 @@
 <header class="hero">
   <h1>Mock interview: the chargeback platform, minute by minute</h1>
   <p class="lede">A full simulated system design round for the Nubank Lead role, with every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them.</p>
-  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026.</p>
+  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026; the numbers, the v1 sketch, a pushback exchange and the bad-day questions were added 29 September 2026 from Nubank's own candidate PDF.</p>
 </header>
 
 <h2 id="setup">Before you start</h2>
@@ -193,6 +194,24 @@
   We call: ledger (money) · card network · object storage · notifications · identity
   Sync: accept case, validate, current state     Async: everything external (Processing)
   Opening a case ≠ moving money.  Provisional credit = separate policy decision.</pre></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m4">4:30</p>
+<p class="note">Numbers before boxes. Nubank's own prep document grades whether rough arithmetic leads to a decision; this is where it goes.</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>One more thing before the rules: rough numbers, so the shape of the problem is on the board. May I assume something like a hundred million customers and around two billion card transactions a month?</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Close enough. Go on.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>A dispute rate around a tenth of a percent gives two million disputes a month, roughly seventy thousand a day. A day is about a hundred thousand seconds, so that's under one case per second on average, call it eight at peak. Twenty events per case at a kilobyte each is forty gigabytes of events a month, half a terabyte a year. Evidence is the big one: two files at two megabytes per case is eight terabytes a month, which goes to object storage, never the database. And if thirty percent of cases need a human who does forty a day, that's about five hundred reviewers.</p>
+<p>So the decision the numbers force: this is not a throughput problem. One well-indexed relational database handles it and would still handle ten times this. It is a correctness, deadline and people problem. That's where I'll spend the design: audit, durable deadlines, safe money intent, reconciliation, and measuring what to automate.</p>
+<p>And my scope: the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest. The network is an adapter, the ledger is an existing system, and I'll come back to reporting and analytics only if we have time.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 5 (side notes)</p><pre>NUMBERS  100M customers · 2B tx/mo · 0.1% disputed → 2M/mo ≈ 70k/day ≈ 0.8/s avg, ~8/s peak
+         events 20 × 1KB/case → 40 GB/mo · evidence 2 × 2MB/case → 8 TB/mo (object storage)
+         30% manual × 40/day → ~500 reviewers   ⇒ NOT throughput; correctness + deadlines + people
+SCOPE    issuer workflow + provisional credit · network = adapter · ledger = existing · reporting later</pre></div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m5">5:00</p>
@@ -246,12 +265,22 @@
 
 <!-- ============================================================ -->
 <p class="clock" id="m13">13:00</p>
+<p class="note">Begin simple, then iterate. The prep document wants to hear a first idea, its pros and its cons, before the design you actually want.</p>
 <div class="turn c"><p class="who">Candidate</p>
-<p>Here's the write path. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
-<p>Side effects happen after commit. Workers read the outbox and call the card network, the ledger, object storage, notifications. Whatever they observe comes back into the case as a new event: network acked, ledger posted transaction 9182, scan passed. So the case's own history says what actually happened outside it.</p>
-<p>Two more pieces. Deadlines: a timer wakes workers near the due time, and an independent sweeper periodically queries the deadline rows for anything due or near due and catches whatever the timer missed. Search: Operations finds cases by country, age, reason, deadline through an index built from events; it may lag; Ops opens the authoritative case by id before acting.</p></div>
+<p>Let me start with the simplest thing that could work, and then break it myself. One dispute service, one Postgres with a cases table and a status column, synchronous calls to the network API and the ledger, and a cron job that checks deadlines every hour. Pros: one service, one database, easy to build and to understand, and at under one case a second it's fast enough.</p>
+<p>Four problems I'd hit in the first month. A status column can't tell an auditor who moved the case or why, so audit becomes a separate log that can disagree with the truth. The synchronous network and ledger calls hold a transaction open across a slow external hop; a timeout leaves the case not matching reality, and a retry can credit twice. The cron job is the only guardian of a legal deadline, so if it dies the deadline dies with it. And two operators updating the same row is last-write-wins, silently. Let me fix those in that order; the fixes are the design.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 18</p><pre>                 command (key, expected version)
+<div class="draw"><p class="label">Whiteboard, minute 14</p><pre>v1   [app] → [dispute service] → [Postgres: cases + status column]
+                        ↘ network API (sync)   ↘ ledger (sync)   ↘ cron: deadlines hourly
+     fine at 0.8/s.  flaws: ① no audit  ② sync external calls inside txn  ③ cron = only deadline guard  ④ last write wins</pre></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Here's the write path, v2. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
+<p>Side effects happen after commit. Workers read the outbox and call the card network, the ledger, object storage, notifications. Whatever they observe comes back into the case as a new event: network acked, ledger posted transaction 9182, scan passed. So the case's own history says what actually happened outside it.</p>
+<p>Two more pieces. Deadlines: a timer wakes workers near the due time, and an independent sweeper periodically queries the deadline rows for anything due or near due and catches whatever the timer missed. Search: Operations finds cases by country, age, reason, deadline through an index built from events; it may lag; Ops opens the authoritative case by id before acting.</p>
+<p>What v2 costs, so it's said: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to show. I pay that for a rebuildable audit trail and money that can't be credited twice.</p></div>
+
+<div class="draw"><p class="label">Whiteboard, minute 18 (v2)</p><pre>                 command (key, expected version)
                           │
               ┌───────────▼────────────┐
               │ auth · idempotency ·    │
@@ -333,6 +362,7 @@
 
 <div class="turn c"><p class="who">Candidate</p>
 <p>Tenfold what, is my first question: cases per day, documents per case, or operators? I'll take cases per day, and I'll answer in the order I'd actually look.</p>
+<p>First the arithmetic, because it decides the answer. Tenfold cases is seven hundred thousand a day: about eight writes a second average, eighty at peak, four hundred gigabytes of events a month, eighty terabytes of evidence a month, and five thousand reviewers if we automate nothing. So the database is still not the problem. Evidence retention becomes a real cost line, and Operations is the ceiling by an order of magnitude.</p>
 <p>What I'd measure: p99 of the command path, queue age per dependency, oldest unprocessed deadline, outbox lag, index lag.</p>
 <p>What scales by adding machines: every worker and adapter, because every side effect is idempotent and every claim is conditional. The search index, because it's a rebuildable projection. Evidence, because object storage is effectively unbounded and scanning has its own queue.</p>
 <p>What the case store does: it partitions cleanly by case id, because no transaction ever spans two cases. So the write authority scales by adding partitions, and I'd key on case id from day one so the split is possible later. The one hot shape is a single case with thousands of events, which policy should cap, and the snapshot means reads never replay it.</p>
@@ -340,11 +370,21 @@
 <p>What does not scale by adding machines: Operations. If ten times the cases means ten times the manual reviews, that's the real ceiling. So the honest performance lever at scale is automation, and I'd decide what to automate from shadow results, precision and recall by reason and market, not from average handle time.</p>
 <p>And on latency specifically: the customer-facing path is one indexed read plus one commit. Policy evaluation is precomputed at case open. If p99 is bad, it's a hot partition, a lock held across a slow call, or a synchronous call that shouldn't be there, in that order. I would not cache the case; a cached case is exactly what lets two operators decide it twice.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p><pre>10x  → measure: p99 cmd, queue age/dependency, oldest deadline, outbox lag, index lag
+<div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p><pre>10x  = 700k/day ≈ 8/s avg · 80/s peak · 400 GB/mo events · 80 TB/mo evidence · ~5k reviewers
+     measure: p99 cmd, queue age/dependency, oldest deadline, outbox lag, index lag
      scales: workers, adapters, index, evidence        partition: case store by case_id
      check first: sweeper query → index (status, due_at), batches, SKIP LOCKED
      does NOT scale: Ops  → automate from shadow results (precision/recall), not AHT
      never: cache the case</pre></div>
+
+<p class="note">The interviewer makes a suggestion. The prep document says they welcome pushback; silence here reads as passivity.</p>
+<div class="turn i"><p class="who">Interviewer</p><p>I'd actually push you to cache the case. Ops reads are most of the traffic, and a cache in front of the case store is the standard move.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>I'd push back on that one, and let me say why rather than just no. The thing Ops reads a case for is to decide on it, and a cached case is a stale decision input: two operators can each read the cached version, each believe the case is undecided, and the version check only catches the second one after they've both done the work. That's the double-decision bug with the latency hidden.</p>
+<p>If the goal is read latency, I'd get it a different way. Ops discovery already comes from the search projection, and the case read itself is one indexed row from the snapshot, which I can serve from a synchronous replica. What I'd happily cache is the versioned policy and reference data, because a version is a safe cache key. So: cache the inputs that don't change under you, never the thing you're about to decide on. If you're seeing a read problem I'm not, I'd want to look at the numbers before choosing.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Fair. Keep going.</p></div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m36">36:00</p>
@@ -363,6 +403,17 @@
 <div class="turn c"><p class="who">Candidate</p>
 <p>Both commands carry the expected case version. The first commits and bumps the version. The second's conditional update matches zero rows and gets a conflict. It reloads, sees the case is decided, and is rejected, or the operator consciously retries with a reason if policy allows a re-decision. The audit trail shows both attempts and one decision. Never last-write-wins.</p></div>
 
+<div class="turn i"><p class="who">Interviewer</p><p>Point at your diagram. What's the single point of failure, and what does a customer see when it goes?</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>The case database's primary. Everything else is either stateless behind a load balancer, workers and adapters and API instances, or a rebuildable projection. For the primary: a synchronous replica in another zone, so failover loses nothing; automated promotion, which takes seconds to a minute; and during that window commands return "try again" while reads keep working from the snapshot replica. The customer sees a brief retry message on a submit, nothing on a read.</p>
+<p>And the rest degrades rather than dies. Network down: cases still open, submissions queue with stable references, customer sees "sent, awaiting". Ledger down: decisions continue, credits pend with their keys, customer sees "approved, being applied". Storage down: uploads refused with a retry message, nothing else affected. Search down: Ops works from queues built off the case store. Kafka down: commands unaffected, outbox backlog grows, notifications late.</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>Different kind of failure. An operator credits a friend's account through a made-up dispute.</p></div>
+
+<div class="turn c"><p class="who">Candidate</p>
+<p>Three layers, because one won't do. Commands are role-based, with four-eyes approval above an amount threshold and per-role limits, so one person can't take a large case from open to credited alone. Every command records actor and reason in the event history, so it's discoverable, and I'd add a control that flags operators deciding cases for accounts linked to them. And the ledger independently restricts which command types it accepts from this platform and at what limits, so even an engineer with database access can't move money by editing a row here. Friendly fraud from the customer side is the same family: business uniqueness, velocity limits per customer, and provisional-credit caps by risk band, which is a policy lever I'd name to Risk rather than decide myself.</p></div>
+
 <div class="turn i"><p class="who">Interviewer</p><p>A policy release goes out wrong and misclassifies five thousand cases before anyone notices.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
@@ -373,7 +424,10 @@
   workers down 1h    → rows survive; sweeper claims w/ lease; alert time-to-breach; Ops list
   2 operators        → expected version; one commits, one conflicts; both in audit
   bad policy v13     → freeze v13; find by version; fix forward w/ events; never rewrite
-  ledger timeout     → retry same key; settlement-pending until observed</pre></div>
+  ledger timeout     → retry same key; settlement-pending until observed
+  SPOF = case DB primary → sync replica · auto failover · cmds "try again" · reads from replica
+  degrade: network↓ queue + stable ref · ledger↓ credits pend · storage↓ uploads refused · search↓ id queues
+  insider  → roles · 4-eyes · limits · actor+reason on every event · ledger enforces independently</pre></div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m43">43:00</p>
@@ -422,11 +476,11 @@ TRADE    automation vs review → decide from shadow precision/recall</pre></div
 <div class="turn i"><p class="who">Interviewer</p><p>Thanks. Any questions for me?</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
-<p>Two. In your dispute operation today, is the exchange with the networks real-time, file-based, or both? And who owns the provisional-credit policy per country, and how often does it change? Those two answers would move my design more than anything else.</p></div>
+<p>Three. In your dispute operation today, is the exchange with the networks real-time, file-based, or both, and which side gives you the most operational pain? Who owns the provisional-credit policy per country, and how often does it change? And when a batch consumer fails on a message, what's the team's convention: dead-letter and replay, or pause the consumer? Those answers would move my design more than anything else.</p></div>
 
 <!-- ============================================================ -->
 <h2 id="score">How it scored, and where it could have gone wrong</h2>
-<p class="question">What the interviewer heard, against the four things Nubank's round is reported to grade.</p>
+<p class="question">What the interviewer heard, against the four things candidates report and the extra signals in Nubank's own prep document.</p>
 <table>
   <tr><th>Signal</th><th>Where it showed</th><th>How a weaker answer sounds</th></tr>
   <tr><td>Immutable facts, derived state</td><td>Events plus snapshot at minute 8; the "as of 3 June" answer at 21 was one sentence because of it; "never rewrite history" in the bad-policy answer.</td><td>"The case table has a status column and we update it." Then the regulator question needs a new logging system.</td></tr>
@@ -435,10 +489,16 @@ TRADE    automation vs review → decide from shadow precision/recall</pre></div
   <tr><td>Partial failure</td><td>Timeout equals unknown, three times, for network, ledger and file. Version conflict for the two operators. Sweeper for dead workers.</td><td>"We'd retry" without saying with which identity, or "roll back the case" after a committed side effect.</td></tr>
   <tr><td>Scalability push (Lead bar)</td><td>Asked "tenfold what", named metrics, separated what scales from what doesn't, called Operations the ceiling, refused the cache.</td><td>"Add more instances, add a cache, move to NoSQL."</td></tr>
   <tr><td>Recovery from interruption</td><td>Every interruption was answered and then "let me get back to" was said out loud.</td><td>Loses the thread, or ignores the interruption to finish the monologue.</td></tr>
+  <tr><td>Numbers that lead to a decision</td><td>Minute 4:30: seventy thousand a day is under one per second, so "not a throughput problem"; at 33 the tenfold answer opened with the arithmetic.</td><td>"It'll be a lot of data, so we need something scalable."</td></tr>
+  <tr><td>Begin simple, then iterate</td><td>Minute 13: the one-table v1, its four flaws named by the candidate, then v2 with its cost said aloud.</td><td>The finished diagram at minute ten, presented as the only option.</td></tr>
+  <tr><td>Two-way discussion</td><td>Declined the cache with a reason and an alternative, and left the door open to data.</td><td>"Sure, we could add a cache" to every suggestion.</td></tr>
+  <tr><td>Assume things will fail</td><td>Named the primary as the single point of failure, gave the failover story and the degradation matrix in one breath.</td><td>"We'd make it highly available."</td></tr>
+  <tr><td>Security and abuse</td><td>Roles, four-eyes, actor on every event, and the ledger enforcing independently.</td><td>"We'd add authentication."</td></tr>
 </table>
 
-<h3>Three places this candidate could still lose points</h3>
+<h3>Four places this candidate could still lose points</h3>
 <ul>
+  <li><strong>Skipping the v1.</strong> Drawing the finished design at minute thirteen is what the prep document calls the most common way a strong engineer scores poorly. The v1 and its flaws take ninety seconds and are the collaboration signal.</li>
   <li><strong>Talking through the diagram instead of drawing it.</strong> The architecture must be on the board by minute 18. If you're narrating boxes that aren't drawn, the interviewer can't check your write path.</li>
   <li><strong>Over-answering the interruptions.</strong> Each one above is under 90 seconds. If the tenfold answer runs five minutes, you never reach rollout, and rollout is where "has shipped things" is graded.</li>
   <li><strong>Forgetting to ask the interviewer questions at the end.</strong> Two good ones, tied to the design, are cheap and remembered.</li>
@@ -448,7 +508,7 @@ TRADE    automation vs review → decide from shadow precision/recall</pre></div
 <p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time; the point is that the answer doesn't depend on when it's asked.</p>
 
 <footer>
-  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions.
+  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>.
 </footer>
 </main>
 </div>
