@@ -129,6 +129,10 @@
     <li><a href="#generic">8. If the prompt is generic: two sketches</a></li>
     <li><a href="#week">9. Six days, one plan</a></li>
     <li><a href="#questions">10. Your five minutes of questions</a></li>
+    <li><a href="#reading">11. Their own words: what to read and how to cite it</a></li>
+    <li class="sub"><a href="#datomic">The Datomic trade-off that explains everything</a></li>
+    <li class="sub"><a href="#video">The video they recommended</a></li>
+    <li><a href="#edges">12. Six more edges</a></li>
   </ol>
 </nav>
 
@@ -370,7 +374,7 @@ search index ← events (Ops discovery only)</code></pre>
   <tr><td>Tue</td><td>Read this guide once. Memorise the arithmetic table in section 4. Do the chargeback numbers on paper without looking.</td></tr>
   <tr><td>Wed</td><td>Run the chargeback mock with a timer, but start with the v1 sketch and its four flaws before drawing v2. Add the numbers at minute 6.</td></tr>
   <tr><td>Thu</td><td>Ledger: section 10 follow-ups and section 11 scaling, out loud, with numbers. Then the two generic sketches from section 8, ten minutes each, whiteboard from memory.</td></tr>
-  <tr><td>Fri</td><td>Bad-day drill: for chargebacks, walk the degradation matrix and the security table aloud; name your single point of failure and its failover story. Read two posts on building.nubank.com.br, ideally a post-mortem, so you can reference how they actually handled something.</td></tr>
+  <tr><td>Fri</td><td>Bad-day drill: for chargebacks, walk the degradation matrix and the security table aloud; name your single point of failure and its failover story. Read the four Nubank posts in <a href="#reading">section 11</a> and watch the recommended video, so you can cite how they actually handled something.</td></tr>
   <tr><td>Sat</td><td>Full mock with someone injecting interruptions at random; include one "I'd suggest caching the case" so you practise polite pushback. Prepare your five questions (section 10).</td></tr>
   <tr><td>Sun</td><td>Light: re-read the sentences in the cheat sheets. Check camera, mic, the whiteboard tool, and draw the chargeback diagram once in under three minutes. Sleep.</td></tr>
   <tr><td>Mon</td><td>Five clarifying questions, numbers, scope sentence, v1, flaws, v2, one deep dive, failures, rollout, your questions.</td></tr>
@@ -384,11 +388,62 @@ search index ← events (Ops discovery only)</code></pre>
   <li>"How do you handle policy versioning across countries in practice: one platform with per-country rule packages, or separate deployments?"</li>
   <li>"When a batch consumer fails on a message, what's your team's convention: dead-letter and replay, or pause the consumer?"</li>
   <li>"What does the on-call rotation look like for a platform team, and what's the most common page?"</li>
+  <li>"Your incidents post describes a blameless postmortem for every high-severity crash. In practice, how often do the follow-up actions actually change an architecture, versus a runbook?"</li>
   <li>"For the Lead role, what's the split between designing, reviewing others' designs, and shipping code yourself?"</li>
 </ul>
 
+<!-- ============================================================ -->
+<h2 id="reading">11. Their own words: what to read and how to cite it</h2>
+<p class="question">Their PDF says reading engineering blogs, "including the post-mortems", beats memorising reference architectures, and points at building.nubank.com.br. Almost no candidate does it. Four posts, one doc page, one talk, one video: an evening's reading, and a sentence ready for each.</p>
+
+<h3>The four Nubank posts</h3>
+<div class="rows">
+  <div><span>Managing Cloud Limits</span><span><a href="https://building.nu.com/managing-cloud-limits/">building.nu.com/managing-cloud-limits</a><br><strong>What it says:</strong> over 4,000 microservices on Kubernetes, 72 billion Kafka events a day, millions of requests per second. They shard not only Datomic (multiple transactors, each owning a subset of data) and Kafka (multiple clusters per shard) but whole microservice clusters. Business domains got their own AWS accounts to shrink the "blast radius" of any one failure.<br><strong>Use it when:</strong> you partition by case id or customer id. <em>"Which is the same instinct as your cloud-limits post: shard everything, keep the blast radius small."</em></span></div>
+  <div><span>Scaling fraud defense</span><span><a href="https://building.nu.com/scaling-fraud-defense-how-nubank-evolved-its-risk-analysis-platform/">building.nu.com/scaling-fraud-defense…</a><br><strong>What it says:</strong> 20 shards in Brazil alone, each essentially a full replica of the entire system; Clojure, Datomic on top of DynamoDB, Kafka; decisions can be real-time (block, warn) or asynchronous (open an internal case); every event goes through an ETL that aggregates over 100 TB of logs a day.<br><strong>Use it when:</strong> you separate the sync decision from async analysis, or say analytics never touches the transactional store. <em>"Your fraud post draws exactly this line: real-time block or warn, asynchronous case, everything into the ETL."</em></span></div>
+  <div><span>How we deal with technical incidents</span><span><a href="https://building.nu.com/how-we-deal-with-incidents/">building.nu.com/how-we-deal-with-incidents</a><br><strong>What it says:</strong> a postmortem for every high-severity crash (recommended for all), on a fixed template: summary with severity, detection and resolution time; customer and business impact; meeting notes. Explicitly blameless: the goal is to understand what happened and prevent recurrence, not to find a culprit.<br><strong>Use it when:</strong> they ask how you'd debug or handle a bad day. End with: <em>"…and then a blameless postmortem on your template, with detection time and resolution time as the two numbers I'd want to move."</em></span></div>
+  <div><span>The evergreen cache</span><span><a href="https://building.nu.com/the-evergreen-cache/">building.nu.com/the-evergreen-cache</a> (titled "A digital pine forest: the evergreen cache"; the Medium copy blocks some readers)<br><strong>What it says:</strong> for NuConta they built a cache that is never stale. Datomic separates writing, storing and querying onto different machines; it stores data as a tree of immutable nodes with an atomic swap of the root; and they added a version attribute to the account entity so a cached value can be checked against the current version.<br><strong>Use it when:</strong> caching comes up. <em>"I'd cache under a version key so a new version is a new key, which is essentially your evergreen-cache approach, and I still wouldn't cache the thing that decides."</em></span></div>
+</div>
+
+<h3>Two more if you have time</h3>
+<ul>
+  <li><a href="https://building.nu.com/engineering-lessons-from-scaling-million-customers/">10 years of engineering at Nubank</a>: sharding introduced in 2016 worked for a time but eventually hit physical limits, including AWS running out of machines to match their pace. Good for "where the bottleneck moves": even sharding has a ceiling.</li>
+  <li><a href="https://building.nu.com/engineering-behind-the-scenes-innovation-nubank/">Inside Nubank's engineering</a>: immutability as the organising principle: Datomic, Kafka for asynchronous communication, functional Clojure, chosen to minimise state changes and make problems easier to find and fix. This is the "architecture fundamentals" signal in their own words.</li>
+  <li><a href="https://www.infoq.com/presentations/nubank-architectural-decisions/">Lucas Cavalcanti, "Architecting Software for Leverage" (InfoQ talk on Nubank's architectural decisions)</a>: buy-versus-build at the start (they integrated a card processor rather than building one), the vendor not scaling, running several copies of the whole system, hexagonal architecture, Kafka as a persistent log with a TTL. Pragmatic-thinking material.</li>
+</ul>
+
+<h3 id="datomic">The Datomic trade-off that explains everything</h3>
+<p>One page: <a href="https://docs.datomic.com/datomic-overview.html">docs.datomic.com/datomic-overview</a>. Datomic is developed and maintained by Nubank and used in billions of their transactions a day. The overview states its two defining properties plainly:</p>
+<ul>
+  <li><strong>Trivial read scaling</strong>: because databases are immutable, any number of processes can hold copies to serve reads.</li>
+  <li><strong>No per-database write scaling</strong>: transactions are totally serialized; only one transaction happens at a time in a given database.</li>
+</ul>
+<p>Hold those two facts together and Nubank's whole architecture falls out. Immutability gives them audit for free and reads that scale by copying. Serialized writes mean one database can't absorb the whole bank, so they shard by customer (and, per the cloud-limits post, shard everything else too). Sharding by customer makes cross-customer movements the hard problem, which is your clearing-account section. In the scaling stage, one sentence does the work:</p>
+<div class="say"><p class="label">Say it once, at the scaling stage</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialized writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
+
+<h3 id="video">The video they recommended</h3>
+<p><a href="https://www.hellointerview.com/learn/system-design/problem-breakdowns/ad-click-aggregator">Hello Interview, "Design an Ad Click Aggregator"</a> (the written breakdown is on the same page). Watch it once for the habits, not the answer:</p>
+<ul>
+  <li>It splits requirements into core ones and <strong>"below the line (out of scope)"</strong>. Use that phrase when you scope; they chose to endorse it.</li>
+  <li>It asks the interviewer about scale <em>before</em> writing non-functional requirements, then commits to numbers: 10M active ads, a peak of 10k clicks per second, about 100M clicks a day.</li>
+  <li>Its non-functional list is a good template: scalable to the stated peak, low-latency queries, fault-tolerant and accurate collection (no lost clicks), as real-time as possible, and idempotent tracking so the same click isn't counted twice.</li>
+  <li>For data-processing problems it defines the system's <strong>interface</strong> (input: click data; output: metrics) and the <strong>data flow</strong> before the high-level design. If you get a pipeline-shaped prompt, do the same.</li>
+</ul>
+<p>Their other recommendation is Alex Xu's <em>System Design Interview</em>. If you only open one part, open the back-of-envelope estimation chapter and, in volume 2, the payment system and ad-click aggregation chapters; those three overlap with sections 4 and 8 of this guide.</p>
+
+<!-- ============================================================ -->
+<h2 id="edges">12. Six more edges</h2>
+<p class="question">Small investments with outsized return, given six days.</p>
+<ol>
+  <li><strong>Two stories from your own work.</strong> Their PDF says to revisit design decisions from past projects because your experience can lead to a stronger solution. Pick two from your banking years and rehearse each in ninety seconds: what you chose, what you gave up, what broke later. Best shapes: a time you handled duplicates or idempotency, and a production failure you found and fixed. When they ask "have you dealt with this?", answer with a real one.</li>
+  <li><strong>One mock with a human, on the real tool.</strong> The PDF calls talking through a design out loud the most valuable preparation you can do. You've read and written; the gap is speaking while drawing. Have someone read the interviewer turns from the mock-interview file, inject interruptions at random, in Excalidraw or Miro, camera on. Record it and watch ten minutes back; you'll hear the filler and the silences.</li>
+  <li><strong>Practise disagreeing politely.</strong> They welcome pushback. Have your mock partner propose "let's cache the case" and "let's use Kafka as the store"; answer with the reason, then offer the alternative. One rehearsed disagreement makes the real one natural.</li>
+  <li><strong>A paper card beside you.</strong> The arithmetic table from section 4, your five clarifying questions, the scope sentence, and the six failure questions. Nobody minds, and it removes the one thing that goes first under pressure: numbers.</li>
+  <li><strong>Draw the diagram in under three minutes.</strong> Boxes, labelled arrows with the key each carries, nothing else. A clear board is on their list; a slow board eats the deep dive.</li>
+  <li><strong>Setup on Sunday.</strong> Quiet room, stable connection, camera, mic, the whiteboard tool open in a test board. It's the last item on their checklist and the cheapest to get right.</li>
+</ol>
+
 <footer>
-  Built from Nubank's <em>Preparing for your System Design Interview</em> PDF (60-minute format, seven evaluation signals, ten keys for success, technical concepts list) and the three earlier guides: <em>The ledger, end to end</em>; <em>The chargeback platform, end to end</em>; <em>Pivot insurance</em>. The volume assumptions in section 4 are illustrative; replace them with any numbers the interviewer gives you.
+  Built from Nubank's <em>Preparing for your System Design Interview</em> PDF (60-minute format, seven evaluation signals, ten keys for success, technical concepts list) and the three earlier guides: <em>The ledger, end to end</em>; <em>The chargeback platform, end to end</em>; <em>Pivot insurance</em>. The volume assumptions in section 4 are illustrative; replace them with any numbers the interviewer gives you. Sections 11 and 12 were added on 29 September 2026 from Nubank's engineering blog (building.nu.com), the Datomic overview, Lucas Cavalcanti's InfoQ talk, and the Hello Interview ad-click breakdown; every figure quoted was checked against the source page the same day.
 </footer>
 </main>
 </div>

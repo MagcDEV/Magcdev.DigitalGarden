@@ -330,6 +330,7 @@ Batch:      case commit → outbox → row waits in a batch → file built + upl
 
 <h3>Their vocabulary, used lightly</h3>
 <p>You don't need Clojure. You need three sentences in their language, each said once at the moment it fits. "Your Datomic transaction function is where my check-and-write becomes one atomic operation." "Kafka carries the outbox events between services; every consumer dedupes on a correlation id, which is how you already do it." "The case is an append-only history plus a materialised snapshot, the same shape as an immutable database with a current view."</p>
+<p>Section 11 of <em>Nubank's prep document, decoded</em> goes one step further: four of their own engineering posts, each with a sentence that cites it. The two that fit this design are the incidents post (end a bad-day answer with "…and then a blameless postmortem on your template") and the evergreen-cache post (cache under a version key, never the thing that decides). Read them on Friday; cite one, not four.</p>
 
 <div class="trap"><p class="label">Caveat</p><p>The candidate material above is self-reported. Nubank publishes no question bank, sample sizes are small, and none of the reports come from the Buenos Aires team; interviewers for Argentina may be drawn from Brazil, Mexico or the US. Prepare chargebacks first, the ledger second, and be able to pivot the same seven stages to an authoriser, a credit-limit service, or a generic prompt.</p></div>
 

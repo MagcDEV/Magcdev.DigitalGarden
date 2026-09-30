@@ -377,6 +377,7 @@ Aggregated per ad per minute                       → tiny; the raw log is the 
   <tr><td>Dashboard and invoice disagree</td><td>They're allowed to, briefly: the dashboard is eventual, the billing number comes from the batch reconciliation over the raw log.</td></tr>
 </table>
 <p><strong>The consistency line.</strong> The dashboard is eventual; the billing number is exact and comes later.</p>
+<p><strong>The habits from the video Nubank recommends.</strong> Their PDF points at Hello Interview's breakdown of this exact prompt. Borrow three things from it: write requirements as core versus "below the line (out of scope)", a phrase they chose to endorse; ask about scale before writing non-functional requirements, then commit to numbers; and for a pipeline-shaped prompt, define the interface (input: click data; output: metrics) and the data flow before the high-level design. Section 11 of <em>Nubank's prep document, decoded</em> has the link.</p>
 
 <div class="recap"><p class="label">Say the resemblance out loud</p><p>Notice how much is the same as the fintech designs: a stable key per unit of work, a conditional claim for the one thing that must be exclusive, strong where you decide and eventual where you read, replay from an immutable log, corrections appended rather than edited. Saying that resemblance is the "architecture fundamentals" signal in Nubank's rubric: every "what" has a "why", and the why is a principle you've used before.</p></div>
 

@@ -722,6 +722,9 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 
 <div class="trap"><p class="label">Avoid saying</p><p>"Add more instances" without naming instances of what. "Cache the balance." "Read replicas for authorisation." "Shard everything" without a key. "Move to NoSQL" as if the store were the problem. Each answers a generic question the interviewer didn't ask.</p></div>
 
+<p>Their own database makes the same trade explicit. The Datomic overview states two properties side by side: trivial read scaling, because immutable databases can be copied to any number of readers, and no per-database write scaling, because transactions are totally serialised. That is why Nubank shards by customer, and why cross-shard movement is the part to spend care on. Section 11 of <em>Nubank's prep document, decoded</em> has the source and the two posts behind it.</p>
+<div class="say"><p class="label">Say it once, in their own words</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialized writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
+
 <h3 id="ledger-spof">Your single point of failure, and the degradation matrix</h3>
 <p>Point at the diagram before they ask. The single point of failure is the write authority's primary, one per partition. Synchronous replica in another zone so failover loses no committed money; automated promotion in seconds to a minute; during that window new debits are rejected rather than approved from a replica, because a replica is a stale balance. Reads of the display balance and the feed keep working from projections. Failover time is the availability ceiling, and you say so.</p>
 <table>
