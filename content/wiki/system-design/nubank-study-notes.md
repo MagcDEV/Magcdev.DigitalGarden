@@ -49,7 +49,7 @@ How a multi-country card dispute platform fits together: cases, evidence, deadli
 
 ## Mock interview: the chargeback platform, minute by minute
 
-A full simulated system design round for the Nubank Lead role, with every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them. Now includes the numbers and scope sentence at 4:30, the v1 sketch at 13:00 before the v2 write path, a pushback exchange when the interviewer suggests caching the case, and the single-point-of-failure and insider-abuse questions in the failures block. Companion to the chargeback guide above.
+A full simulated system design round for the Nubank Lead role, with every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them. Now run in the four steps of the recommended video: the road map said at minute 0, features and a below-the-line list at 3:30, the numbers and scope at 4:30, the qualities with a number each at 5:30, the entities and API at 8:00, the one-table version named in a sentence and not drawn at 13:00, the first version on the board at 16:00 with its gaps as the deep-dive menu, the candidate choosing the dives, a pushback exchange when the interviewer suggests caching the case, the single-point-of-failure and insider-abuse questions in the failures block, and the video's level bar at the end. Companion to the chargeback guide above.
 
 <form class="guide-open" action="../../assets/nubank-guides/nubank-chargeback-mock-interview.html" method="get" target="_blank">
 <button type="submit">Open full page</button>

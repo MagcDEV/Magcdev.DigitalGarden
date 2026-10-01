@@ -275,20 +275,22 @@
   <p>Contents</p>
   <ol>
     <li><a href="#setup">Before you start</a></li>
-    <li><a href="#m0">0:00 Prompt and clarifying</a></li>
-    <li><a href="#m4">4:30 Numbers and scope</a></li>
-    <li><a href="#m5">5:00 Rules</a></li>
-    <li><a href="#m8">8:00 Nouns</a></li>
+    <li><a href="#m0">0:00 Road map, then clarifying</a></li>
+    <li><a href="#m3">3:30 Step 1: features, below the line</a></li>
+    <li><a href="#m4">4:30 Step 1: numbers and scope</a></li>
+    <li><a href="#m5">5:30 Step 1: qualities, as rules</a></li>
+    <li><a href="#m8">8:00 Step 2: entities and API</a></li>
     <li><a href="#m11">11:00 Interruption 1</a></li>
-    <li><a href="#m13">13:00 v1, then architecture</a></li>
+    <li><a href="#m13">13:00 Step 3: the rung below, then the first version</a></li>
     <li><a href="#m21">21:00 Interruption 2</a></li>
-    <li><a href="#m24">24:00 Deep dive</a></li>
+    <li><a href="#m24">24:00 Step 4: dive one, provisional credit</a></li>
     <li><a href="#m33">33:00 Interruption 3</a></li>
-    <li><a href="#m36">36:00 Failures</a></li>
+    <li><a href="#m36">36:00 Step 4: dive two, failures</a></li>
     <li><a href="#m43">43:00 Interruption 4</a></li>
-    <li><a href="#m45">45:00 Rollout</a></li>
+    <li><a href="#m45">45:00 Step 4: rollout, short</a></li>
     <li><a href="#m50">50:00 Close</a></li>
     <li><a href="#score">How it scored</a></li>
+    <li class="sub"><a href="#bar">The bar for a Lead, in the video's terms</a></li>
   </ol>
 </nav>
 
@@ -296,11 +298,12 @@
 <header class="hero">
   <h1>Mock interview: the chargeback platform, minute by minute</h1>
   <p class="lede">A full simulated system design round for the Nubank Lead role, with every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them.</p>
-  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026; the numbers, the v1 sketch, a pushback exchange and the bad-day questions were added 29 September 2026 from Nubank's own candidate PDF.</p>
+  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026; the numbers, a pushback exchange and the bad-day questions were added 29 September 2026 from Nubank's own candidate PDF. Re-run 1 October 2026 in the four steps of the video Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>): the road map is said at minute two, the features and the qualities are written in its form, the one-table version is named and not drawn, the first version is on the board by minute 16, and the candidate chooses the deep dives.</p>
 </header>
 
 <h2 id="setup">Before you start</h2>
-<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. They are drawn here in the same style as the guides' diagrams, with colour for the consistency line; on the real board you draw the same boxes and arrows in one pen and say the colours out loud. Timestamps are where you should be, not where you must be; if you're five minutes behind at the architecture stage, cut the deep dive, never the failures.</p>
+<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. They are drawn here in the same style as the guides' diagrams, with colour for the consistency line; on the real board you draw the same boxes and arrows in one pen and say the colours out loud. Timestamps are where you should be, not where you must be; if you're five minutes behind at the drawing, cut a dive to a sentence, never the failures.</p>
+<p>The round is run in the four steps of the video Nubank's interviewers recommend, and the candidate names each step as they enter it: requirements (features, then the scale question, then the qualities), entities and API, a high-level design that serves only the features, and deep dives one quality at a time. Two rules from that video shape the script. The high-level design starts at the rung a senior candidate starts at: the one-table version is named in a sentence and never drawn, because a design that cannot keep audit, retries or deadlines "would not pass at any level". And the drawing is on the board by about minute 16, so that more than half the hour is deep dives, which is where a Lead is graded.</p>
 <p>The candidate's answers below are deliberately spoken, not written: short sentences, one idea each, said while drawing. That is the register to practise.</p>
 
 <!-- ============================================================ -->
@@ -308,7 +311,8 @@
 <div class="turn i"><p class="who">Interviewer</p><p>Thanks for joining. We've got about 55 minutes. I'd like you to design a card dispute platform for us. Customers dispute card transactions, we handle evidence, deadlines, submission to the card network, provisional credits, and the outcome has to be audited. Multi-country. Take it wherever you think it should go; I'll interrupt when I have questions.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
-<p>Great. Before I draw anything I want to pin the boundary, because this prompt can mean three different systems. Let me ask five things, quickly.</p>
+<p>Great. Here's how I'll use the time, so you can interrupt wherever you like: requirements first, the features, then rough numbers, then the qualities with a number each; then the nouns and the operations on them; then a simple design that serves the features, drawn by about minute fifteen; then I'll go back to the qualities one by one and harden it.</p>
+<p>So, requirements. Before I draw anything I want to pin the boundary, because this prompt can mean three different systems. Let me ask five things, quickly.</p>
 <p>First: are we the issuer, the cardholder's bank, or the acquirer, the merchant's bank? I'll assume issuer, since the customer opens the dispute with us, unless you tell me otherwise.</p></div>
 
 <div class="turn i"><p class="who">Interviewer</p><p>Issuer. We're the customer's bank.</p></div>
@@ -359,10 +363,19 @@
 </div>
 
 <!-- ============================================================ -->
-<p class="clock" id="m4">4:30</p>
-<p class="note">Numbers before boxes. Nubank's own prep document grades whether rough arithmetic leads to a decision; this is where it goes.</p>
+<p class="clock" id="m3">3:30</p>
+<p class="note">Features as expectations, then the "below the line" list, said to get a nod. The video Nubank recommends writes requirements this way; its point is agreement on a boundary, not completeness.</p>
 <div class="turn c"><p class="who">Candidate</p>
-<p>One more thing before the rules: rough numbers, so the shape of the problem is on the board. May I assume something like a hundred million customers and around two billion card transactions a month?</p></div>
+<p>Then the features, as what each user expects. One: a customer disputes a card transaction and can see where it stands. Two: an operator reviews evidence and decides, under the policy for that country and network. Three: the platform submits the dispute to the network and records the outcome. Four: the platform asks the ledger for provisional credit, and for its reversal or adjustment once the outcome is known.</p>
+<p>Below the line for today: fraud scoring, the acquirer and merchant side, the network's internals, and reporting dashboards, which I'd come back to if we have time. Does that boundary work for you?</p></div>
+
+<div class="turn i"><p class="who">Interviewer</p><p>It does. Reporting we can skip.</p></div>
+
+<!-- ============================================================ -->
+<p class="clock" id="m4">4:30</p>
+<p class="note">Numbers before the qualities, and before boxes. The video asks the interviewer for scale before writing a single non-functional requirement, because the qualities are written in terms of the numbers; Nubank's own prep document grades whether the arithmetic leads to a decision.</p>
+<div class="turn c"><p class="who">Candidate</p>
+<p>Before I write the qualities I want the scale, because they'll be written in terms of it. What volume should I design for? If you don't have a number, may I assume something like a hundred million customers and around two billion card transactions a month?</p></div>
 
 <div class="turn i"><p class="who">Interviewer</p><p>Close enough. Go on.</p></div>
 
@@ -393,9 +406,11 @@
 </div>
 
 <!-- ============================================================ -->
-<p class="clock" id="m5">5:00</p>
+<p class="clock" id="m5">5:30</p>
+<p class="note">The qualities, in context and quantified, then the same qualities as rules. The video calls a bare list of "scalable, low latency, fault tolerant" wholly uninteresting; each one here says what it means for this system and carries a number from the board.</p>
 <div class="turn c"><p class="who">Candidate</p>
-<p>Before components, the rules that must hold no matter what breaks. I'll write them; they're what I'll judge the design against.</p>
+<p>Now the qualities, each for this system and with a number. Auditable: any case reproducible as it stood on any date, from about twenty events per case. Deadlines kept: a legal window never missed silently, with alerts before and after breach, over about six million deadline rows a month. Money idempotent: a retry never credits twice. Available for intake: opening and reading a case keep working when the network or the ledger is down, with everything external shown as Processing. Latency: acceptance under a second, the operator's view under three hundred milliseconds, nothing external on that path. Scale: under one write a second, so one store is fine at ten times; Operations, at five hundred reviewers, is the real ceiling. Evidence trustworthy: a document is evidence only after its checks, eight terabytes a month in object storage.</p>
+<p>And the same qualities as the rules I'll judge the design against, because that's the form a failure will test them in.</p>
 <p>One: a case only moves through valid transitions under a versioned policy. No jumping from opened to closed unless a rule permits it, and an override needs a role, a reason and an approval, recorded.</p>
 <p>Two: every action records who, why and when. There is no anonymous status change. The audit trail is the event history, not a log we bolt on.</p>
 <p>Three: deadlines are durable. A due date is a saved row that cannot disappear if every worker dies. Not an in-memory timer.</p>
@@ -434,7 +449,8 @@
 <div class="turn c"><p class="who">Candidate</p>
 <p>Six nouns, and I'll resist adding more.</p>
 <p>DisputeCase is the current summary: state, amount, country, network, reason code, owner, policy version. CaseEvent is one immutable fact in its history: opened, evidence added, submitted, acknowledged, won. Deadline is a row with a type and a status. EvidenceItem is metadata pointing at a document in object storage: object version, checksum, scan status, uploader. NetworkSubmission is the stable reference we sent and whether it was acknowledged. FinancialAction is one money step with its own ledger key.</p>
-<p>The case is the aggregate root. Everything changes through commands. Nobody edits a status column.</p></div>
+<p>The case is the aggregate root. Everything changes through commands. Nobody edits a status column.</p>
+<p>And the operations on them, three, because every change is a command on the case rather than an endpoint per field. Open a case: transaction, reason, amount, and an idempotency key the app mints at the tap; it returns the existing case on a replay. Run a command on a case: the command type, the expected case version, a reason, a key; it returns the accepted state by name, or a version conflict, or a policy rejection with the version that rejected it. Read a case: the snapshot, and the history as of a date on request. Evidence bytes go through a staged upload; a later command links the exact object version. Who is acting comes from the token, never the body. Ops search is a projection read, not part of this API.</p></div>
 
 <div class="turn i"><p class="who">Interviewer</p><p>Why both events and a snapshot? Why not just the case row with a status?</p></div>
 
@@ -468,58 +484,24 @@
 
 <div class="turn c"><p class="who">Candidate</p>
 <p>No, and I need two mechanisms, not one. Request idempotency handles the literal retry: the app generates a key once per tap-intent and sends the same key on the retry; the platform returns the existing case. But two separate taps are two different keys, so I also need a business uniqueness rule: for this transaction, this claimant, this reason family, while a case is live, return the existing case or a deterministic conflict. I don't use transaction id alone, because partial disputes on one transaction are legitimate.</p>
-<p>Let me get back to the shape of the system.</p></div>
+<p>Let me get back to the step I was on: the entities and the API are done, so the drawing is next.</p></div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m13">13:00</p>
-<p class="note">Begin simple, then iterate. The prep document wants to hear a first idea, its pros and its cons, before the design you actually want.</p>
+<p class="note">Begin simple, then iterate, from the rung a Lead starts at. The prep document wants a first idea and its flaws found by you; the video sets the floor: a design that cannot serve the features "would not pass at any level", and a senior candidate "starts a little further on". So the one-table version is named in one sentence, not drawn, and the first version on the board is the one that works.</p>
 <div class="turn c"><p class="who">Candidate</p>
-<p>Let me start with the simplest thing that could work, and then break it myself. One dispute service, one Postgres with a cases table and a status column, synchronous calls to the network API and the ledger, and a cron job that checks deadlines every hour. Pros: one service, one database, easy to build and to understand, and at under one case a second it's fast enough.</p>
-<p>Four problems I'd hit in the first month. A status column can't tell an auditor who moved the case or why, so audit becomes a separate log that can disagree with the truth. The synchronous network and ledger calls hold a transaction open across a slow external hop; a timeout leaves the case not matching reality, and a retry can credit twice. The cron job is the only guardian of a legal deadline, so if it dies the deadline dies with it. And two operators updating the same row is last-write-wins, silently. Let me fix those in that order; the fixes are the design.</p></div>
-
-<div class="draw"><p class="label">Whiteboard, minute 14</p>
-<svg viewBox="0 0 680 430" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
-<title>Chargebacks v1: one service, one table, synchronous calls</title>
-<desc>A mobile app calls one dispute service, which updates a status column in a single Postgres table, calls the card network and the ledger synchronously inside the same transaction, and relies on an hourly cron job for deadlines. Two operators can update the same row. Four numbered flaws are marked.</desc>
-<defs><marker id="arrow-cb-v1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<g><rect x="40" y="40" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">App</text><text x="120.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana taps dispute</text></g>
-<line x1="200" y1="68" x2="258" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
-<g><rect x="260" y="40" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Dispute service</text><text x="350.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">one process, one codebase</text></g>
-<line x1="350" y1="96" x2="350" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="342" y="147" text-anchor="end" dominant-baseline="central" font-size="11" fill="#5F5E5A">UPDATE cases SET status = …</text>
-<g><rect x="260" y="200" width="180" height="72" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">One Postgres</text><text x="350.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">cases table, status column</text><text x="350.0" y="252" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">no history, no actor, no reason</text></g>
-<line x1="440" y1="60" x2="498" y2="60" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="469" y="46" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">in the txn</text>
-<g><rect x="500" y="32" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="50" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network API</text><text x="575.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">called synchronously</text></g>
-<path d="M440 80 L470 80 L470 158 L498 158" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
-<g><rect x="500" y="130" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="575.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">credit, synchronously</text></g>
-<g><rect x="40" y="200" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Cron job</text><text x="120.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">checks deadlines hourly</text></g>
-<line x1="200" y1="228" x2="258" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
-<g><rect x="500" y="208" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Two operators</text><text x="575.0" y="244" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">edit the same row</text></g>
-<line x1="498" y1="236" x2="442" y2="236" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
-<circle cx="445" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="445" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
-<circle cx="470" cy="119" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="119.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
-<circle cx="205" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="205" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
-<circle cx="470" cy="260" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="260.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
-<text x="40" y="318" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">The flaws, in the order they would hurt in the first month:</text>
-<circle cx="47" cy="344" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="344.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
-<text x="66" y="344" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">a status column can't say who moved the case or why; audit is a separate log that can disagree</text>
-<circle cx="47" cy="368" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="368.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
-<text x="66" y="368" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">external calls inside the transaction: a timeout leaves a mismatch, a retry can credit twice</text>
-<circle cx="47" cy="392" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="392.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
-<text x="66" y="392" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">the cron job is the only guardian of a legal deadline; if it dies, the deadline dies with it</text>
-<circle cx="47" cy="416" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="416.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
-<text x="66" y="416" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">two operators on one row: last write wins, silently</text>
-</svg>
-</div>
+<p>Step three, the design. I'll say the simplest version and not draw it: one dispute service, one Postgres with a cases table and a status column, synchronous calls to the network and the ledger, a cron that checks deadlines hourly. At under one case a second it would run for a week, and then it fails the qualities I just wrote: a status column can't tell an auditor who moved the case or why; a synchronous network or ledger call inside the transaction means a timeout leaves the case not matching reality and a retry can credit twice; the cron is the only guardian of a legal deadline; and two operators on one row is last-write-wins. So the first version I draw is the one that fixes those four, and I'll say what it costs as I go.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
-<p>Here's the write path, v2. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
+<p>Here's the first version, the write path. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
 <p>Side effects happen after commit. Workers read the outbox and call the card network, the ledger, object storage, notifications. Whatever they observe comes back into the case as a new event: network acked, ledger posted transaction 9182, scan passed. So the case's own history says what actually happened outside it.</p>
 <p>Two more pieces. Deadlines: a timer wakes workers near the due time, and an independent sweeper periodically queries the deadline rows for anything due or near due and catches whatever the timer missed. Search: Operations finds cases by country, age, reason, deadline through an index built from events; it may lag; Ops opens the authoritative case by id before acting.</p>
-<p>What v2 costs, so it's said: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to show. I pay that for a rebuildable audit trail and money that can't be credited twice.</p></div>
+<p>What it costs, so it's said: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to show. I pay that for a rebuildable audit trail and money that can't be credited twice.</p>
+<p>And what it doesn't handle yet, which is my menu for the rest of the hour. The timer alone finds deadlines, so I owe you the sweeper and the claim. One money step per case, so I owe you the keys for reversals and partial wins. Bytes in storage aren't evidence yet. The network is an HTTP call, and in practice it may be a file. No bad-day story yet, and no rollout. Of those I'd go deepest on provisional credit, because money meets long-running state there, and on failures, unless you'd rather steer me somewhere else.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 18 (v2)</p>
+<div class="draw"><p class="label">Whiteboard, minute 16 (the first version drawn)</p>
 <svg viewBox="0 0 680 690" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
-<title>Chargebacks v2: the atomic case commit, side effects after</title>
+<title>Chargebacks, the first version drawn: the atomic case commit, side effects after</title>
 <desc>A case command is authenticated and checked for idempotency and expected version, validated against a policy version, then committed atomically as an event, snapshot, deadlines, idempotency record and outbox rows; the accepted state is returned. Outbox workers then call the card network, ledger and notification service and record observed results as new case events. A search index is built for operations, and a timer plus sweeper read saved deadlines. Numbered badges show which v1 flaw each piece fixes.</desc>
 <defs><marker id="arrow-cb-v2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
 <g><rect x="180" y="40" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Case command</text><text x="300.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana disputes a purchase, key K1</text></g>
@@ -545,7 +527,7 @@
 <path d="M458 548 L445 548 L445 330 L432 330" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-v2)"/>
 <rect x="180" y="596" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="202" y="603" dominant-baseline="central" font-size="12" fill="#3E4A63">Strongly consistent: case truth, deadlines, intent</text>
 <rect x="180" y="620" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="202" y="627" dominant-baseline="central" font-size="12" fill="#3E4A63">Asynchronous: side effects, projections, recovery</text>
-<circle cx="187" cy="651" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="187" y="651.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">n</text><text x="202" y="651" dominant-baseline="central" font-size="12" fill="#3E4A63">Which v1 flaw this piece fixes</text>
+<circle cx="187" cy="651" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="187" y="651.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">n</text><text x="202" y="651" dominant-baseline="central" font-size="12" fill="#3E4A63">Which flaw of the undrawn version this piece removes</text>
 </svg>
 </div>
 
@@ -567,12 +549,12 @@
 <div class="turn c"><p class="who">Candidate</p>
 <p>Replay the case's events up to that timestamp and show the snapshot they produce. Every event carries actor, reason, time, and the policy version in force for that decision, so "which rule applied" is in the events, not reconstructed from a deployment history. This is a query, not a project, and it's the reason I refused a mutable status row ten minutes ago.</p></div>
 
-<div class="turn i"><p class="who">Interviewer</p><p>Good. Pick a part to go deep on.</p></div>
+<div class="turn i"><p class="who">Interviewer</p><p>Good. You said provisional credit. Go.</p></div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m24">24:00</p>
 <div class="turn c"><p class="who">Candidate</p>
-<p>Provisional credit, because it's where long-running case state meets customer money, and where the case model and the ledger have to agree without a distributed transaction.</p>
+<p>Deep dive one, provisional credit. The quality it serves is money idempotent under retry, with partial wins. It's where long-running case state meets customer money, and where the case model and the ledger have to agree without a distributed transaction.</p>
 <p>Walkthrough. Ana disputes R$300. Policy for her product and country says she's owed provisional credit. The case commit writes a FinancialAction with key CB-812, provisional credit, v1, and an outbox row. Case state is under review; financial state is provisional credit pending. After commit, a worker sends that command to the ledger with that key. The ledger posts a balanced pair, Ana plus 300, a disputes clearing account minus 300, and returns its transaction id. The worker records provisional-credit-posted as a case event carrying that id. Ana sees the money.</p>
 <p>Now the outcome. If she wins in full, finalise: the credit stands. If she loses, a new action, reverse provisional v1, asks the ledger for a linked reversal; the original posting is untouched. If she wins R$200 of 300, one adjustment for the difference, final adjustment v2, minus 100. Never edit the credit amount.</p>
 <p>The case closes only when both are true: the workflow decision is recorded, and every required ledger action is confirmed. And at the end I reconcile three truths: the network's award, our recorded decision, and the ledger's postings. They must agree on outcome and amount.</p></div>
@@ -636,6 +618,7 @@
 <p>What the case store does: it partitions cleanly by case id, because no transaction ever spans two cases. So the write authority scales by adding partitions, and I'd key on case id from day one so the split is possible later. The one hot shape is a single case with thousands of events, which policy should cap, and the snapshot means reads never replay it.</p>
 <p>The deadline sweeper's query is the thing I'd check first for performance: status equals open and due before now, on millions of rows. Index on status and due time, bounded batches, skip-locked claims, and let the timer take the normal path so the sweeper only sees stragglers.</p>
 <p>What does not scale by adding machines: Operations. If ten times the cases means ten times the manual reviews, that's the real ceiling. So the honest performance lever at scale is automation, and I'd decide what to automate from shadow results, precision and recall by reason and market, not from average handle time.</p>
+<p>Two things I'd deliberately not add, because the numbers don't ask for them: a queue between the API and the case store to absorb spikes, which at eight writes a second is a component with no job and one more place to lose a command; and sharding for throughput, when the reason to partition here is failover size, not writes. I'd rather say that than draw them.</p>
 <p>And on latency specifically: the customer-facing path is one indexed read plus one commit. Policy evaluation is precomputed at case open. If p99 is bad, it's a hot partition, a lock held across a slow call, or a synchronous call that shouldn't be there, in that order. I would not cache the case; a cached case is exactly what lets two operators decide it twice.</p></div>
 
 <div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p>
@@ -665,6 +648,7 @@
 
 <!-- ============================================================ -->
 <p class="clock" id="m36">36:00</p>
+<p class="note">Deep dive two: failures as a quality, six questions per failure. The candidate named this dive at minute 18; the interviewer runs it.</p>
 <div class="turn i"><p class="who">Interviewer</p><p>Let's break things. The card network times out on a submission.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
@@ -772,6 +756,7 @@
 
 <!-- ============================================================ -->
 <p class="clock" id="m45">45:00</p>
+<p class="note">The last dive, short: rollout and ownership in three minutes, because the two chosen dives took the depth.</p>
 <div class="turn i"><p class="who">Interviewer</p><p>Last few minutes. How do you get this to production, and who owns what?</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
@@ -827,25 +812,33 @@
   <tr><td>Scalability push (Lead bar)</td><td>Asked "tenfold what", named metrics, separated what scales from what doesn't, called Operations the ceiling, refused the cache.</td><td>"Add more instances, add a cache, move to NoSQL."</td></tr>
   <tr><td>Recovery from interruption</td><td>Every interruption was answered and then "let me get back to" was said out loud.</td><td>Loses the thread, or ignores the interruption to finish the monologue.</td></tr>
   <tr><td>Numbers that lead to a decision</td><td>Minute 4:30: seventy thousand a day is under one per second, so "not a throughput problem"; at 33 the tenfold answer opened with the arithmetic.</td><td>"It'll be a lot of data, so we need something scalable."</td></tr>
-  <tr><td>Begin simple, then iterate</td><td>Minute 13: the one-table v1, its four flaws named by the candidate, then v2 with its cost said aloud.</td><td>The finished diagram at minute ten, presented as the only option.</td></tr>
+  <tr><td>Begin simple, then iterate</td><td>Minute 13: the one-table version named in one sentence with its four flaws, not drawn; the first version on the board by 16 with its cost and its gaps said aloud.</td><td>Five minutes drawing a design that cannot keep audit or deadlines; or the finished diagram at minute ten, presented as the only option.</td></tr>
+  <tr><td>A road map, said once</td><td>Minute 0: requirements, entities and API, a simple design, then the qualities one by one; each step named on entry, and named again when returning from an interruption.</td><td>Starts asking questions with no stated plan; the interviewer can't tell where the hour is going.</td></tr>
+  <tr><td>Features agreed, qualities quantified</td><td>Minute 3:30: four feature lines and a below-the-line list, with a nod; 5:30: every quality in context with a number.</td><td>"Scalable, low latency, fault tolerant" as bare words, and scope never agreed.</td></tr>
+  <tr><td>Chose the dives</td><td>Minute 18: listed what the first version doesn't handle and chose two, leaving the door open to steering.</td><td>Waits to be told what to go deep on, then goes shallow on five things.</td></tr>
+  <tr><td>Against the grain, with a reason</td><td>Refused the spike queue and throughput sharding at minute 33, and the cache at 36, each with the number or the bug that says why.</td><td>Adds every component a textbook would, whether or not the numbers ask for it.</td></tr>
   <tr><td>Two-way discussion</td><td>Declined the cache with a reason and an alternative, and left the door open to data.</td><td>"Sure, we could add a cache" to every suggestion.</td></tr>
   <tr><td>Assume things will fail</td><td>Named the primary as the single point of failure, gave the failover story and the degradation matrix in one breath.</td><td>"We'd make it highly available."</td></tr>
   <tr><td>Security and abuse</td><td>Roles, four-eyes, actor on every event, and the ledger enforcing independently.</td><td>"We'd add authentication."</td></tr>
 </table>
 
-<h3>Four places this candidate could still lose points</h3>
+<h3>Five places this candidate could still lose points</h3>
 <ul>
-  <li><strong>Skipping the v1.</strong> Drawing the finished design at minute thirteen is what the prep document calls the most common way a strong engineer scores poorly. The v1 and its flaws take ninety seconds and are the collaboration signal.</li>
-  <li><strong>Talking through the diagram instead of drawing it.</strong> The architecture must be on the board by minute 18. If you're narrating boxes that aren't drawn, the interviewer can't check your write path.</li>
+  <li><strong>Drawing the rung below the floor.</strong> The prep document wants a first idea and its flaws; the video says a design that cannot serve the features would not pass at any level, and that a senior candidate starts further on. Name the one-table version in one sentence, with its four flaws; that is the collaboration signal, and it takes forty seconds. Drawing it costs five minutes of deep dive.</li>
+  <li><strong>Reaching the drawing late.</strong> The video's pace for senior and staff candidates is the high-level design by about minute 10 of your own time, minute 15 on Nubank's clock. If the qualities run long, say the invariants as a list, not a speech.</li>
+  <li><strong>Talking through the diagram instead of drawing it.</strong> The architecture must be on the board by minute 16. If you're narrating boxes that aren't drawn, the interviewer can't check your write path.</li>
   <li><strong>Over-answering the interruptions.</strong> Each one above is under 90 seconds. If the tenfold answer runs five minutes, you never reach rollout, and rollout is where "has shipped things" is graded.</li>
   <li><strong>Forgetting to ask the interviewer questions at the end.</strong> Two good ones, tied to the design, are cheap and remembered.</li>
 </ul>
+
+<h3 id="bar">The bar for a Lead, in the video's terms</h3>
+<p>The video grades three levels and says where each passes. Mid-level: breadth over depth, the batch solution, probing on the basics; the interviewer drives the second half. Senior: reaches the high-level design fast, contrasts the options and chooses, goes deep on two or three of the dives with the trade-offs said; drives, and anticipates problems. Staff: breezes through the basics, drives every chosen dive to the bottom, "the interviewer should intervene only to focus, not to steer", and ideally teaches the interviewer something. The Lead round sits between senior and staff, and the script above is written to that: two dives to the bottom (provisional credit, failures), one dive in three minutes (rollout), the batch-file answer at 43 as the teach-the-interviewer moment, and a pushback with a reason each time the interviewer suggests a component the numbers don't ask for. The sentence the video's interviewer uses for the last of those: "identifications that go against the grain are really effective ways to show seniority."</p>
 
 <h3>Run it yourself</h3>
 <p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time; the point is that the answer doesn't depend on when it's asked.</p>
 
 <footer>
-  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The whiteboards were redrawn as diagrams on 30 September 2026. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>.
+  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The whiteboards were redrawn as diagrams on 30 September 2026. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>. On 1 October 2026 the script was re-run in the four steps of the recommended video: road map at minute 0, features at 3:30, qualities at 5:30, the API at 8, the one-table version named and not drawn at 13, the first version on the board at 16 with its gaps as the deep-dive menu, and the level bar added at the end.
 </footer>
 </main>
 </div>
