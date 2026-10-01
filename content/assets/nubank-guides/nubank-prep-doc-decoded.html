@@ -308,6 +308,7 @@
   <tr><td>Collaborative problem-solving</td><td>8–55</td><td>Stages 2 to 7: rules, nouns, v1 sketch, its flaws, v2 architecture, one deep dive, failures with a bad-day story, scaling with numbers, rollout.</td></tr>
   <tr><td>Your questions</td><td>55–60</td><td>Section 10.</td></tr>
 </table>
+<p>The video they recommend (section 11) follows the same shape under different names: requirements, then a short bridge of entities and API (or interface and data flow for a pipeline), then a high-level design that serves only the features, then deep dives that take the qualities one at a time. <em>The Hello Interview method, applied to Nubank's hour</em> maps the two onto each other and scripts chargebacks and the ledger in those steps; its section 1 is the one-page version.</p>
 
 <div class="say"><p class="label">The sentence to say in minute eight</p><p>"So I'll scope to the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest; I'll treat the network as an adapter and the ledger as an existing system, and come back to reporting if we have time. At roughly 70,000 cases a day this is not a throughput problem; it's a correctness, deadline and people problem, and that shapes every choice I make next."</p></div>
 
@@ -430,8 +431,9 @@ One indexed read + one small commit ≈ 5–10 ms → fits with room; a synchron
 <!-- ============================================================ -->
 <h2 id="v1">6. Begin simple, then iterate: chargebacks as v1 → v2 → v3</h2>
 <p class="question">They want to see you start with a v1, find its flaws yourself, and fix them in order. Here is the storyline; the end state is the design you already know.</p>
+<div class="trap"><p class="label">The floor, from the video they recommend (added 1 October 2026)</p><p>Evan King sets a limit on "begin simple": a high-level design that cannot serve the features "would not pass at any level", and a senior or staff candidate "won't start with the crappy solution; you'll start a little further on". For a Lead role, treat the v1 below as the rung you <em>name in one sentence and don't draw</em>, draw v2 as your first version by about minute 15, and spend the saved minutes on the deep dives. Section 6 of the chargeback guide and section 4 of the ledger guide are now written that way; the flaws below are still the sentence you say.</p></div>
 
-<h3>v1: the honest first sketch (minute 10)</h3>
+<h3>v1: the honest first sketch, named in a sentence</h3>
 <figure>
 <svg viewBox="0 0 680 430" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Chargebacks v1: one service, one table, synchronous calls</title>
@@ -664,8 +666,8 @@ One indexed read + one small commit ≈ 5–10 ms → fits with room; a synchron
   <tr><th>Day</th><th>Do</th></tr>
   <tr><td>Tue</td><td>Read this guide once. Memorise the arithmetic table in section 4. Do the chargeback numbers on paper without looking.</td></tr>
   <tr><td>Wed</td><td>Run the chargeback mock with a timer, but start with the v1 sketch and its four flaws before drawing v2. Add the numbers at minute 6.</td></tr>
-  <tr><td>Thu</td><td>Ledger: section 10 follow-ups and section 11 scaling, out loud, with numbers. Then the two generic sketches from section 8, ten minutes each, whiteboard from memory.</td></tr>
-  <tr><td>Fri</td><td>Bad-day drill: for chargebacks, walk the degradation matrix and the security table aloud; name your single point of failure and its failover story. Read the four Nubank posts in <a href="#reading">section 11</a> and watch the recommended video, so you can cite how they actually handled something.</td></tr>
+  <tr><td>Thu</td><td>Ledger: section 13 follow-ups and section 11 scaling, out loud, with numbers. Then the two generic sketches from section 8, ten minutes each, whiteboard from memory.</td></tr>
+  <tr><td>Fri</td><td>Bad-day drill: for chargebacks, walk the degradation matrix and the security table aloud; name your single point of failure and its failover story. Read the four Nubank posts in <a href="#reading">section 11</a> and watch the recommended video, so you can cite how they actually handled something. Then run section 7 of <em>The Hello Interview method</em> with a timer, saying the step name at each transition.</td></tr>
   <tr><td>Sat</td><td>Full mock with someone injecting interruptions at random; include one "I'd suggest caching the case" so you practise polite pushback. Prepare your five questions (section 10).</td></tr>
   <tr><td>Sun</td><td>Light: re-read the sentences in the cheat sheets. Check camera, mic, the whiteboard tool, and draw the chargeback diagram once in under three minutes. Sleep.</td></tr>
   <tr><td>Mon</td><td>Five clarifying questions, numbers, scope sentence, v1, flaws, v2, one deep dive, failures, rollout, your questions.</td></tr>
@@ -719,6 +721,13 @@ One indexed read + one small commit ≈ 5–10 ms → fits with room; a synchron
   <li>Its non-functional list is a good template: scalable to the stated peak, low-latency queries, fault-tolerant and accurate collection (no lost clicks), as real-time as possible, and idempotent tracking so the same click isn't counted twice.</li>
   <li>For data-processing problems it defines the system's <strong>interface</strong> (input: click data; output: metrics) and the <strong>data flow</strong> before the high-level design. If you get a pipeline-shaped prompt, do the same.</li>
 </ul>
+<p>The transcript adds four more habits, each worked out in <em>The Hello Interview method, applied to Nubank's hour</em> (sections 4 and 5):</p>
+<ul>
+  <li>The high-level design serves <strong>only the features</strong>; the qualities are the deep dives, taken in the order of the non-functional list. He gives the pace: a senior candidate is drawing by minute 10, a mid-level one by minute 15.</li>
+  <li>Before adding a component, he <strong>exhausts the cheap fix and names its ceiling</strong>: "run the batch more often" hits job start-up overhead, and only then does the stream appear.</li>
+  <li>He plants one <strong>pushback against the textbook</strong>: candidates propose Flink checkpointing, and he argues it is pointless for a one-minute window. "Identifications that go against the grain are really effective ways to show seniority."</li>
+  <li>The final design is <strong>neither Lambda nor Kappa</strong>, and he says hybrids are practical: "practicality should almost always be favoured over abstract purity." Nubank's pragmatic-thinking signal, in another interviewer's words.</li>
+</ul>
 <p>Their other recommendation is Alex Xu's <em>System Design Interview</em>. If you only open one part, open the back-of-envelope estimation chapter and, in volume 2, the payment system and ad-click aggregation chapters; those three overlap with sections 4 and 8 of this guide.</p>
 
 <!-- ============================================================ -->
@@ -734,7 +743,7 @@ One indexed read + one small commit ≈ 5–10 ms → fits with room; a synchron
 </ol>
 
 <footer>
-  Built from Nubank's <em>Preparing for your System Design Interview</em> PDF (60-minute format, seven evaluation signals, ten keys for success, technical concepts list) and the three earlier guides: <em>The ledger, end to end</em>; <em>The chargeback platform, end to end</em>; <em>Pivot insurance</em>. The volume assumptions in section 4 are illustrative; replace them with any numbers the interviewer gives you. Sections 11 and 12 were added on 29 September 2026 from Nubank's engineering blog (building.nu.com), the Datomic overview, Lucas Cavalcanti's InfoQ talk, and the Hello Interview ad-click breakdown; every figure quoted was checked against the source page the same day.
+  Built from Nubank's <em>Preparing for your System Design Interview</em> PDF (60-minute format, seven evaluation signals, ten keys for success, technical concepts list) and the three earlier guides: <em>The ledger, end to end</em>; <em>The chargeback platform, end to end</em>; <em>Pivot insurance</em>. The volume assumptions in section 4 are illustrative; replace them with any numbers the interviewer gives you. Sections 11 and 12 were added on 29 September 2026 from Nubank's engineering blog (building.nu.com), the Datomic overview, Lucas Cavalcanti's InfoQ talk, and the Hello Interview ad-click breakdown; every figure quoted was checked against the source page the same day. On 1 October 2026 the pointers to <em>The Hello Interview method, applied to Nubank's hour</em> were added in sections 1, 9 and 11.
 </footer>
 </main>
 </div>

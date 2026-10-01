@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Hello Interview method, applied to Nubank's hour — system design interview</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --dia-line: #5F5E5A;
+    --dia-line-soft: #888780;
+    --dia-fill: #F1EFE8;
+    --dia-text: #2C2C2A;
+    color-scheme: light;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* Dark mode. The palette follows the garden's saved "theme" preference
+     (shared with the Quartz toggle) and, when none is saved, the system
+     setting. Content and layout are unchanged; only the colours swap. */
+  :root[data-theme="dark"] {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+    }
+  }
+
+  /* Diagrams carry their colours as fill/stroke attributes from the light
+     palette. These rules map each attribute value onto a theme variable so
+     the SVGs follow the theme without touching their markup. */
+  svg [fill="#0F6E56" i] { fill: var(--strong); }
+  svg [stroke="#0F6E56" i] { stroke: var(--strong); }
+  svg [fill="#E1F5EE" i] { fill: var(--strong-bg); }
+  svg [stroke="#E1F5EE" i] { stroke: var(--strong-bg); }
+  svg [fill="#085041" i] { fill: var(--strong-ink); }
+  svg [stroke="#085041" i] { stroke: var(--strong-ink); }
+  svg [fill="#534AB7" i] { fill: var(--eventual); }
+  svg [stroke="#534AB7" i] { stroke: var(--eventual); }
+  svg [fill="#EEEDFE" i] { fill: var(--eventual-bg); }
+  svg [stroke="#EEEDFE" i] { stroke: var(--eventual-bg); }
+  svg [fill="#3C3489" i] { fill: var(--eventual-ink); }
+  svg [stroke="#3C3489" i] { stroke: var(--eventual-ink); }
+  svg [fill="#BA7517" i] { fill: var(--money); }
+  svg [stroke="#BA7517" i] { stroke: var(--money); }
+  svg [fill="#FAEEDA" i] { fill: var(--money-bg); }
+  svg [stroke="#FAEEDA" i] { stroke: var(--money-bg); }
+  svg [fill="#633806" i] { fill: var(--money-ink); }
+  svg [stroke="#633806" i] { stroke: var(--money-ink); }
+  svg [fill="#A32D2D" i] { fill: var(--warn); }
+  svg [stroke="#A32D2D" i] { stroke: var(--warn); }
+  svg [fill="#FCEBEB" i] { fill: var(--warn-bg); }
+  svg [stroke="#FCEBEB" i] { stroke: var(--warn-bg); }
+  svg [fill="#791F1F" i] { fill: var(--warn-ink); }
+  svg [stroke="#791F1F" i] { stroke: var(--warn-ink); }
+  svg [fill="#3E4A63" i] { fill: var(--ink-soft); }
+  svg [stroke="#3E4A63" i] { stroke: var(--ink-soft); }
+  svg [fill="#5F5E5A" i] { fill: var(--dia-line); }
+  svg [stroke="#5F5E5A" i] { stroke: var(--dia-line); }
+  svg [fill="#888780" i] { fill: var(--dia-line-soft); }
+  svg [stroke="#888780" i] { stroke: var(--dia-line-soft); }
+  svg [fill="#F1EFE8" i] { fill: var(--dia-fill); }
+  svg [stroke="#F1EFE8" i] { stroke: var(--dia-fill); }
+  svg [fill="#2C2C2A" i] { fill: var(--dia-text); }
+  svg [stroke="#2C2C2A" i] { stroke: var(--dia-text); }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-tint); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--strong); color: var(--strong); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+</button>
+<div class="page">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#end-result">1. The end result: the road map on one page</a></li>
+    <li><a href="#requirements">2. Requirements: features, then qualities with numbers</a></li>
+    <li><a href="#interface">3. Interface and data flow, or entities and API</a></li>
+    <li><a href="#hld">4. High-level design: satisfy the features, nothing more</a></li>
+    <li class="sub"><a href="#redirect">The redirect: client side versus 302</a></li>
+    <li class="sub"><a href="#ladder">Store and query: bad, good, great</a></li>
+    <li class="sub"><a href="#final">The final board</a></li>
+    <li><a href="#deep-dives">5. Deep dives: one quality at a time</a></li>
+    <li class="sub"><a href="#dd-realtime">As real time as possible</a></li>
+    <li class="sub"><a href="#dd-scale">10k clicks a second</a></li>
+    <li class="sub"><a href="#dd-loss">Never lose a click</a></li>
+    <li class="sub"><a href="#dd-idem">One click per impression</a></li>
+    <li class="sub"><a href="#dd-query">Queries under a second</a></li>
+    <li><a href="#levels">6. What each level is graded on, and where Lead sits</a></li>
+    <li><a href="#chargebacks">7. The method run on chargebacks, minute by minute</a></li>
+    <li class="sub"><a href="#ledger-run">The same run on the ledger</a></li>
+    <li><a href="#cheat">8. Interview sentences, collected</a></li>
+    <li><a href="#practice">9. Practice next</a></li>
+  </ol>
+</nav>
+<main>
+<header class="hero">
+  <h1>The Hello Interview method, applied to Nubank's hour</h1>
+  <p class="lede">Nubank's interviewers pointed you at one video: Evan King's ad-click aggregator walkthrough. This guide takes the road map he follows, step by step, shows every move he makes in the 56 minutes and why the interviewer in him rewards it, and then runs the same steps over your chargeback and ledger designs so you walk in with one method, not two.</p>
+  <p class="source">Built 1 October 2026 from the video transcript (<a href="https://youtu.be/1oFVUT4_Yy0">youtu.be/1oFVUT4_Yy0</a>), its written answer key (<a href="https://hellointerview.com/youtube/ad-click-aggregator/description">hellointerview.com/youtube/ad-click-aggregator</a>) and Hello Interview's delivery framework page. Companion to <em>Nubank's prep document, decoded</em>, which names the video in section 11.</p>
+</header>
+
+<!-- ============================================================ -->
+<h2 id="end-result">1. The end result: the road map on one page</h2>
+<p class="question">Read this first. Everything else in the guide is one of these steps, worked out.</p>
+<p class="thesis">Four steps, each feeding the next: requirements (features, then qualities with numbers), a thin bridge (entities and API, or interface and data flow), a high-level design that satisfies only the features, and deep dives that take the qualities one at a time. The interviewer who recommended this to you grades the <em>order</em> as much as the boxes. Your seven stages already fit inside it; what the video adds is the discipline of saying which step you are on, and of not drawing until step three.</p>
+
+<h3>Two flavours of the same road map</h3>
+<p>Evan King opens by saying the road map has two variants. For <strong>product design</strong> questions, where you design something a person uses (Ticketmaster, Uber, Dropbox), the bridge between requirements and the drawing is <em>core entities</em> and <em>API</em>. For <strong>infrastructure design</strong> questions, where the system is a pipeline rather than a screen (an ad-click aggregator, a web crawler, a reconciliation engine), entities and endpoints make less sense, so the bridge becomes <em>system interface</em> (what comes in, what goes out) and <em>data flow</em> (the ordered steps that turn one into the other). Both variants start with requirements and end with a high-level design plus deep dives.</p>
+<p>Say which flavour your prompt is in the first two minutes. Chargebacks and the ledger are product-shaped: a customer or an operator acts on a case or a transfer, so you list nouns and endpoints. An ETL for fraud features, a reconciliation job, a file exchange with the card network, or any "count things per minute" prompt is infrastructure-shaped: you list inputs, outputs and the steps between them.</p>
+
+<figure>
+<svg viewBox="0 0 720 300" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>The Hello Interview road map over Nubank's hour, with your seven stages underneath</title>
+<desc>Four boxes in a row: requirements, a bridge of entities and API or interface and data flow, high-level design, deep dives. Minute marks for a sixty-minute round sit under each box. A second row shows where the seven stages of the existing guides fall: clarify under requirements; invariants and nouns under the bridge; v1 then v2 architecture under high-level design; deep dive, failures and rollout under deep dives.</desc>
+<defs><marker id="arrow-hi-map" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="160" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="100" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">1 Requirements</text><text x="100" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">features; scale; qualities</text></g>
+<line x1="180" y1="58" x2="194" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-map)"/>
+<g><rect x="196" y="30" width="160" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="276" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">2 The bridge</text><text x="276" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">nouns + API, or I/O + flow</text></g>
+<line x1="356" y1="58" x2="370" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-map)"/>
+<g><rect x="372" y="30" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="452" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">3 High-level design</text><text x="452" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">serves the features only</text></g>
+<line x1="532" y1="58" x2="546" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-map)"/>
+<g><rect x="548" y="30" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="628" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">4 Deep dives</text><text x="628" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">one quality at a time</text></g>
+<text x="100" y="104" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">minutes 3–12</text>
+<text x="276" y="104" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">minutes 12–15</text>
+<text x="452" y="104" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">minutes 15–27</text>
+<text x="628" y="104" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">minutes 27–53</text>
+<line x1="100" y1="116" x2="100" y2="166" stroke="#5F5E5A" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="276" y1="116" x2="276" y2="166" stroke="#5F5E5A" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="452" y1="116" x2="452" y2="166" stroke="#5F5E5A" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="628" y1="116" x2="628" y2="166" stroke="#5F5E5A" stroke-width="1" stroke-dasharray="3 3"/>
+<g><rect x="20" y="170" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="100" y="188" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Stage 1</text><text x="100" y="206" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">clarify, numbers, scope</text></g>
+<g><rect x="196" y="170" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="276" y="188" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Stages 2, 3</text><text x="276" y="206" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">invariants; the nouns</text></g>
+<g><rect x="372" y="170" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="452" y="188" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Stage 4</text><text x="452" y="206" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">v1, its flaws, v2 drawn</text></g>
+<g><rect x="548" y="170" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="628" y="188" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Stages 5, 6, 7</text><text x="628" y="206" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">dive, failures, rollout</text></g>
+<rect x="20" y="252" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="42" y="259" dominant-baseline="central" font-size="12" fill="#3E4A63">Before the board: words, lists, numbers. No boxes yet.</text>
+<rect x="20" y="276" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="42" y="283" dominant-baseline="central" font-size="12" fill="#3E4A63">On the board: the drawing, then the drawing made to survive its qualities.</text>
+</svg>
+<figcaption>The road map over Nubank's hour. Minutes 0–3 are the interviewer stating the problem; 53–55 is your one-sentence summary; 55–60 is your questions. The grey row is where the seven stages of your other guides sit: nothing is lost, the stages just get a name for the step they belong to. The minute marks assume the senior pace from the video, high-level design by minute 10 of your own time, and are where you should be, not where you must be.</figcaption>
+</figure>
+
+<h3>What each step feeds</h3>
+<p>The sentence he repeats most: <em>each section fuels the next</em>. Functional requirements become the inputs, outputs and data flow. The data flow becomes the high-level design, drawn in the same order. The non-functional requirements become the deep dives, taken one at a time. When you get lost mid-interview, this is the thread to pick up: "which requirement am I serving right now?"</p>
+
+<h3>How this sits on your seven stages</h3>
+<table>
+  <tr><th>Hello Interview step</th><th>Your stage</th><th>What changes for you</th></tr>
+  <tr><td>Requirements</td><td>1 Clarify</td><td>Nothing in substance; you already spend 5–8 minutes here. Add the video's two habits: write the features as "users can…" lines with a "below the line" list, and ask about scale <em>before</em> writing the qualities.</td></tr>
+  <tr><td>Bridge</td><td>2 Invariants, 3 Nouns</td><td>Your invariants are non-functional requirements written as rules; say them at the end of step 1. Your six nouns are the core entities; say them as the bridge, with the two or three endpoints that act on them.</td></tr>
+  <tr><td>High-level design</td><td>4 Architecture</td><td>Draw only what the features need. Your v1 → v2 story lives here: v1 is the "bad" rung, v2 the "good or great" rung. Name the key each arrow carries as you draw it.</td></tr>
+  <tr><td>Deep dives</td><td>5 Deep dive, 6 Failures, 7 Rollout</td><td>Go back to the qualities list and tick them off. Failures and scaling are deep dives, not a separate stage; rollout is the last dive if time allows.</td></tr>
+</table>
+
+<div class="say"><p class="label">Say it in minute two, while the interviewer is still finishing the prompt</p><p>"Here's how I'll use the time: requirements first, features then qualities with rough numbers; then the nouns and the two or three operations on them; then a simple design that satisfies the features; then I'll go back to the qualities one by one and harden the design. Interrupt whenever you like."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="requirements">2. Requirements: features, then qualities with numbers</h2>
+<p class="question">Minutes 3 to 12. The step the video spends the most care on, and the step Nubank's PDF grades hardest.</p>
+
+<h3>Functional requirements are features, written as expectations</h3>
+<p>He writes them as what a user expects of the system, and the user may be a person, an operator, another team, or a machine. Two lines for the ad-click aggregator:</p>
+<ol>
+  <li>Users click on an ad and are redirected to the advertiser's website.</li>
+  <li>Advertisers query click metrics over time, with a minimum granularity of one minute.</li>
+</ol>
+<p>Then a short list he labels <strong>below the line (out of scope)</strong>: ad targeting and serving, cross-device tracking, integration with offline channels. Two things he says about that list that matter for you. First, write it only if it comes naturally; some candidates strain to produce out-of-scope items and it reads as padding. Second, the point of the list is <em>agreement</em>: you are getting the interviewer to nod at a boundary, so say it aloud and wait for the nod.</p>
+
+<h3>Ask about scale before you write the qualities</h3>
+<p>This is the move Nubank's section-11 note already flagged, and the transcript shows why it matters: he stops, asks the interviewer "how many ads at any one time, how many clicks per second at peak", gets 10 million ads and 10,000 clicks per second at peak, and only then writes the non-functional list. The written version adds the arithmetic: peak is roughly ten times average, so about 1,000 clicks a second on average, times 86,400 seconds, about 100 million clicks a day. Every later decision quotes one of those numbers.</p>
+<p>Your arithmetic table in section 4 of the decoded guide is the same habit. The order is what the video adds: numbers come <em>before</em> the qualities, because the qualities are written in terms of them.</p>
+
+<h3>Non-functional requirements: in context, and quantified</h3>
+<div class="trap"><p class="label">The trap he names explicitly</p><p>Many candidates write "scalability, low latency, fault tolerance, security" as bare words. He calls that "wholly uninteresting". Instead: pick the qualities that are uniquely relevant to this system, put each in the context of this system, and quantify it where you can.</p></div>
+<p>His list for the ad-click aggregator, with the context and the number attached:</p>
+<ul>
+  <li><strong>Scalable</strong> to a peak of 10,000 clicks per second.</li>
+  <li><strong>Low latency</strong> on the advertisers' analytics queries: under one second.</li>
+  <li><strong>Fault tolerant with high data integrity</strong>: no click is lost, because clicks are what advertisers are billed for.</li>
+  <li><strong>As real time as possible</strong>: a click should be visible in the metrics as soon as it can be, within the one-minute granularity.</li>
+  <li><strong>Idempotent click tracking</strong>: one user clicking one ad placement ten times, or a bot doing it, counts once.</li>
+</ul>
+<p>Below the line: spam detection beyond idempotency, demographic slicing, conversion tracking. He admits on camera that "fault tolerant" could have been put in context better; that candour is worth copying, because it shows the list is being checked against the system, not recited.</p>
+
+<h3>The same two lists for your prompts</h3>
+<table>
+  <tr><th>Prompt</th><th>Features ("users can…")</th><th>Qualities, in context and with a number</th></tr>
+  <tr><td>Chargebacks</td><td>A customer disputes a card transaction and sees its status. An operator reviews evidence and decides. The platform submits to the network and records the outcome. The platform asks the ledger for provisional credit and its reversal. Below the line: fraud scoring, the merchant side, the network's own systems.</td><td>About 70,000 cases a day, under one a second, so correctness over throughput. Every decision auditable "as of" any date. Deadlines never missed silently: a durable timer plus a sweeper. Money actions idempotent under retry. Degrades to "Processing", never to a double credit.</td></tr>
+  <tr><td>Ledger</td><td>A client submits a transfer with an idempotency key and gets a definite answer. Anyone reads a balance and a statement. Projections rebuild from the log. Below the line: the authoriser, FX, the card network.</td><td>Peak thousands of transfers a second across the bank, so one primary per shard, not one primary. Commit latency tens of milliseconds. No double debit, ever: the invariant you say first. Replay from the log; drift detectable. Reads eventual, the decision strong.</td></tr>
+  <tr><td>Ad clicks</td><td>Users click and are redirected. Advertisers query metrics per ad per minute.</td><td>10k clicks/s peak; queries under a second; no lost clicks; as real time as possible; one click per impression.</td></tr>
+</table>
+<p>The chargeback and ledger columns are what your guides already say in stages 1 and 2, re-sorted into the video's two lists. The point of the table is to prove that nothing changes but the labelling: say "features" when you list what the system does, say "qualities" when you list what must hold, and attach a number to each quality.</p>
+
+<!-- ============================================================ -->
+<h2 id="interface">3. Interface and data flow, or entities and API</h2>
+<p class="question">Minutes 12 to 15. A thin step; it exists so that the drawing has something to follow.</p>
+
+<h3>For a pipeline prompt: inputs, outputs, then the ordered steps</h3>
+<p>The <strong>system interface</strong> is one line each side. Inputs: click data from users; queries from advertisers. Outputs: a redirect for the user; aggregated click metrics for the advertiser. He says on camera that for this question it was almost too simple to be worth writing, and that you should do it only if it helps you; keep that honesty, but note that he still did it, because it makes the next list easy.</p>
+<p>The <strong>data flow</strong> is a numbered list of the steps from input to output. His six:</p>
+<ol>
+  <li>Click data comes into the system.</li>
+  <li>The user is redirected.</li>
+  <li>The click is validated (this is where idempotency will live).</li>
+  <li>The raw click is logged.</li>
+  <li>Clicks are aggregated into a read-optimised shape.</li>
+  <li>Advertisers query the aggregated data.</li>
+</ol>
+<p>Then he checks the list against the features: steps 1, 2 and 6 are the two functional requirements. That check is the whole point of the step. If a feature has no step, you forgot something; if a step serves no feature, it is gold-plating.</p>
+
+<h3>For a product prompt: nouns, then the operations on them</h3>
+<p>Core entities are the nouns the features need; the API is the two or three operations that act on them. The framework page's advice: plural resource names, and anything sensitive (who the caller is) comes from the authentication token, never the request body.</p>
+<table>
+  <tr><th>Prompt</th><th>Core entities</th><th>API or interface</th></tr>
+  <tr><td>Chargebacks</td><td>Case, Event, Evidence, Deadline, NetworkMessage, FinancialAction. The six nouns of the chargeback guide; case is the aggregate root.</td><td><code>POST /cases</code> (open, with an idempotency key), <code>POST /cases/{id}/commands</code> (submit evidence, decide, submit to network; each a command with the case version), <code>GET /cases/{id}</code>. Operator identity from the token.</td></tr>
+  <tr><td>Ledger</td><td>Account, Transfer (the command), Entry, Balance snapshot, Outbox row, Projection.</td><td><code>POST /transfers</code> with the client-generated idempotency key; returns the same result on replay. <code>GET /accounts/{id}/balance</code>, <code>GET /accounts/{id}/entries</code>.</td></tr>
+  <tr><td>Batch-file chargebacks (pipeline flavour)</td><td>Interface: outbound submissions in; network's CSV response files out and in again.</td><td>Flow: collect submissions → write file with per-row keys → upload → poll for response → parse → apply as events → reconcile the three truths.</td></tr>
+</table>
+
+<div class="recap"><p class="label">The bridge in one breath, for any prompt</p><p>"Here are the nouns, here are the operations on them, and here's the key each operation carries." Thirty seconds. Then pick up the pen.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="hld">4. High-level design: satisfy the features, nothing more</h2>
+<p class="question">Minutes 15 to 27. The video's most quotable rule, its time marks, and the ladder of bad, good and great.</p>
+<p>The goal of the high-level design is to satisfy the functional requirements, following the data flow in order. That's it. Qualities come later. He gives the time marks directly: a mid-level candidate should reach this step by about 15 minutes in; a senior or staff candidate by about 10, "so there's plenty of time for the high-level design and the deep dives". On Nubank's clock, where the first three minutes are the interviewer's, that is minute 13 to 15 for you.</p>
+
+<h3 id="redirect">The redirect: client side versus 302</h3>
+<p>He starts with the easy feature, and still finds a trade-off in it. The browser gets ads from an <em>Ad Placement Service</em> (out of scope, drawn as a box so the data entering the system has a source) backed by an ads store with ad id, redirect URL and creative.</p>
+<table>
+  <tr><th>Option</th><th>How</th><th>Why not, or why</th></tr>
+  <tr><td>Client-side redirect</td><td>Send the redirect URL with the ad. The browser navigates straight to it and POSTs the click in parallel.</td><td>Anyone with an ad blocker, or anyone who reads the DOM, goes to the advertiser without the click ever reaching you. Someone would write a browser extension for it.</td></tr>
+  <tr><td>Server-side 302</td><td>Send only the ad id. The click hits your <em>click processor</em>, which logs it, looks up the redirect URL and answers with a 302.</td><td>Every click passes through you, and you can append tracking parameters. The cost is one more hop on the user's path, so the processor must be fast.</td></tr>
+</table>
+<p>Notice the shape: the "simple" option has a correctness hole, the "robust" option has a latency cost, and he names both. That is the trade-off signal in Nubank's rubric, demonstrated on the smallest possible decision.</p>
+
+<h3 id="ladder">Store and query: bad, good, great</h3>
+<p>Then the second feature, and here he does something you should copy deliberately. He says a senior candidate would not start from the worst version, but he builds it anyway so the viewer sees why each rung exists. In your interview the same ladder is your v1 → v2 → v3 story: show the first rung for thirty seconds, break it yourself, climb.</p>
+
+<div class="rows">
+  <div><span>Bad</span><span>Click processor writes each click event (event id, ad id, user id, timestamp) to a click database. A query service runs <code>SELECT COUNT(*) … GROUP BY</code> over the ad id and time range. <strong>Why it fails:</strong> at 10k inserts a second the aggregating query is "super super slow", on Cassandra especially but on Postgres or DynamoDB too once the window opens. It breaks the under-one-second quality. He is explicit: "this would not pass as a high-level design at any level, including mid-level". Some things are too bad even for a first draft.</span></div>
+  <div><span>Good</span><span>Keep the write-optimised event store (Cassandra: commit log, memtable, SSTables; great for a row by key, bad for ranges and aggregations). Add a cron that starts a Spark map-reduce every five minutes, aggregating by ad id and minute, writing <code>(ad id, minute, clicks)</code> into a read-optimised OLAP store. The query service reads the OLAP store. <strong>The arithmetic:</strong> 10k clicks/s × 300 s = 3 million events per batch × ~100 bytes = 300 MB; small enough for one machine, so Spark is chosen for the framework, not the volume. <strong>Why two databases:</strong> contention (writes and reads stop competing for the same threads) and fault isolation (if the write path breaks, advertisers still read; if the read path breaks, clicks still log and you backfill). <strong>Why it's only good:</strong> advertisers always see data minutes old, and a spike makes the next batch longer than the batch interval, so lag grows exactly when a big launch needs freshness.</span></div>
+  <div><span>Great</span><span>Replace the batch with a stream. The click processor writes to Kafka or Kinesis; a stream processor (Flink, or Spark Streaming) keeps per-ad counters in memory over a one-minute <em>aggregation window</em> and writes each closed window to the OLAP store. <strong>Why Flink and not hand-rolled consumers:</strong> event-time windows so out-of-order clicks land in the right minute, watermarks that know when a window can close, exactly-once semantics, and state recovery. <strong>The lever that makes it real time:</strong> a <em>flush interval</em>, say ten seconds, writes partial counts for the open minute, so a dashboard shows the current minute as a dotted, incomplete bar that fills in. He says many candidates start their high-level design here, and that's fine; if you start at "good", he will say "I don't like that five-minute delay, do better", and you climb.</span></div>
+</div>
+
+<div class="trap"><p class="label">The numbers in your pivot guide differ, on purpose</p><p>Section 6 of <em>Pivot insurance</em> and section 8 of the decoded guide sketch this prompt at 10k clicks/s average and 100k at peak, a stress number chosen to force sharding. The video's numbers are 10k at peak and about 1k average. If Nubank hands you the prompt, ask for the number and use theirs; if they don't give one, say which you are assuming and why it changes the design: at 10k peak one well-tuned Postgres or DynamoDB takes the writes and the problem is the query shape; at 100k peak the ingest itself needs partitioning.</p></div>
+
+<h3 id="final">The final board</h3>
+<figure>
+<svg viewBox="0 0 780 456" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ad-click aggregator, the final design from the video</title>
+<desc>A browser gets ads with signed impression ids from an ad placement service and sends clicks through an API gateway to a click processor, which verifies the signature, checks an impression cache, writes to a stream sharded by ad id and answers with a 302 redirect. Flink aggregates the stream per ad per minute and writes to an OLAP store that a query service reads for advertisers. The stream also dumps raw events to object storage; a daily Spark job re-aggregates them and a reconciliation worker compares, fixes the OLAP store and alerts.</desc>
+<defs><marker id="arrow-hi-final" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Browser</text><text x="95" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">clicks; gets a 302 back</text></g>
+<line x1="170" y1="55" x2="198" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="200" y="30" width="150" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="275" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">API gateway</text><text x="275" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">routing, load balancing</text></g>
+<line x1="350" y1="55" x2="378" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="380" y="30" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="460" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Click processor × n</text><text x="460" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">verify HMAC; dedupe; 302</text></g>
+<line x1="540" y1="58" x2="568" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="570" y="30" width="170" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="655" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Stream, by ad id</text><text x="655" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">7-day retention; hot id:0–N</text></g>
+<line x1="95" y1="80" x2="95" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-start="url(#arrow-hi-final)" marker-end="url(#arrow-hi-final)"/><text x="107" y="104" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">ads + signed impression id</text>
+<g><rect x="20" y="130" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ad placement</text><text x="95" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">out of scope; mints ids</text></g>
+<line x1="95" y1="186" x2="95" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="20" y="230" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ads store</text><text x="95" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">ad id, redirect URL</text></g>
+<line x1="460" y1="86" x2="460" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-start="url(#arrow-hi-final)" marker-end="url(#arrow-hi-final)"/><text x="472" y="107" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">seen before?</text>
+<g><rect x="380" y="130" width="160" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="460" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Impression cache</text><text x="460" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Redis cluster, ~1.6 GB/day</text></g>
+<line x1="655" y1="86" x2="655" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="570" y="130" width="170" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="655" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Flink, task per shard</text><text x="655" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">1-min window, 10-s flush</text></g>
+<line x1="655" y1="186" x2="655" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="570" y="230" width="170" height="56" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="655" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">OLAP, by advertiser</text><text x="655" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">(ad, minute, clicks)</text></g>
+<line x1="540" y1="255" x2="568" y2="255" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="380" y="230" width="160" height="50" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="460" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Query service</text><text x="460" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">daily/weekly rollups too</text></g>
+<line x1="350" y1="255" x2="378" y2="255" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="200" y="230" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="275" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Advertiser</text><text x="275" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">per ad per minute, &lt; 1 s</text></g>
+<path d="M732 86 L732 98 L756 98 L756 358 L742 358" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="570" y="330" width="170" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="655" y="348" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Raw log (S3)</text><text x="655" y="366" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">every raw event; connector</text></g>
+<line x1="570" y1="358" x2="542" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="380" y="330" width="160" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="460" y="348" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Spark, daily</text><text x="460" y="366" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">cron; re-aggregate raw log</text></g>
+<line x1="380" y1="358" x2="352" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-hi-final)"/>
+<g><rect x="200" y="330" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="275" y="348" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Reconciliation</text><text x="275" y="366" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">compare, fix, alert</text></g>
+<path d="M275 330 L275 306 L655 306 L655 288" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-hi-final)"/>
+<text x="465" y="296" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">batch wins; overwrite, then page the team</text>
+<rect x="20" y="404" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="42" y="411" dominant-baseline="central" font-size="12" fill="#3E4A63">Fresh path: seconds behind, deduped at the door.</text>
+<rect x="390" y="404" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="412" y="411" dominant-baseline="central" font-size="12" fill="#3E4A63">Exact path: a day behind, corrects the store.</text>
+<rect x="20" y="428" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="42" y="435" dominant-baseline="central" font-size="12" fill="#3E4A63">Read-optimised store both paths write to.</text>
+<rect x="390" y="428" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="412" y="435" dominant-baseline="central" font-size="12" fill="#3E4A63">Outside the boundary; the inputs' source.</text>
+</svg>
+<figcaption>The board at minute 53 of the video, after the deep dives. The purple path is what the high-level design needs: gateway, processor, stream, Flink, store, query. The green path and the cache arrive only in the deep dives, each answering one quality: no lost clicks, one click per impression. Note what is <em>not</em> drawn: no Flink checkpointing (he argues against it), no separate click database (the stream with retention replaced it). The same three colours mean the same things as in your pivot guide's sketch.</figcaption>
+</figure>
+
+<h3>How this is Nubank's "begin simple, then iterate"</h3>
+<p>Nubank's PDF wants "my first idea is X, the pros are, the cons are, we tackle that next by". The ladder is that sentence three times. Where the video and the PDF differ is the floor: he will not accept the "bad" rung as a high-level design even from a mid-level candidate, so your v1 should be his "good", a working design with a named lag, not a design that cannot serve the feature. Section 6 of the chargeback guide and section 4 of the ledger guide now do exactly this: the one-table rung is named in a sentence and not drawn, the design on the board is the atomic-commit version, and its gaps are listed as the deep-dive menu.</p>
+
+<!-- ============================================================ -->
+<h2 id="deep-dives">5. Deep dives: one quality at a time</h2>
+<p class="question">Minutes 27 to 53. He literally scrolls back up to the non-functional list and takes them in order. Do the same, out loud.</p>
+<p>Each dive below has three parts: what he does, what the interviewer in him says he is looking for, and where the same move already lives in your chargeback or ledger design, so you can say "this is the same shape as…" and collect the architecture-fundamentals signal.</p>
+
+<h3 id="dd-realtime">As real time as possible</h3>
+<p><strong>What he does.</strong> Names the problem with the "good" rung (a five-minute batch means a five-minute-old dashboard), tries the obvious fix (run Spark more often) and finds its floor (job start-up overhead; you cannot run it every few seconds), and only then introduces the stream and Flink. Two terms get written on the board: <em>aggregation window</em>, the period over which events are grouped (one minute), and <em>flush interval</em>, how often partial results are written out (ten seconds). The written version adds that decreasing Flink's window is realistic where increasing Spark's frequency is not, and that with a window plus a flush you get both: minute-boundary numbers that are final, and a current minute that fills in.</p>
+<p><strong>What he is looking for.</strong> That you exhausted the cheap fix before reaching for the new component. "Run it more often" and its limit is the trade-off; the stream is the consequence.</p>
+<p><strong>Your version.</strong> The chargeback timer plus sweeper is the same two-lever idea: the timer gives freshness, the sweeper gives completeness, and you say what each one's interval costs. In the ledger, projections are the flush: the balance snapshot is updated at commit, the search projection lags by seconds and says so.</p>
+
+<h3 id="dd-scale">10k clicks a second</h3>
+<p><strong>What he does.</strong> Walks the path of one click and scales each box: the click processor and the placement service scale horizontally on CPU or memory thresholds, behind a load balancer or managed API gateway (he says the multiple-boxes drawing is optional; say it aloud instead). The stream needs sharding because a Kinesis shard takes 1 MB/s or 1,000 records/s, whichever first; <em>shard by ad id</em>, the natural key, so all of one ad's clicks land on one shard. Flink scales as one task per shard, and because no two tasks share an ad id there is no distributed contention. The OLAP store shards by <em>advertiser</em> id, not ad id, because the common query is "all my ads". He says this is the moment to "do a little bit of math" on the aggregated store's size, then skips it on camera; you should not skip it.</p>
+<p>Then the hot shard. Nike launches an ad with LeBron James, every click goes to one shard, latency climbs and in the worst case data drops. The fix is the celebrity pattern: for popular ads (known by spend or recent volume) the click processor appends a random suffix, so the partition key becomes <code>ad id:0–N</code>. That breaks the one-task-per-ad property, so a single Flink task reads the set of shards for that ad, which Flink supports; the written version adds that Flink strips the suffix before writing and upserts with a sum, so writes from different partitions combine correctly.</p>
+<p><strong>What he is looking for.</strong> The order: horizontal first, then the component with a hard limit, then the key, then the key's failure mode. He calls the first part "straightforward, obvious stuff you do in most interviews" and the hot shard "where this gets interesting". Spend your time accordingly.</p>
+<p><strong>Your version.</strong> The five-step scaling answer in section 11 of the ledger guide is this walk: what grew, the measurable bottleneck, scale what scales, say what doesn't, protect the invariants. The hot shard is your hot account: a merchant or the clearing account taking every write; the ledger guide's answer (scope the clearing account per shard, deterministic lock order) is the same move as the suffix.</p>
+
+<h3 id="dd-loss">Never lose a click</h3>
+<p><strong>What he does.</strong> Three layers. First, the stream itself: Kafka replicates across brokers, Kinesis across availability zones; if managed, assume it is up. Second, a <em>retention policy</em> of seven days, so a Flink task that dies comes back and re-reads from its last committed cursor; nothing was consumed away. Third, a <em>reconciliation</em>: a connector dumps every raw event to S3 (Kinesis Firehose, Kafka Connect), a daily Spark job re-aggregates the raw log, and a reconciliation worker compares its result with the OLAP store, trusts the batch, overwrites the difference, and alerts the team so a rising discrepancy count is itself a signal that something broke.</p>
+<p>Between the second and third layers is the moment the transcript is most useful for. Candidates, he says, reliably propose Flink <em>checkpointing</em> (periodic state snapshots to S3, every ten or fifteen minutes by default) because "they've read it in a book somewhere". He pushes back: with a one-minute window there is at most a minute of state to lose, 10,000 × 60 events to replay from the stream, so a checkpoint halfway through the minute buys nothing and costs S3 writes. His rule of thumb: windows under five minutes, don't checkpoint. And he says why it matters for the grade: "these identifications that go against the grain are really effective ways to show seniority."</p>
+<p>He closes with Lambda and Kappa. Kappa: everything is a stream, one real-time layer (the design before reconciliation). Lambda: a batch layer that is correct and a speed layer that is fast but unguaranteed, with the batch overwriting. His final design is neither and both, and when candidates ask "is that allowed?" his answer is that textbook patterns are guidelines, that hybrids are "incredibly practical", and that "practicality should almost always be favoured over abstract purity". Said once, that sentence is worth a level.</p>
+<p><strong>What he is looking for.</strong> One thing you could have skipped and said why. Checkpointing is the planted one; find yours.</p>
+<p><strong>Your version.</strong> This is the three-truths reconciliation of the chargeback close and the outbox-plus-replay of the ledger, with the raw log in the role of the event store. Your planted pushback is already in the mock: "I'd push back on caching the case". Add the checkpointing one for a pipeline prompt, and for the ledger: "I wouldn't checkpoint the projection builder either; it rebuilds from the log, that's what the log is for."</p>
+
+<h3 id="dd-idem">One click per impression</h3>
+<p>The video runs out of time before this dive and says so; the written version carries it, and Nubank's security-and-abuse signal makes it the one you should not skip.</p>
+<p><strong>What the answer key does.</strong> First the tempting fix: require login and dedupe on user id plus ad id. It fails twice: not everyone is logged in, and it dedupes the wrong thing, because retargeting shows the same ad to the same user on purpose and each showing should be clickable once. The unit of idempotency is the <em>impression</em>, one rendering of one ad to one user. So the ad placement service mints an impression id per rendering, signs it together with the ad id with an HMAC under a server secret (microseconds, no asymmetric crypto), and sends it with the ad. The click carries it back; the click processor verifies the signature, which stops both invented ids and replaying a valid id against a different ad.</p>
+<p>Then <em>where</em> to dedupe: not in Flink, because a duplicate on either side of a minute boundary would count twice; before the stream, in a cache keyed by impression id. The order of the two writes is the senior detail: <strong>write to the stream first, then mark the cache</strong>, because a cache failure then costs you a duplicate that reconciliation catches, whereas the other order can lose a click, and lost clicks are unrecoverable. Size: 100 million clicks a day × 16 bytes ≈ 1.6 GB, "tiny"; a Redis cluster with a replica and persistence makes it a non-bottleneck.</p>
+<p><strong>Your version.</strong> This is your idempotency key, with one addition you may not have said aloud: the key is <em>minted by the system and signed</em>, not trusted from the client. In the chargeback platform the semantic action key (case, action, version) is minted server-side; in the ledger the client generates the transfer key but the server pins the payload to it and rejects a conflicting replay. "Stream first, cache second" is the same ordering as "commit first, then publish from the outbox": the durable write goes first, the convenience write second, and the reconciliation absorbs the gap.</p>
+
+<h3 id="dd-query">Queries under a second</h3>
+<p><strong>What the answer key does.</strong> Mostly already solved by pre-aggregation. Where it still hurts is a query over weeks or years, which sums millions of minute rows; the fix is a nightly cron that pre-aggregates into daily and weekly tables, so the dashboard reads the coarse table and drills down only when asked. He frames it as a form of caching: storage traded for latency on the common query.</p>
+<p><strong>Your version.</strong> The ledger's balance snapshot is exactly this: the sum you would otherwise compute over every entry, kept as a row, with the log as the source of truth it can be rebuilt from. Same for the chargeback case snapshot beside its events.</p>
+
+<div class="recap"><p class="label">The pattern across all five dives</p><p>Each one starts from a quality in the list, names what the current board does wrong against it, tries the cheap fix and states its ceiling, then adds exactly one thing. The thing has a cost, and the cost is said. Five times, in order. That rhythm is what Nubank's PDF calls "zoom in and out" and "trade-offs, not optimal answers", and it is the rhythm the mock in the chargeback folder is written in.</p></div>
+
+<!-- ============================================================ -->
+<h2 id="levels">6. What each level is graded on, and where Lead sits</h2>
+<p class="question">He states the bar for each level twice, at the start and the end. Nubank's Lead role is graded nearer the top of this table than the middle.</p>
+<table>
+  <tr><th>Level</th><th>Breadth / depth</th><th>What passes on this question</th><th>Who drives</th></tr>
+  <tr><td>Mid-level</td><td>80 / 20</td><td>Understand why pre-aggregation is needed; propose at least the batch solution; answer probing on idempotency and database choice.</td><td>You drive early; the interviewer takes over later and probes.</td></tr>
+  <tr><td>Senior</td><td>60 / 40</td><td>Reach the high-level design fast; contrast batch with streaming and choose; go deep on scaling, click-to-query latency and fault tolerance for a couple of the dives, with trade-offs for each technology choice.</td><td>You drive; you anticipate problems and propose fixes before being asked.</td></tr>
+  <tr><td>Staff+</td><td>40 / 60</td><td>Breeze through the basics; weigh batch against real time in detail; a fault-tolerant design; database and storage choices with their implications; the dives you choose may differ from his but you drive each to the bottom.</td><td>"Your interviewer should intervene only to focus, not to steer." Ideally the interviewer learns something.</td></tr>
+</table>
+<p>Three sentences from the transcript to carry into Monday:</p>
+<ul>
+  <li>"Usually it's a telltale sign that a staff candidate did well when I leave the interview having learned something myself." Your batch-file chargeback section, or the clearing-account scoping, is your candidate for that. Pick one and rehearse teaching it in two minutes.</li>
+  <li>"Candidates who are able to handle that nuance are indicative of seniority." Said about the Lambda/Kappa hybrid. Nuance here means knowing the pattern well enough to depart from it with a reason.</li>
+  <li>"For a senior candidate I think you could have left out the reconciliation; you might not have had time to get to the idempotency; I would have liked some depth." Which is to say: two dives done to the bottom beat five done shallowly. Choose yours and say you are choosing.</li>
+</ul>
+<div class="say"><p class="label">When you choose your dives, say it</p><p>"Of these five qualities I'll go deepest on two: no lost money, because that's the one that pages someone, and the idempotent side effects, because that's where retries create double effects. I'll do the others in a sentence each unless you'd rather I went elsewhere."</p></div>
+
+<!-- ============================================================ -->
+<h2 id="chargebacks">7. The method run on chargebacks, minute by minute</h2>
+<p class="question">Your most likely prompt, scripted in the video's steps on Nubank's clock. Compare with "The hour, minute by minute" in section 2 of the chargeback guide: same content, now with the step names you will say aloud.</p>
+<table>
+  <tr><th>Minute</th><th>Step</th><th>What you say and write</th></tr>
+  <tr><td>0–3</td><td>Listen</td><td>The interviewer states the problem. Write the nouns you hear. Say the road-map sentence from section 1 as they finish.</td></tr>
+  <tr><td>3–7</td><td>Features</td><td>The five clarifying questions (issuer or acquirer; countries and networks; who owns policy; does opening move money; real-time or files). Then the feature lines: customer disputes and sees status; operator reviews and decides; platform submits and records outcomes; platform asks the ledger for credit and reversal. Below the line: fraud scoring, merchant side, the network's internals. Wait for the nod.</td></tr>
+  <tr><td>7–9</td><td>Scale</td><td>"What volume should I design for?" If they don't give one: "I'll assume 70,000 cases a day, under one a second, with about 10 MB of evidence per case; so this is not a throughput problem, it's a correctness, deadline and people problem." Section 4 of the decoded guide has the arithmetic.</td></tr>
+  <tr><td>9–12</td><td>Qualities</td><td>Each with its context and number: auditable as of any date; deadlines never missed silently; money actions idempotent under retry; degrades to Processing, never to a double credit; ops throughput is the real scaling axis. Then the seven invariants from the chargeback guide's section 4, said as rules. End with the scope sentence.</td></tr>
+  <tr><td>12–15</td><td>Entities and API</td><td>The six nouns, case as root. Three operations: open a case, run a command on it with the case version, read it. Name the key each carries. Thirty seconds on who is the actor behind each.</td></tr>
+  <tr><td>15–16</td><td>High-level design, the rung below</td><td>One sentence, not a drawing: "one service, one table with a status column, synchronous calls; it works for a week and then fails audit, retries and deadlines, so I won't draw it."</td></tr>
+  <tr><td>16–27</td><td>High-level design, v1</td><td>Draw section 1 of the chargeback guide as your first version: atomic case commit, side effects after commit from an outbox, timer plus sweeper, search as a projection, the ledger as an external system. Walk one dispute through it in the order of the features. Say what it costs (a second write per command; eventual search) and name the gaps the dives will close.</td></tr>
+  <tr><td>27–37</td><td>Dive 1</td><td>Provisional credit, or the batch-file lifecycle if they steer there. Case state is not money state; semantic action keys; win, loss, partial; three-way reconciliation. Drive it to the bottom.</td></tr>
+  <tr><td>37–45</td><td>Dive 2</td><td>Failures as a quality: network timeout, ledger timeout, timers down, two operators at once. Your single point of failure named, the degradation matrix, and the planted pushback when they suggest caching the case. If they push on 10x, the five-step answer with the arithmetic.</td></tr>
+  <tr><td>45–50</td><td>Dive 3, short</td><td>Security and abuse, one minute (who can see evidence, insider decisions, signed references to the network). Rollout, two minutes: one country, one network, shadow, kill switches, owners.</td></tr>
+  <tr><td>50–53</td><td>Summary</td><td>"The one decision that matters: commit locally, side effects after, observed results come back as events. Won is a decision; settled is a fact." Then stop.</td></tr>
+  <tr><td>53–60</td><td>Your questions</td><td>Two from section 10 of the decoded guide, tied to what you drew.</td></tr>
+</table>
+<p>When an interruption lands, take it, answer in the six-question form, say "let me return to the step I was on", and name the step. Naming the step is the small addition the video makes to your recovery habit; it tells the interviewer you have a map.</p>
+
+<h3 id="ledger-run">The same run on the ledger</h3>
+<table>
+  <tr><th>Minute</th><th>Step</th><th>What changes from the chargeback run</th></tr>
+  <tr><td>3–9</td><td>Features, scale</td><td>Features: submit a transfer and get a definite answer; read balance and statement; rebuild projections. Scale: thousands a second across the bank at peak, so this is the design that <em>does</em> outgrow one primary; say so, and say you will shard by account owner.</td></tr>
+  <tr><td>9–12</td><td>Qualities</td><td>No double debit, first and loudest. Commit latency in tens of milliseconds. Replay from the log. The decision strong, the reads eventual.</td></tr>
+  <tr><td>12–15</td><td>Entities and API</td><td>Account, Transfer, Entry, Balance, Outbox, Projection. <code>POST /transfers</code> with the client-generated key; same key, same answer.</td></tr>
+  <tr><td>15–27</td><td>High-level design</td><td>The rung below, in one sentence: a balance column updated in place, which loses updates, has no history and double-debits on retry. Then v1 drawn: the five-row atomic commit with the account version, success returns from the commit, outbox to Kafka; say its cost and its gaps. Section 4 of the ledger guide has this as v1 → v2 → v3, starting from the rung a Lead draws.</td></tr>
+  <tr><td>27–50</td><td>Dives</td><td>Cross-shard transfer with the clearing account (your teach-the-interviewer candidate); Kafka down for six hours and the outbox alert; projection drift; the planted pushback: "Kafka is not the source of truth, and I wouldn't checkpoint the projection builder; it rebuilds from the log." Scaling with the Datomic sentence from section 11 of the decoded guide.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="cheat">8. Interview sentences, collected</h2>
+<ol class="cheat">
+  <li><em>"Requirements first, features then qualities with rough numbers; then the nouns and the operations; then a simple design that serves the features; then the qualities one by one."</em><span>Minute two. The road map, said once.</span></li>
+  <li><em>"Below the line for today: fraud scoring, the merchant side, the network's internals. Does that boundary work for you?"</em><span>Features. Get the nod.</span></li>
+  <li><em>"Before I write the qualities, what scale should I design for?"</em><span>The question that comes before the non-functional list.</span></li>
+  <li><em>"Not just 'low latency': the operator's view of a case under 300 ms, and acceptance of a command under a second. Not just 'scalable': 70,000 cases a day today, so ops throughput before write throughput."</em><span>Qualities in context, quantified.</span></li>
+  <li><em>"Each of those steps serves one of the features; steps three and four serve none directly, they exist for the qualities, and I'll come back to them in the dives."</em><span>Data flow checked against the features.</span></li>
+  <li><em>"This first version serves the features. It has three flaws I can see, so let me fix them in order."</em><span>The high-level design climbing the ladder.</span></li>
+  <li><em>"I could run the batch more often, but there's a floor: the job's start-up cost. So the fix is a different shape, not a shorter interval."</em><span>Cheap fix exhausted before a new component.</span></li>
+  <li><em>"A lot of candidates would add checkpointing here. With a one-minute window there's at most a minute to replay from the stream, so I'd leave it out and say why."</em><span>The planted pushback, pipeline flavour.</span></li>
+  <li><em>"Write to the durable thing first, then the convenience thing. A cache failure costs me a duplicate that reconciliation catches; the other order loses a click I can't get back."</em><span>Ordering of the two writes.</span></li>
+  <li><em>"This is neither Lambda nor Kappa; it's the hybrid that's practical here. The patterns are guidelines; I'd rather be practical than pure."</em><span>Nuance that reads as seniority.</span></li>
+  <li><em>"Of these five qualities I'll go deepest on two, and say why I chose them."</em><span>Choosing the dives.</span></li>
+  <li><em>"Let me take that, then return to the step I was on, which is the second dive."</em><span>Recovery from an interruption, with the step named.</span></li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="practice">9. Practice next</h2>
+<ul>
+  <li><strong>Watch minutes 2–4 and 13–15 of the video</strong> once more, with the road map figure from section 1 beside you. Those are the two places he explains the method rather than the design; the rest is the method being run.</li>
+  <li><strong>Run the chargeback script in section 7 with a timer</strong>, saying the step name at each transition. If you can't name the step you're on, you've drifted; go back to the qualities list.</li>
+  <li><strong>Draw the final board in section 4 from memory in three minutes</strong>, then draw the chargeback v2 in three minutes. Same pen, same three colours said aloud.</li>
+  <li><strong>Rehearse one planted pushback per prompt.</strong> Checkpointing for a pipeline; caching the case for chargebacks; Kafka as the store for the ledger. The sentence, then the alternative.</li>
+  <li><strong>Pick your teach-the-interviewer piece</strong> and say it in two minutes to someone who doesn't know it. The batch-file lifecycle or the clearing account are the best candidates.</li>
+  <li><strong>Then do the two generic sketches</strong> in section 6 of <em>Pivot insurance</em>, using the pipeline flavour of the bridge for the ad-click one and the product flavour for ride-hailing.</li>
+</ul>
+
+<footer>
+  Built 1 October 2026 from the transcript of Hello Interview's "Design an Ad Click Aggregator" (Evan King, 56 minutes), its written answer key, and Hello Interview's delivery-framework page. Numbers quoted (10M ads, 10k clicks/s peak, ~100M clicks/day, 3M events and 300 MB per five-minute batch, 1 MB/s or 1,000 records/s per Kinesis shard, 7-day retention, ~1.6 GB of impression ids per day, the breadth/depth splits and the 10- and 15-minute marks) are from those sources. The chargeback and ledger runs in section 7 restate the existing guides; the minute marks are a pace to aim for, not a rule.
+</footer>
+</main>
+</div>
+</body>
+</html>
