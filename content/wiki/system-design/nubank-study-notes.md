@@ -5,12 +5,12 @@ tags:
   - system-design
   - nubank
 date_created: 2026-09-06
-date_modified: 2026-09-29
+date_modified: 2026-10-01
 cssclasses:
   - nubank-guides
 ---
 
-Original HTML study guides for a Nubank lead system design interview, plus a timed mock round and a decoding of Nubank's own candidate prep document. The documents are embedded as-is — layout, CSS, diagrams, and wording are unchanged.
+Original HTML study guides for a Nubank lead system design interview, plus a timed mock round and a decoding of Nubank's own candidate prep document. The documents are embedded as-is — layout, diagrams, and wording are unchanged. Each guide follows the garden's light or dark theme and has its own toggle in the top-right corner.
 
 Each guide also has an **Open full page** button. That loads the original HTML as a standalone document, which is the most accurate way to read it (sticky table of contents, full width, original type).
 
