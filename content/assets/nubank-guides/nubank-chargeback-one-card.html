@@ -257,11 +257,12 @@
     <li><a href="#step1">3. Step 1: questions, numbers, rules</a></li>
     <li><a href="#step2">4. Step 2: six nouns, three operations</a></li>
     <li><a href="#step3">5. Step 3: the drawing</a></li>
-    <li><a href="#money">6. The money story (Ana's R$300)</a></li>
-    <li><a href="#failures">7. When things break</a></li>
-    <li><a href="#tenfold">8. "Ten times the volume"</a></li>
-    <li><a href="#rollout">9. Rollout, in three lines</a></li>
-    <li><a href="#never">10. Never say</a></li>
+    <li><a href="#case">6. One case, end to end, on the diagram</a></li>
+    <li><a href="#money">7. The money story, three endings</a></li>
+    <li><a href="#failures">8. When things break</a></li>
+    <li><a href="#tenfold">9. "Ten times the volume"</a></li>
+    <li><a href="#rollout">10. Rollout, in three lines</a></li>
+    <li><a href="#never">11. Never say</a></li>
   </ol>
 </nav>
 <main>
@@ -348,7 +349,66 @@
 <div class="recap"><p class="label">Say its cost, then its gaps</p><p>"It costs two writes per command instead of one, a worker fleet, and in-flight states the product has to show. It doesn't yet handle: deadlines beyond the timer, more than one money step per case, evidence trust, a file-shaped network, and the bad day. Those are my deep dives. I'd go deepest on provisional credit and failures."</p></div>
 <p><strong>The consistency line, said once:</strong> strong where I decide (transitions, deadlines, money intent); eventual where I only read (search, notifications, dashboards); explicitly <em>unknown</em> where the world hasn't answered yet.</p>
 
-<h2 id="money">6. The money story (Ana's R$300)</h2>
+<h2 id="case">6. One case, end to end, on the diagram</h2>
+<p>Ana disputes a R$300 purchase at a petrol station in Brazil, on a Visa card. Follow the numbers.</p>
+<figure>
+<svg viewBox="0 0 760 400" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ana's dispute, numbered on the design</title>
+<desc>Ana's app sends a dispute with key K1 to the case service, which checks and validates it, writes one atomic commit, and returns the case id. Outbox workers then call the ledger, the card network and notifications, and write what they observe back as events. Ana uploads evidence to object storage and a command links it. Deadline rows are read by a timer and a sweeper; a search index built from events serves Ops. The numbered circles are the steps of the story told below.</desc>
+<defs><marker id="arrow-card-walk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ana's app</text><text x="95.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">disputes R$300, key K1</text></g>
+<line x1="170" y1="58" x2="198" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="200" y="30" width="170" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="285.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Check and validate</text><text x="285.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key, version, policy v12</text></g>
+<line x1="285" y1="86" x2="285" y2="118" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="200" y="120" width="170" height="90" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="285.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">One atomic commit</text><text x="285.0" y="158" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">event, snapshot, deadline,</text><text x="285.0" y="176" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key record, outbox rows</text></g>
+<path d="M200 165 L95 165 L95 88" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<text x="103" y="180" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">returns "opened"</text>
+<line x1="370" y1="165" x2="418" y2="165" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="420" y="130" width="160" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="500.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox workers</text><text x="500.0" y="168" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">after commit; stable keys</text></g>
+<line x1="580" y1="165" x2="600" y2="165" stroke="#5F5E5A" stroke-width="1.5"/>
+<line x1="600" y1="125" x2="600" y2="255" stroke="#5F5E5A" stroke-width="1.5"/>
+<line x1="600" y1="125" x2="618" y2="125" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<line x1="600" y1="190" x2="618" y2="190" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<line x1="600" y1="255" x2="618" y2="255" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="620" y="100" width="120" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="680.0" y="118" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="680.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">+300 Ana; tx 9182</text></g>
+<g><rect x="620" y="165" width="120" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="680.0" y="183" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network</text><text x="680.0" y="203" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">NB-CB-812-1 → ack</text></g>
+<g><rect x="620" y="230" width="120" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="680.0" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Notifications</text><text x="680.0" y="268" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">“money is in”</text></g>
+<path d="M500 130 L500 105 L330 105 L330 118" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-walk)"/>
+<text x="415" y="93" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">what they saw, back as events</text>
+<line x1="40" y1="86" x2="40" y2="298" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="20" y="300" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Object storage</text><text x="95.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">screenshot bytes; scan</text></g>
+<path d="M95 298 L95 200 L198 200" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<text x="103" y="216" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">EvidenceItem, then READY</text>
+<line x1="320" y1="210" x2="320" y2="298" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="200" y="300" width="170" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="285.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Deadline rows</text><text x="285.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">timer + sweeper read them</text></g>
+<line x1="470" y1="200" x2="470" y2="298" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="420" y="300" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="500.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Search index</text><text x="500.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">from events; may lag</text></g>
+<line x1="580" y1="328" x2="618" y2="328" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-walk)"/>
+<g><rect x="620" y="300" width="120" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="680.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ops</text><text x="680.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">real case by id</text></g>
+<circle cx="20" cy="30" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="20" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">1</text><circle cx="200" cy="30" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">2</text><circle cx="200" cy="120" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="120.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">3</text><circle cx="148" cy="165" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="148" y="165.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">4</text><circle cx="420" cy="130" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="420" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">5</text><circle cx="620" cy="100" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="620" y="100.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">6</text><circle cx="415" cy="105" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="415" y="105.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">7</text><circle cx="40" cy="230" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="40" y="230.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">8</text><circle cx="148" cy="200" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="148" y="200.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">9</text><circle cx="620" cy="165" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="620" y="165.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">10</text><circle cx="200" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">11</text><circle cx="420" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="420" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">12</text>
+<rect x="20" y="376" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="42" y="383" dominant-baseline="central" font-size="12" fill="#3E4A63">The write path: one commit, strongly consistent.</text>
+<rect x="330" y="376" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="352" y="383" dominant-baseline="central" font-size="12" fill="#3E4A63">After the commit: asynchronous, rebuildable.</text>
+</svg>
+<figcaption>The design with Ana's case numbered on it. Green is the one place anything is decided; purple happens after the commit and can be replayed; grey is outside the platform. The numbers are the steps of the story below; several steps go through boxes 2, 3 and 5 more than once, because every change to the case is a command through the same door.</figcaption>
+</figure>
+<ol>
+  <li><strong>Ana taps "I don't recognise this purchase".</strong> Her app creates an idempotency key, K1, once for this tap, and sends an OpenDispute command with it. If the network is slow and the app retries, it sends the same K1.</li>
+  <li><strong>The case service checks, then validates.</strong> Is this really Ana? Has K1 been seen before (if yes, return the same case and stop)? What case version does the command expect (none, it's new)? Then, under policy version 12 for Brazil and Visa: Ana owns the card, there is no open case for this transaction, and the purchase is inside the dispute window.</li>
+  <li><strong>One commit writes five things together.</strong> A CaseEvent OPENED (actor Ana, time, policy v12). The DisputeCase snapshot (state OPENED, version 1). A Deadline row: Ana must supply evidence within 10 days. The record of K1. And outbox rows: notify Ana, and evaluate provisional credit. All or nothing.</li>
+  <li><strong>The service answers "case CB-812 opened".</strong> Ana's app shows "under review". Nothing outside the platform has been called yet; that is on purpose. The promise to call them is already saved, in the outbox rows.</li>
+  <li><strong>After the commit, workers read the outbox.</strong> The credit worker evaluates policy: Ana is owed provisional credit. It sends a RequestProvisionalCredit command, which goes through boxes 2 and 3 again; that commit writes a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and a new outbox row. The ledger worker picks it up and calls the ledger with exactly that key.</li>
+  <li><strong>The ledger posts the money.</strong> +300 to Ana, −300 to the disputes clearing account, and it returns transaction 9182. If the call times out, the worker retries the same key; the ledger either returns 9182 or posts once now. Never a new key.</li>
+  <li><strong>What the worker saw comes back as an event.</strong> PROVISIONAL_CREDIT_POSTED, tx 9182. Ana sees R$300 in her account. The case still says "under review": won is a decision and paid is a fact, and neither has happened yet.</li>
+  <li><strong>Ana uploads a screenshot</strong> of her chat with the merchant. The app asks for a staged upload; the bytes go straight to encrypted object storage, which returns a token and a checksum. The case row never holds the file.</li>
+  <li><strong>A command links that exact object version to the case</strong> (through box 3 again): an EvidenceItem in state UPLOADED. A scan worker checks checksum, format and malware, then a command moves it to EVIDENCE_READY. Only now is it evidence the platform may send.</li>
+  <li><strong>Submission to the network.</strong> A worker evaluates eligibility under policy v12: ELIGIBLE. A Submit command writes a NetworkSubmission with reference <code>NB-CB-812-1</code> and an outbox row, and returns "submitted", which means durably intended. The adapter sends it with that reference. The network acknowledges; a worker writes NETWORK_ACKED (step 7 again). In that same commit the evidence deadline is completed and a new Deadline row is created: the merchant has 30 days to respond. Had the adapter's call timed out, it would query the network by <code>NB-CB-812-1</code> before ever sending again.</li>
+  <li><strong>Thirty days of waiting.</strong> The deadline row sits in the database. A timer wakes a worker near the due time; a sweeper reads due and near-due rows every few minutes in case the timer died. Alerts fire before breach. In Ana's case nothing fires, because the network answers in time.</li>
+  <li><strong>Meanwhile, Ops can see it.</strong> Every event also updates the search index, so an operator sees CB-812 in the "awaiting network" queue with its age and deadline. If the index lags, Ops still opens the real case by id before acting on it.</li>
+  <li><strong>Week four: the award.</strong> The network returns its decision. A Decide command (boxes 2, 3) writes the event. Won in full: the credit stands and the FinancialAction is finalised. Lost: a new action <code>CB-812:REVERSE_PROVISIONAL:v1</code> asks the ledger for a linked reversal, through steps 5, 6 and 7 again; Ana may go negative, which is a product decision made before launch. Won R$200 of 300: one adjustment <code>FINAL_ADJUSTMENT:v2</code> for −100. The case closes only when the decision is recorded <em>and</em> every ledger action is confirmed, and the three truths agree: the network's award, our decision, the ledger's postings. Ana gets a notification. The events tell the whole story to any auditor, as of any date.</li>
+</ol>
+<div class="say"><p class="label">The case in one breath</p><p>"Ana opens a dispute with a key; one commit saves the event, the snapshot, a deadline and the promises to call outside; she's told 'opened'. Workers then ask the ledger for credit with a key that names that action, and write back what the ledger said. Evidence is bytes in storage until a checked item is committed. Submission reuses one reference. Deadlines are rows a sweeper can always find. Weeks later the award arrives as an event, money moves again under a new key, and the case closes when decision and settlement agree."</p></div>
+
+<h2 id="money">7. The money story (Ana's R$300), the three endings</h2>
 <ol>
   <li>Ana disputes R$300. Policy says she's owed provisional credit. The case commit writes a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and an outbox row. Case state: under review. Money state: credit pending.</li>
   <li>After commit, a worker sends that key to the ledger. The ledger posts +300 to Ana, −300 to a disputes clearing account, and returns its transaction id. A new event records it. Ana sees the money.</li>
@@ -358,7 +418,7 @@
 <div class="say"><p class="label">Why the key is so specific</p><p>"One case legitimately needs several money actions. If the key were the case id, the reversal would look like a retry of the credit and the ledger would refuse it. The key names the business action being retried: this case, this action, this version."</p></div>
 <p><strong>Ledger timeout?</strong> "Unknown, not failed. I retry the same key. The ledger returns what it already posted, or posts once now. I never create a new key on a timeout; that's how a customer is credited twice."</p>
 
-<h2 id="failures">7. When things break</h2>
+<h2 id="failures">8. When things break</h2>
 <p>For any failure, answer these six: What committed? What retries, with which key? What can duplicate? What does the customer see? Which metric alerts? What does an operator safely do?</p>
 <table>
   <tr><th>Failure</th><th>Answer in one line</th></tr>
@@ -372,7 +432,7 @@
 </table>
 <p><strong>Degrades, never dies.</strong> Network down: cases still open, submissions queue. Ledger down: decisions continue, credits pend with their keys. Storage down: uploads refused, nothing else. Search down: Ops works from queues. Kafka down: commands fine, notifications late.</p>
 
-<h2 id="tenfold">8. "Ten times the volume"</h2>
+<h2 id="tenfold">9. "Ten times the volume"</h2>
 <ol>
   <li><strong>Ask what grew.</strong> Cases, documents, operators?</li>
   <li><strong>Do the maths.</strong> 700k cases a day is 8 writes a second, 80 at peak. The database is still fine. Evidence storage becomes a cost. Operations becomes 5,000 people.</li>
@@ -382,11 +442,11 @@
 </ol>
 <div class="say"><p class="label">When they suggest caching the case</p><p>"I'd push back. Ops reads a case to decide on it, and a cached case is a stale decision input: two operators both read it, both think it's undecided. If it's read latency, I'd serve the snapshot from a replica and cache the versioned policy instead, because a version is a safe cache key."</p></div>
 
-<h2 id="rollout">9. Rollout, in three lines</h2>
+<h2 id="rollout">10. Rollout, in three lines</h2>
 <p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
 <p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file; never rebuild with a new run id.</p>
 
-<h2 id="never">10. Never say</h2>
+<h2 id="never">11. Never say</h2>
 <ul>
   <li>"Opening the case credits the customer." (Credit is a separate policy decision.)</li>
   <li>"The scheduler will handle the deadline." (The row is the obligation.)</li>
