@@ -212,9 +212,33 @@
 <h3 id="network-modes">Two ways to talk to the network, and why the platform doesn't care which</h3>
 <p>The walkthrough above assumes a real-time adapter: send the submission, get an acknowledgement back. Candidates in 2026 also report a <strong>batch file</strong> shape: the platform writes disputes into a CSV, uploads it by FTP to Mastercard four times a day, and later receives a file back with the network's answers. Section 10 covers that variant in full.</p>
 <p>What matters here: <em>nothing in the case model changes</em>. A NetworkSubmission still has a stable external reference and an acknowledged flag. Only the meaning of "sending" changes: one HTTP call, or one row in a file that goes out at 14:00. The batch shape adds two nouns, a <strong>BatchRun</strong> (one file, one upload, one status) and a <strong>ReconciliationItem</strong> (one row we sent that the network hasn't answered yet). It moves the uncertainty from "did the call arrive?" to "did the file arrive, and which rows did they accept?".</p>
-<pre><code>Real-time:  case commit → outbox → adapter sends one submission → ack event
-Batch:      case commit → outbox → row waits in a batch → file built + uploaded at 14:00
-                                                       → ack file arrives later → one event per row</code></pre>
+<figure>
+<svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Two ways to reach the card network: real-time adapter or batch file</title>
+<desc>Both shapes start with the same case commit and outbox. In the real-time shape an adapter sends one submission and an acknowledgement comes back as an event. In the batch shape the row waits in a batch, a file is built and uploaded at a scheduled slot, and an acknowledgement file arrives later, producing one event per row.</desc>
+<defs><marker id="arrow-cb-modes" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="40" y="36" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">Real-time</text>
+<g><rect x="40" y="50" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="115.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case commit</text><text x="115.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">NetworkSubmission ref</text></g>
+<line x1="190" y1="78" x2="216" y2="78" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/>
+<g><rect x="218" y="50" width="120" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="278.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Outbox row</text><text x="278.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">submit this</text></g>
+<line x1="338" y1="78" x2="364" y2="78" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/>
+<g><rect x="366" y="50" width="130" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="431.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Adapter</text><text x="431.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">one HTTP call</text></g>
+<line x1="496" y1="78" x2="522" y2="78" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/><text x="509" y="62" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">ack</text>
+<g><rect x="524" y="50" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="594.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Event</text><text x="594.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">NETWORK_ACKED</text></g>
+<text x="40" y="150" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">Batch file</text>
+<g><rect x="40" y="164" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="115.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case commit</text><text x="115.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">same ref, same row id</text></g>
+<line x1="190" y1="192" x2="216" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/>
+<g><rect x="218" y="164" width="120" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="278.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Outbox row</text><text x="278.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">row waits QUEUED</text></g>
+<line x1="338" y1="192" x2="364" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/>
+<g><rect x="366" y="164" width="130" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="431.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Batch run 14:00</text><text x="431.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">claim, build, upload</text></g>
+<line x1="496" y1="192" x2="522" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-modes)"/><text x="509" y="176" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">later</text>
+<g><rect x="524" y="164" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="594.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Event per row</text><text x="594.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key file:row</text></g>
+<text x="415" y="240" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">a response file arrives hours later; sent but unanswered rows age in a reconciliation queue</text>
+<rect x="40" y="276" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="283" dominant-baseline="central" font-size="12" fill="#3E4A63">Unchanged in both shapes: the commit, the stable reference, the event that records the answer</text>
+<rect x="40" y="300" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="307" dominant-baseline="central" font-size="12" fill="#3E4A63">The only thing that changes: what "sending" means, and how long the answer takes</text>
+</svg>
+<figcaption>Two delivery mechanisms, one case model. Green boxes are identical in both lanes: the commit, the stable reference, the event that records the answer. Only the purple box differs, and with it how long the answer takes. Section 10 opens the batch lane in full.</figcaption>
+</figure>
 <p>If the interviewer opens with the batch version, start from the same six nouns and the same atomic commit, then say: "the network leg is a file, so I'll add a batch run and per-row reconciliation". That sentence shows you see the stable core under the delivery mechanism.</p>
 
 <h3 id="vs-ledger">How it differs from the ledger, in one table</h3>
@@ -445,10 +469,40 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <h3 id="v1">Begin simple: the v1 you show first, and its four flaws</h3>
 <p>Nubank's prep document wants to see you start with a first idea, find its flaws yourself, and fix them in order. Don't draw the finished design at minute ten. Draw this, say its pros, then take it apart.</p>
-<pre><code>[app] → [dispute service] → [one Postgres: cases table with a status column]
-                     ↘ calls network API synchronously
-                     ↘ calls ledger synchronously for credit
-                     ↘ cron job checks deadlines every hour</code></pre>
+<figure>
+<svg viewBox="0 0 680 430" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Chargebacks v1: one service, one table, synchronous calls</title>
+<desc>A mobile app calls one dispute service, which updates a status column in a single Postgres table, calls the card network and the ledger synchronously inside the same transaction, and relies on an hourly cron job for deadlines. Two operators can update the same row. Four numbered flaws are marked.</desc>
+<defs><marker id="arrow-cb-v1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="40" y="40" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">App</text><text x="120.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana taps dispute</text></g>
+<line x1="200" y1="68" x2="258" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="260" y="40" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Dispute service</text><text x="350.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">one process, one codebase</text></g>
+<line x1="350" y1="96" x2="350" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="342" y="147" text-anchor="end" dominant-baseline="central" font-size="11" fill="#5F5E5A">UPDATE cases SET status = …</text>
+<g><rect x="260" y="200" width="180" height="72" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">One Postgres</text><text x="350.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">cases table, status column</text><text x="350.0" y="252" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">no history, no actor, no reason</text></g>
+<line x1="440" y1="60" x2="498" y2="60" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="469" y="46" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">in the txn</text>
+<g><rect x="500" y="32" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="50" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network API</text><text x="575.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">called synchronously</text></g>
+<path d="M440 80 L470 80 L470 158 L498 158" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="500" y="130" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="575.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">credit, synchronously</text></g>
+<g><rect x="40" y="200" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Cron job</text><text x="120.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">checks deadlines hourly</text></g>
+<line x1="200" y1="228" x2="258" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="500" y="208" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Two operators</text><text x="575.0" y="244" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">edit the same row</text></g>
+<line x1="498" y1="236" x2="442" y2="236" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<circle cx="445" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="445" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
+<circle cx="470" cy="119" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="119.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
+<circle cx="205" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="205" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
+<circle cx="470" cy="260" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="260.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
+<text x="40" y="318" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">The flaws, in the order they would hurt in the first month:</text>
+<circle cx="47" cy="344" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="344.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
+<text x="66" y="344" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">a status column can't say who moved the case or why; audit is a separate log that can disagree</text>
+<circle cx="47" cy="368" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="368.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
+<text x="66" y="368" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">external calls inside the transaction: a timeout leaves a mismatch, a retry can credit twice</text>
+<circle cx="47" cy="392" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="392.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
+<text x="66" y="392" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">the cron job is the only guardian of a legal deadline; if it dies, the deadline dies with it</text>
+<circle cx="47" cy="416" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="416.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
+<text x="66" y="416" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">two operators on one row: last write wins, silently</text>
+</svg>
+<figcaption>The simplest thing that could work: one service, one table, one cron. Every box is neutral because nothing here has a consistency story yet. The red badges are the four flaws you name yourself, in the order they would hurt.</figcaption>
+</figure>
 <p>The pros: one service, one database, easy to build, easy to understand, and fine at 0.8 cases per second. Then the flaws, in the order they would hurt in the first month:</p>
 <ol>
   <li>A status column can't answer "who moved this case and why", so audit is a separate log that can disagree with the truth.</li>
@@ -457,7 +511,79 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>Two operators updating the same row: last write wins, silently.</li>
 </ol>
 <p><strong>v2 fixes correctness</strong>, and it is the design in the rest of this section: events plus snapshot fix flaw 1; commit-then-side-effects with stable keys fix flaw 2; deadline rows with a sweeper fix flaw 3; the expected version fixes flaw 4. Say what it costs: two writes per command instead of one, a worker fleet, and explicit "in flight" states the product has to display.</p>
+<figure>
+<svg viewBox="0 0 680 690" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Chargebacks v2: the atomic case commit, side effects after</title>
+<desc>A case command is authenticated and checked for idempotency and expected version, validated against a policy version, then committed atomically as an event, snapshot, deadlines, idempotency record and outbox rows; the accepted state is returned. Outbox workers then call the card network, ledger and notification service and record observed results as new case events. A search index is built for operations, and a timer plus sweeper read saved deadlines. Numbered badges show which v1 flaw each piece fixes.</desc>
+<defs><marker id="arrow-cb-v2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="180" y="40" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Case command</text><text x="300.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana disputes a purchase, key K1</text></g>
+<line x1="300" y1="96" x2="300" y2="118" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="120" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Auth, idempotency, version</text><text x="300.0" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Expected case version 7</text></g>
+<circle cx="178" cy="118" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="178" y="118.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">4</text>
+<line x1="300" y1="176" x2="300" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="200" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Validate transition</text><text x="300.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Against policy version 12</text></g>
+<line x1="300" y1="256" x2="300" y2="278" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="170" y="280" width="260" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">One atomic commit</text><text x="300.0" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Event, snapshot, deadlines, key, outbox</text></g>
+<circle cx="168" cy="278" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="168" y="278.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">1</text>
+<line x1="300" y1="336" x2="300" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="360" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300.0" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Return accepted state</text><text x="300.0" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Intent is durable now</text></g>
+<line x1="430" y1="308" x2="458" y2="308" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="280" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox workers</text><text x="550.0" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Network, ledger, notify</text></g>
+<circle cx="458" cy="278" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="458" y="278.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">2</text>
+<line x1="550" y1="336" x2="550" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="360" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Observed results</text><text x="550.0" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Saved as case events</text></g>
+<line x1="550" y1="416" x2="550" y2="438" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="440" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="458" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Search index</text><text x="550.0" y="476" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Ops discovery only</text></g>
+<g><rect x="460" y="520" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="538" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Timer + sweeper</text><text x="550.0" y="556" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Reads saved deadlines</text></g>
+<circle cx="458" cy="518" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="458" y="518.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">3</text>
+<path d="M458 548 L445 548 L445 330 L432 330" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-v2)"/>
+<rect x="180" y="596" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="202" y="603" dominant-baseline="central" font-size="12" fill="#3E4A63">Strongly consistent: case truth, deadlines, intent</text>
+<rect x="180" y="620" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="202" y="627" dominant-baseline="central" font-size="12" fill="#3E4A63">Asynchronous: side effects, projections, recovery</text>
+<circle cx="187" cy="651" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="187" y="651.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">n</text><text x="202" y="651" dominant-baseline="central" font-size="12" fill="#3E4A63">Which v1 flaw this piece fixes</text>
+</svg>
+<figcaption>v2 is the section 1 diagram with one addition: each green badge says which v1 flaw that piece removes. Events plus snapshot in the commit fix flaw 1; workers after commit, with stable keys, fix flaw 2; deadline rows read by the timer and swept by the safety net fix flaw 3; the expected version at the door fixes flaw 4.</figcaption>
+</figure>
 <p><strong>v3 scales and operates</strong>, and you only go there when the numbers or the interviewer ask: partition the case store by case id when failover size or isolation demands it (the numbers don't demand it for throughput); move Ops discovery fully to projections and add a columnar store for reporting; the batch-file variant of section 10 for networks that require it; automation of review from shadow results, with a kill switch per side effect.</p>
+<figure>
+<svg viewBox="0 0 680 600" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Chargebacks v3: partitioned store, horizontal everything else</title>
+<desc>Commands enter through a load balancer and stateless API instances, land in a case store partitioned by case id with a synchronous replica per partition, and each partition's outbox feeds horizontally scaled workers, a batch-file adapter, projections for search and reporting, and review automation behind kill switches.</desc>
+<defs><marker id="arrow-cb-v3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="240" y="30" width="200" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="340.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Case commands</text><text x="340.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">same shape as v2</text></g>
+<line x1="340" y1="80" x2="340" y2="102" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<g><rect x="240" y="104" width="200" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="340.0" y="122" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Load balancer → API × n</text><text x="340.0" y="140" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">stateless; add instances</text></g>
+<path d="M340 160 L340 190 L190 190 L190 212" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<line x1="340" y1="160" x2="340" y2="212" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<path d="M340 160 L340 190 L490 190 L490 212" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<g><rect x="120" y="214" width="140" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="190.0" y="232" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case store P1</text><text x="190.0" y="250" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">case ids → P1</text><text x="190.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">sync replica, failover</text></g>
+<g><rect x="270" y="214" width="140" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="340.0" y="232" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case store P2</text><text x="340.0" y="250" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">case ids → P2</text><text x="340.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">sync replica, failover</text></g>
+<g><rect x="420" y="214" width="140" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="490.0" y="232" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case store P3</text><text x="490.0" y="250" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">case ids → P3</text><text x="490.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">sync replica, failover</text></g>
+<line x1="190" y1="278" x2="190" y2="330" stroke="#5F5E5A" stroke-width="1.5"/>
+<line x1="340" y1="278" x2="340" y2="330" stroke="#5F5E5A" stroke-width="1.5"/>
+<line x1="490" y1="278" x2="490" y2="330" stroke="#5F5E5A" stroke-width="1.5"/>
+<line x1="110" y1="330" x2="565" y2="330" stroke="#5F5E5A" stroke-width="1.5"/>
+<text x="576" y="330" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">outbox events,</text>
+<text x="576" y="344" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">per partition</text>
+<line x1="110" y1="330" x2="110" y2="368" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<line x1="260" y1="330" x2="260" y2="368" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<line x1="410" y1="330" x2="410" y2="368" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<line x1="565" y1="330" x2="565" y2="368" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v3)"/>
+<g><rect x="40" y="370" width="140" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="110.0" y="388" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Workers × n</text><text x="110.0" y="406" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">network, ledger, notify</text></g>
+<g><rect x="190" y="370" width="140" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="260.0" y="388" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Batch adapter</text><text x="260.0" y="406" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">runs, per-row keys</text></g>
+<g><rect x="340" y="370" width="140" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="410.0" y="388" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Projections</text><text x="410.0" y="406" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">search + columnar</text></g>
+<g><rect x="490" y="370" width="150" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="565.0" y="388" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Review automation</text><text x="565.0" y="406" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">shadow; kill switches</text></g>
+<text x="110" y="442" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">idempotent; add machines</text>
+<text x="260" y="442" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">reconciliation queue</text>
+<text x="410" y="442" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">Ops discovery; reporting</text>
+<text x="565" y="442" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">one switch per side effect</text>
+<rect x="120" y="486" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="142" y="493" dominant-baseline="central" font-size="12" fill="#3E4A63">Write authority: partitioned by case id, replicated, one owner per case</text>
+<rect x="120" y="510" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="142" y="517" dominant-baseline="central" font-size="12" fill="#3E4A63">Horizontal: anything idempotent or rebuildable</text>
+<rect x="120" y="534" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="142" y="541" dominant-baseline="central" font-size="12" fill="#3E4A63">Stateless entry: scales behind the load balancer</text>
+<text x="120" y="562" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Partition by case id because no transaction spans two cases: for isolation and failover size, not throughput.</text>
+<text x="120" y="582" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">The one thing that still doesn't scale by adding machines is Operations; automation is the lever.</text>
+</svg>
+<figcaption>Nothing in the write path changes shape; it multiplies. The case store splits by case id, each partition with its own synchronous replica, and each partition's outbox feeds the purple row, where every box scales by adding machines because every job is idempotent or rebuildable. Operations is the box that isn't here, because it doesn't scale by adding machines.</figcaption>
+</figure>
 <div class="say"><p class="label">The words that make this a collaboration signal</p><p>"My first idea is one service and one table with a status column. That's fine at our volume, but it has four problems I'd hit in the first month. Let me fix them in the order they'd hurt."</p></div>
 
 <h3>What a command does</h3>
@@ -472,7 +598,23 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <h3>Why side effects happen afterwards</h3>
 <p>The card network, the ledger, object storage and the notification service are independent systems with their own latencies and failures. Holding a database transaction open while calling them is slow and fragile, and it creates exactly the "half done" states you are trying to eliminate. So:</p>
-<pre><code>commit durable intent → return accepted state → worker performs external action → record observed result as a new event</code></pre>
+<figure>
+<svg viewBox="0 0 680 150" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Commit, return, act, record</title>
+<desc>Four steps in order: commit durable intent, return the accepted state, let a worker perform the external action, and record the observed result as a new case event.</desc>
+<defs><marker id="arrow-cb-after" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="100.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Commit intent</text><text x="100.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">event + outbox, durable</text></g>
+<line x1="170" y1="68" x2="198" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-after)"/>
+<g><rect x="200" y="40" width="140" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="270.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Return state</text><text x="270.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">SUBMITTED, by name</text></g>
+<line x1="340" y1="68" x2="368" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-after)"/>
+<g><rect x="370" y="40" width="140" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="440.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Worker acts</text><text x="440.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">network, ledger, scan</text></g>
+<line x1="510" y1="68" x2="538" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-after)"/>
+<g><rect x="540" y="40" width="120" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="600.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Record result</text><text x="600.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">new CaseEvent</text></g>
+<path d="M600 96 L600 118 L100 118 L100 98" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-after)"/>
+<text x="350" y="134" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">the observation comes back into the case; its own history says what happened outside it</text>
+</svg>
+<figcaption>Four steps, always in this order. The two green boxes are commits in the case store; the purple one is the only place an external system is called, and it is after the customer already has an answer.</figcaption>
+</figure>
 <p>The last step is what distinguishes this from the ledger's outbox: the worker's observation comes <em>back into the case</em>. The network acked, the ledger posted tx_9182, the scan passed. Each is a CaseEvent, so the case's own history says what happened outside it.</p>
 
 <h3>The pieces around the commit</h3>
@@ -507,6 +649,31 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>Claims use a <strong>lease</strong>: <code>UPDATE deadline SET status='CLAIMED', lease_until=now()+5min WHERE id=? AND status='OPEN'</code>. Zero rows updated means someone else has it. An expired lease means the previous worker died and the work is available again.</li>
   <li>Alerts fire <strong>before</strong> breach (time-to-breach below threshold with the case not progressed) and <strong>after</strong> (breached and not escalated). Metrics: oldest unprocessed deadline, count near breach.</li>
 </ul>
+<figure>
+<svg viewBox="0 0 680 360" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>A deadline is a row: timer for speed, sweeper for safety</title>
+<desc>The case commit writes a deadline row with status OPEN and a due time. A timer wakes a worker near the due time; an independent sweeper periodically queries open rows that are due or near due. Either path claims the row with a conditional update and a lease, processes it idempotently, and marks it done or escalates a breach. Alerts fire on time-to-breach before the deadline and on breach after it.</desc>
+<defs><marker id="arrow-cb-deadline" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="170" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="115.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case commit</text><text x="115.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Deadline row: OPEN</text><text x="115.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">type, due_at, case id</text></g>
+<path d="M200 60 L240 60 L240 45 L278 45" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-deadline)"/>
+<path d="M200 84 L240 84 L240 165 L278 165" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-deadline)"/>
+<g><rect x="280" y="20" width="200" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="380.0" y="38" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Timer</text><text x="380.0" y="56" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">wakes a worker near due_at</text></g>
+<g><rect x="280" y="140" width="200" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="380.0" y="158" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Sweeper</text><text x="380.0" y="176" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">every few minutes: due, unclaimed</text></g>
+<text x="380" y="80" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">fast path</text>
+<text x="380" y="200" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">safety net when the timer lost everything</text>
+<path d="M480 45 L490 45 L490 100 L498 100" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-deadline)"/>
+<path d="M480 165 L490 165 L490 110 L498 110" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-deadline)"/>
+<g><rect x="500" y="76" width="160" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="580.0" y="94" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Conditional claim</text><text x="580.0" y="112" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">OPEN → CLAIMED</text><text x="580.0" y="128" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">lease: 5 minutes</text></g>
+<line x1="580" y1="140" x2="580" y2="178" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-deadline)"/>
+<g><rect x="500" y="180" width="160" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="580.0" y="198" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Process once</text><text x="580.0" y="216" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">DONE or escalate BREACHED</text></g>
+<text x="340" y="250" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">a duplicate worker's claim matches zero rows: someone else has it</text>
+<text x="340" y="266" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">an expired lease means a dead worker: the row is available again</text>
+<rect x="40" y="290" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="297" dominant-baseline="central" font-size="12" fill="#3E4A63">The row is the obligation. Alert on time-to-breach before, and on breach after.</text>
+<rect x="40" y="314" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="321" dominant-baseline="central" font-size="12" fill="#3E4A63">Timers and sweepers are delivery; neither is the truth. Never rebuild deadlines from memory.</text>
+<text x="40" y="342" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Measure: oldest unprocessed deadline, count near breach.</text>
+</svg>
+<figcaption>The row is written in the same commit as the transition that created it. The timer is the fast path; the sweeper is the path that still works when the timer has lost everything. Both end at the same conditional claim, so a duplicate worker fails the claim instead of doing the work twice, and an expired lease hands a dead worker's deadline to the next one.</figcaption>
+</figure>
 <p>When the network responds, the old deadline is completed by an event and a new one is created from the response window under the applicable policy version, in the same commit. Both stay for audit.</p>
 
 <div class="trap"><p class="label">Avoid saying</p><p>"The scheduler will trigger it." One in-memory scheduled job is a best-effort timer; the row is the obligation. And never rebuild deadlines from memory after a restart.</p></div>
@@ -518,8 +685,29 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <p class="question">Large, sensitive, legally significant files, handled without contaminating the case store.</p>
 
 <h3>The lifecycle</h3>
-<pre><code>staged upload (token + checksum) → UPLOADED → scan (format, malware, checksum) → EVIDENCE_READY
-                                                     ↘ QUARANTINED (never usable; customer asked for a replacement)</code></pre>
+<figure>
+<svg viewBox="0 0 680 260" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Evidence lifecycle: bytes are not evidence until the checks pass</title>
+<desc>A staged upload returns a token and checksum; the case commit links that exact object version as an EvidenceItem in state UPLOADED. A scan checks format, malware and checksum. On success a command moves it to EVIDENCE_READY; on failure it is QUARANTINED and the customer is asked for a replacement. An upload whose commit failed is an orphan, deleted by a lifecycle job.</desc>
+<defs><marker id="arrow-cb-evidence" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="140" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="100.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Staged upload</text><text x="100.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">token + checksum</text></g>
+<line x1="170" y1="68" x2="198" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-evidence)"/>
+<g><rect x="200" y="40" width="120" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="260.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">UPLOADED</text><text x="260.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">object version</text></g>
+<line x1="320" y1="68" x2="348" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-evidence)"/>
+<g><rect x="350" y="40" width="120" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="410.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Scan</text><text x="410.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">format, malware, sum</text></g>
+<line x1="470" y1="68" x2="498" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-evidence)"/><text x="484" y="54" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">pass</text>
+<g><rect x="500" y="40" width="160" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="580.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">EVIDENCE_READY</text><text x="580.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">usable, submittable</text></g>
+<path d="M410 96 L410 140 L498 140" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-evidence)"/>
+<g><rect x="500" y="112" width="160" height="56" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="580.0" y="130" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">QUARANTINED</text><text x="580.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#A32D2D">never usable</text></g>
+<text x="455" y="126" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">fail</text>
+<text x="580" y="184" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">customer asked for a replacement</text>
+<path d="M100 96 L100 140 L198 140" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-evidence)"/>
+<g><rect x="200" y="112" width="120" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="260.0" y="130" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Orphan</text><text x="260.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">commit failed</text></g>
+<text x="260" y="184" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">lifecycle job deletes after quarantine</text>
+<rect x="30" y="224" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="231" dominant-baseline="central" font-size="12" fill="#3E4A63">A replacement is a new version linked to the old; the old bytes are never overwritten.</text>
+</svg>
+<figcaption>Only the green states can be submitted to the network, and only the last one actually is. The scan is asynchronous and purple because it may take time and may fail; a failed scan is a red dead end, never an override. The dashed path is the upload whose commit never happened.</figcaption>
+</figure>
 <ul>
   <li><strong>Bytes</strong> go to encrypted object storage via a staged upload that returns a token and a checksum. The case commit links exactly that object version; if the commit fails, the object is an orphan and a lifecycle job deletes it after quarantine.</li>
   <li><strong>Metadata</strong> lives in the case store: evidence id, object version, checksum, media type, scan status, uploader, timestamps, retention class, and which network submission included it.</li>
@@ -549,6 +737,37 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>The case closes only when policy says both are complete: the workflow decision (WON / LOST / PARTIAL) and the financial settlement (all required ledger actions confirmed).</li>
   <li>Reconcile <strong>three truths</strong>: the network's award, the case's recorded decision, and the ledger's postings. They must agree on outcome and amount.</li>
 </ol>
+<figure>
+<svg viewBox="0 0 680 470" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Provisional credit: intent here, posting there, three truths at the end</title>
+<desc>Policy says credit applies. The case commit saves a FinancialAction with a semantic key and an outbox row; a worker sends it to the ledger, which posts a balanced pair and returns a transaction id, recorded as a case event. The outcome from the network leads to finalisation, a linked reversal, or one adjustment for the difference, each with its own key. The case closes only when decision and settlement agree with the network's award.</desc>
+<defs><marker id="arrow-cb-prov" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Policy says yes</text><text x="105.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">product, country, risk</text></g>
+<line x1="180" y1="68" x2="208" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="210" y="40" width="210" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case commit</text><text x="315.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">FinancialAction + outbox</text><text x="315.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:PROVISIONAL_CREDIT:v1</text></g>
+<line x1="420" y1="72" x2="458" y2="72" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="460" y="40" width="190" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="555.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Worker → ledger</text><text x="555.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Ana +300, clearing −300</text><text x="555.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">returns tx 9182</text></g>
+<path d="M555 104 L555 130 L315 130 L315 106" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<text x="435" y="144" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">observed result comes back as the event PROVISIONAL_CREDIT_POSTED(tx 9182)</text>
+<g><rect x="30" y="190" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="208" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Network award</text><text x="105.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">weeks later</text></g>
+<path d="M180 205 L205 205 L205 190 L228 190" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<line x1="180" y1="218" x2="228" y2="218" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<path d="M180 231 L205 231 L205 246 L228 246" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="230" y="164" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">WIN: finalise</text><text x="325.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">credit stands</text></g>
+<g><rect x="230" y="220" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="238" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">LOSS: linked reversal</text><text x="325.0" y="256" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:REVERSE_PROVISIONAL:v1</text></g>
+<g><rect x="230" y="276" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="294" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">PARTIAL: one adjustment</text><text x="325.0" y="312" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:FINAL_ADJUSTMENT:v2, −100</text></g>
+<text x="325" y="342" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">each outcome is a new posting; the original is never edited</text>
+<g><rect x="460" y="190" width="190" height="110" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="555.0" y="208" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Close only when</text><text x="555.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">decision recorded AND</text><text x="555.0" y="242" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">every ledger action confirmed</text></g>
+<text x="555" y="274" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#BA7517">network award = case decision</text>
+<text x="555" y="288" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#BA7517">= ledger posting</text>
+<line x1="420" y1="245" x2="458" y2="245" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<rect x="30" y="380" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="387" dominant-baseline="central" font-size="12" fill="#3E4A63">Case truth: the intent, its key, and the events that record what the ledger did</text>
+<rect x="30" y="404" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="52" y="411" dominant-baseline="central" font-size="12" fill="#3E4A63">The ledger's job: post once per key, return the prior posting on a retry</text>
+<rect x="30" y="428" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="52" y="435" dominant-baseline="central" font-size="12" fill="#3E4A63">Reconciliation: three truths that must agree on outcome and amount</text>
+<text x="30" y="456" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">WON is a decision. Financially settled is a fact.</text>
+</svg>
+<figcaption>The deep dive in one picture. The green commit on the top row carries the intent and its semantic key; the purple box is the ledger doing the posting; the result comes back as an event. Each outcome on the second row is a new posting with its own key, so a retried credit can never look like a reversal. The case closes only inside the amber box, when three independent truths agree.</figcaption>
+</figure>
 
 <h3>Case state is not money state</h3>
 <p>A case can be decided while the ledger action is still pending. Show both states to Operations and in customer messaging. Otherwise the UI says "completed" while the customer has neither received nor repaid the money. One status field for legal outcome and money completion is the mistake.</p>
@@ -732,6 +951,28 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li><strong>Then enable network submissions, then financial actions</strong>, each behind its own kill switch.</li>
   <li><strong>Kill switch and draining.</strong> A kill switch stops new external side effects but keeps durable intents and in-flight states visible. Safe acknowledgements drain, unsafe retries pause, and work resumes from the outbox after remediation. Separate switches for network submission, credits and notifications. Never kill workers and lose track of committed intent.</li>
 </ol>
+<figure>
+<svg viewBox="0 0 680 250" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Rollout: shadow first, then one kill switch per side effect</title>
+<desc>Launch one country, one network and one reason-code family. First run the eligibility and deadline maths in shadow with no side effects possible; then enable network submissions behind a kill switch; then money actions behind their own kill switch; then the next country as a versioned policy package on the same mechanics.</desc>
+<defs><marker id="arrow-cb-rollout" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="340" y="30" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">one country · one network · one reason-code family</text>
+<g><rect x="30" y="60" width="140" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="100.0" y="78" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Shadow</text><text x="100.0" y="96" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">compute, never act</text><text x="100.0" y="112" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">compare to trusted process</text></g>
+<line x1="170" y1="92" x2="198" y2="92" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-rollout)"/>
+<g><rect x="200" y="60" width="140" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="270.0" y="78" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Submissions</text><text x="270.0" y="96" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">network leg live</text><text x="270.0" y="112" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">behind its own switch</text></g>
+<line x1="340" y1="92" x2="368" y2="92" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-rollout)"/>
+<g><rect x="370" y="60" width="140" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="440.0" y="78" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Money actions</text><text x="440.0" y="96" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">credits live</text><text x="440.0" y="112" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">behind its own switch</text></g>
+<line x1="510" y1="92" x2="538" y2="92" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-rollout)"/>
+<g><rect x="540" y="60" width="120" height="64" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="600.0" y="78" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Next country</text><text x="600.0" y="96" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">policy package vN</text><text x="600.0" y="112" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">same mechanics</text></g>
+<rect x="230" y="133" width="91" height="18" rx="9" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="275.5" y="142.5" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#791F1F">kill switch</text>
+<rect x="400" y="133" width="91" height="18" rx="9" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="445.5" y="142.5" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#791F1F">kill switch</text>
+<text x="110" y="142" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">physically unable to emit commands</text>
+<text x="345" y="176" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">a switch stops new side effects; committed intents stay visible and drain safely</text>
+<rect x="30" y="210" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="217" dominant-baseline="central" font-size="12" fill="#3E4A63">Live side effects, each independently stoppable</text>
+<rect x="360" y="210" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="382" y="217" dominant-baseline="central" font-size="12" fill="#3E4A63">Shadow: outputs stored separately, never live state</text>
+</svg>
+<figcaption>Left to right is time. Shadow is purple because it produces outputs, never effects. Each green box goes live behind its own switch, so a bad credit policy can be stopped without stopping submissions. The last box is the Colombia answer: the same mechanics, a new versioned policy package.</figcaption>
+</figure>
 
 <h3>Who owns what</h3>
 <div class="rows">
