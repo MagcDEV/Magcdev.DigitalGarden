@@ -69,7 +69,7 @@ How every piece of Nubank's authoritative-ledger design fits together, written t
 
 ## Pivot insurance: authoriser, credit limit, fraud, PIX, and two generic prompts
 
-Nubank says you "design a system from scratch". The reported prompts cluster around chargebacks and the ledger, but the round also produces card authorisation, credit limits, real-time fraud and PIX. This guide gets each one to a confident stage-1 sentence and a drawn stage-4 diagram in ten minutes of prep, by reusing the pieces you already have. Section 6 now adds the two prompts from Nubank's own PDF, ride-hailing and an ad-click aggregator, as ten-minute sketches, and the authoriser deep dive carries its latency budget in numbers.
+Nubank says you "design a system from scratch". The reported prompts cluster around chargebacks and the ledger, but the round also produces card authorisation, credit limits, real-time fraud and PIX. This guide gets each one to a confident step-1 sentence and a drawn first version in ten minutes of prep, by reusing the pieces you already have, in the same four steps as the other guides: requirements, entities and API (or interface and data flow for the pipeline-shaped ones), a first version with the rung below it named and not drawn, and the deep dives. Section 6 now adds the two prompts from Nubank's own PDF, ride-hailing and an ad-click aggregator, as ten-minute sketches, and the authoriser deep dive carries its latency budget in numbers.
 
 <form class="guide-open" action="../../assets/nubank-guides/nubank-pivot-insurance-study-notes.html" method="get" target="_blank">
 <button type="submit">Open full page</button>
