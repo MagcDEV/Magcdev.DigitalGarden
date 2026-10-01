@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chargebacks on one card — what to memorise</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --dia-line: #5F5E5A;
+    --dia-line-soft: #888780;
+    --dia-fill: #F1EFE8;
+    --dia-text: #2C2C2A;
+    color-scheme: light;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* Dark mode. The palette follows the garden's saved "theme" preference
+     (shared with the Quartz toggle) and, when none is saved, the system
+     setting. Content and layout are unchanged; only the colours swap. */
+  :root[data-theme="dark"] {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+    }
+  }
+
+  /* Diagrams carry their colours as fill/stroke attributes from the light
+     palette. These rules map each attribute value onto a theme variable so
+     the SVGs follow the theme without touching their markup. */
+  svg [fill="#0F6E56" i] { fill: var(--strong); }
+  svg [stroke="#0F6E56" i] { stroke: var(--strong); }
+  svg [fill="#E1F5EE" i] { fill: var(--strong-bg); }
+  svg [stroke="#E1F5EE" i] { stroke: var(--strong-bg); }
+  svg [fill="#085041" i] { fill: var(--strong-ink); }
+  svg [stroke="#085041" i] { stroke: var(--strong-ink); }
+  svg [fill="#534AB7" i] { fill: var(--eventual); }
+  svg [stroke="#534AB7" i] { stroke: var(--eventual); }
+  svg [fill="#EEEDFE" i] { fill: var(--eventual-bg); }
+  svg [stroke="#EEEDFE" i] { stroke: var(--eventual-bg); }
+  svg [fill="#3C3489" i] { fill: var(--eventual-ink); }
+  svg [stroke="#3C3489" i] { stroke: var(--eventual-ink); }
+  svg [fill="#BA7517" i] { fill: var(--money); }
+  svg [stroke="#BA7517" i] { stroke: var(--money); }
+  svg [fill="#FAEEDA" i] { fill: var(--money-bg); }
+  svg [stroke="#FAEEDA" i] { stroke: var(--money-bg); }
+  svg [fill="#633806" i] { fill: var(--money-ink); }
+  svg [stroke="#633806" i] { stroke: var(--money-ink); }
+  svg [fill="#A32D2D" i] { fill: var(--warn); }
+  svg [stroke="#A32D2D" i] { stroke: var(--warn); }
+  svg [fill="#FCEBEB" i] { fill: var(--warn-bg); }
+  svg [stroke="#FCEBEB" i] { stroke: var(--warn-bg); }
+  svg [fill="#791F1F" i] { fill: var(--warn-ink); }
+  svg [stroke="#791F1F" i] { stroke: var(--warn-ink); }
+  svg [fill="#3E4A63" i] { fill: var(--ink-soft); }
+  svg [stroke="#3E4A63" i] { stroke: var(--ink-soft); }
+  svg [fill="#5F5E5A" i] { fill: var(--dia-line); }
+  svg [stroke="#5F5E5A" i] { stroke: var(--dia-line); }
+  svg [fill="#888780" i] { fill: var(--dia-line-soft); }
+  svg [stroke="#888780" i] { stroke: var(--dia-line-soft); }
+  svg [fill="#F1EFE8" i] { fill: var(--dia-fill); }
+  svg [stroke="#F1EFE8" i] { stroke: var(--dia-fill); }
+  svg [fill="#2C2C2A" i] { fill: var(--dia-text); }
+  svg [stroke="#2C2C2A" i] { stroke: var(--dia-text); }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-tint); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--strong); color: var(--strong); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+</button>
+<div class="page">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#one">1. The one sentence</a></li>
+    <li><a href="#hour">2. The hour, in four steps</a></li>
+    <li><a href="#step1">3. Step 1: questions, numbers, rules</a></li>
+    <li><a href="#step2">4. Step 2: six nouns, three operations</a></li>
+    <li><a href="#step3">5. Step 3: the drawing</a></li>
+    <li><a href="#money">6. The money story (Ana's R$300)</a></li>
+    <li><a href="#failures">7. When things break</a></li>
+    <li><a href="#tenfold">8. "Ten times the volume"</a></li>
+    <li><a href="#rollout">9. Rollout, in three lines</a></li>
+    <li><a href="#never">10. Never say</a></li>
+  </ol>
+</nav>
+<main>
+<header class="hero">
+  <h1>Chargebacks on one card</h1>
+  <p class="lede">The chargeback guide is 15 sections. This is the part worth memorising, in plain words, in the order you will say it. If you can say everything on this page without looking, you can pass the round.</p>
+  <p class="source">Condensed 1 October 2026 from <em>The chargeback platform, end to end</em> and the mock interview. Short on purpose: when something here feels thin, that is the section of the big guide to open.</p>
+</header>
+
+<h2 id="one">1. The one sentence</h2>
+<p class="thesis">A chargeback platform is a system that manages a <strong>case</strong> over weeks. It owns the story of the dispute: what happened, who did it, when, and under which rule. It asks other systems to do things: the card network to carry the dispute, storage to hold documents, the ledger to move money. It is not the ledger and it is not the network.</p>
+<p>What it must never do: lose a deadline, forget a side effect it promised, lose the audit trail, or confuse "the case is won" with "the customer has been paid".</p>
+<div class="say"><p class="label">The sentence that ties everything together</p><p>"A case command commits workflow state and intent locally; external side effects happen after commit and come back as new events. Won is a decision; financially settled is a fact."</p></div>
+
+<h2 id="hour">2. The hour, in four steps</h2>
+<table>
+  <tr><th>Minutes</th><th>Step</th><th>You say</th></tr>
+  <tr><td>0–3</td><td>Listen</td><td>"Here's how I'll use the time: requirements, then the nouns and operations, then a simple design that serves the features, then the qualities one by one."</td></tr>
+  <tr><td>3–12</td><td>1 Requirements</td><td>Five questions, the features, the numbers, the qualities, the scope sentence.</td></tr>
+  <tr><td>12–15</td><td>2 Entities and API</td><td>Six nouns, three operations, the key each one carries.</td></tr>
+  <tr><td>15–27</td><td>3 Design</td><td>Name the simple version in one sentence, don't draw it. Draw the real one. Say what it costs and what it doesn't handle yet.</td></tr>
+  <tr><td>27–53</td><td>4 Deep dives</td><td>Provisional credit to the bottom. Failures to the bottom. Rollout in three lines.</td></tr>
+  <tr><td>53–60</td><td>Close</td><td>The one sentence. Then two questions for them.</td></tr>
+</table>
+<p>When they interrupt: answer, then say "let me go back to the step I was on" and name it.</p>
+
+<h2 id="step1">3. Step 1: questions, numbers, rules</h2>
+<h3>Five questions, before anything</h3>
+<ol>
+  <li>Are we the <strong>issuer</strong> (the customer's bank) or the acquirer (the merchant's bank)? Assume issuer.</li>
+  <li>Which countries and networks on day one? Each changes rules and deadlines.</li>
+  <li>Who owns the rules and deadlines? Legal does; we implement them as <strong>versioned policy</strong>.</li>
+  <li>Does opening a case move money? No. Provisional credit is a separate decision.</li>
+  <li>What already exists? A ledger, a card transaction store, identity, storage, notifications. We integrate, we don't rebuild.</li>
+</ol>
+<p>Plus one shape question: is the network a real-time API or files by FTP? Design for the API; say how a file changes it.</p>
+
+<h3>The features (what users can do)</h3>
+<p>A customer disputes a transaction and sees its status. An operator reviews evidence and decides. The platform submits to the network and records the outcome. The platform asks the ledger for credit, and for its reversal. <strong>Below the line:</strong> fraud scoring, the merchant side, reporting.</p>
+
+<h3>The numbers (ask for them first, then do the maths)</h3>
+<pre><code>100M customers, 2B card transactions a month, 0.1% disputed
+→ 2M cases a month ≈ 70k a day ≈ under 1 per second, ~8 at peak
+20 events per case × 1 KB → 40 GB a month        (small)
+2 files × 2 MB per case  → 8 TB a month          (object storage, not the DB)
+30% need a human, 40 cases a day each → ~500 reviewers</code></pre>
+<div class="say"><p class="label">The decision the numbers force</p><p>"Seventy thousand a day is under one write a second. One good relational database handles it, and would at ten times. This is not a throughput problem. It's a correctness, deadline and people problem, and that's where I'll spend the design."</p></div>
+
+<h3>The seven rules (the qualities, as rules)</h3>
+<ol>
+  <li>A case only moves through <strong>valid transitions</strong>, under a versioned policy.</li>
+  <li>Every action records <strong>who, why, when</strong>. No anonymous status change.</li>
+  <li>A <strong>deadline is a saved row</strong>. It cannot disappear if every worker dies.</li>
+  <li>Every <strong>money action has its own key</strong>. A retry never credits twice.</li>
+  <li>Every message to the network <strong>reuses the same reference</strong>. A new one could open a second dispute.</li>
+  <li>Evidence is <strong>versioned</strong> and access-controlled. Old bytes are never overwritten.</li>
+  <li>Every decision records the <strong>policy version</strong> that made it.</li>
+</ol>
+<div class="say"><p class="label">The scope sentence, at minute twelve</p><p>"I'll scope to the issuer-side workflow with provisional credit, because that's where correctness is hardest. The network is an adapter, the ledger is an existing system. Speed matters less than in payments; audit, deadlines and money correctness are strict."</p></div>
+
+<h2 id="step2">4. Step 2: six nouns, three operations</h2>
+<div class="rows">
+  <div><span>DisputeCase</span><span>The current summary: state, amount, country, network, owner, policy version. The row you read.</span></div>
+  <div><span>CaseEvent</span><span>One fact in its history: opened, evidence added, submitted, won. Never edited. The snapshot can be rebuilt from these.</span></div>
+  <div><span>Deadline</span><span>A row with a due time, a type and a status. Not a timer in memory.</span></div>
+  <div><span>EvidenceItem</span><span>Metadata about a document: where the bytes are, checksum, scan status, version. The bytes live in object storage.</span></div>
+  <div><span>NetworkSubmission</span><span>The stable reference we sent to the network, and whether they acknowledged it.</span></div>
+  <div><span>FinancialAction</span><span>One money step with its own ledger key, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. We record the intent here; the ledger posts the money.</span></div>
+</div>
+<p><strong>Three operations.</strong> Open a case (with an idempotency key from the app). Run a command on a case (type, expected version, reason, key). Read a case (snapshot, or history as of a date). Everything is a command on the case. Nobody edits a status column.</p>
+
+<h2 id="step3">5. Step 3: the drawing</h2>
+<p><strong>The version you name and don't draw:</strong> "One service, one table with a status column, synchronous calls to the network and the ledger, a cron for deadlines. It works for a week, then it fails audit, retries and deadlines. So I won't draw it."</p>
+<p><strong>The version you draw.</strong> A command comes in. Four things happen in order:</p>
+<ol>
+  <li><strong>Check:</strong> who is calling, the idempotency key, the expected case version.</li>
+  <li><strong>Validate</strong> the transition against the current policy version.</li>
+  <li><strong>One commit</strong> writes: the new event, the updated snapshot and version, any deadlines, the idempotency record, and <strong>outbox rows</strong> for every side effect.</li>
+  <li><strong>Return</strong> the new state by name: "submitted", "credit pending".</li>
+</ol>
+<p><strong>After the commit,</strong> workers read the outbox and call the network, the ledger, storage, notifications. Whatever they see comes back into the case as a new event: "network acked", "ledger posted tx 9182". So the case's own history says what happened outside it.</p>
+<p><strong>Two more boxes.</strong> A <strong>timer</strong> wakes workers near a due time; a <strong>sweeper</strong> reads the deadline rows every few minutes and catches what the timer missed. A <strong>search index</strong> built from events, for Ops to find cases; it may lag; Ops opens the real case by id before acting.</p>
+<p><strong>The key on every arrow.</strong> App → platform: the request key. Platform → ledger: the action key. Platform → network: the submission reference. File row: file id plus row id.</p>
+<div class="recap"><p class="label">Say its cost, then its gaps</p><p>"It costs two writes per command instead of one, a worker fleet, and in-flight states the product has to show. It doesn't yet handle: deadlines beyond the timer, more than one money step per case, evidence trust, a file-shaped network, and the bad day. Those are my deep dives. I'd go deepest on provisional credit and failures."</p></div>
+<p><strong>The consistency line, said once:</strong> strong where I decide (transitions, deadlines, money intent); eventual where I only read (search, notifications, dashboards); explicitly <em>unknown</em> where the world hasn't answered yet.</p>
+
+<h2 id="money">6. The money story (Ana's R$300)</h2>
+<ol>
+  <li>Ana disputes R$300. Policy says she's owed provisional credit. The case commit writes a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and an outbox row. Case state: under review. Money state: credit pending.</li>
+  <li>After commit, a worker sends that key to the ledger. The ledger posts +300 to Ana, −300 to a disputes clearing account, and returns its transaction id. A new event records it. Ana sees the money.</li>
+  <li>Weeks later the network answers. <strong>Win:</strong> the credit stands. <strong>Lose:</strong> a new action <code>REVERSE_PROVISIONAL:v1</code> asks the ledger for a linked reversal. <strong>Partial win</strong> (R$200 of 300): one adjustment <code>FINAL_ADJUSTMENT:v2</code> for −100. Never edit the credit amount.</li>
+  <li>The case closes only when the decision is recorded <em>and</em> every ledger action is confirmed, and three truths agree: the network's award, our decision, the ledger's postings.</li>
+</ol>
+<div class="say"><p class="label">Why the key is so specific</p><p>"One case legitimately needs several money actions. If the key were the case id, the reversal would look like a retry of the credit and the ledger would refuse it. The key names the business action being retried: this case, this action, this version."</p></div>
+<p><strong>Ledger timeout?</strong> "Unknown, not failed. I retry the same key. The ledger returns what it already posted, or posts once now. I never create a new key on a timeout; that's how a customer is credited twice."</p>
+
+<h2 id="failures">7. When things break</h2>
+<p>For any failure, answer these six: What committed? What retries, with which key? What can duplicate? What does the customer see? Which metric alerts? What does an operator safely do?</p>
+<table>
+  <tr><th>Failure</th><th>Answer in one line</th></tr>
+  <tr><td>Network times out</td><td>Unknown. Query by the same reference before ever resubmitting. Customer sees "sent, awaiting".</td></tr>
+  <tr><td>Timer workers down an hour</td><td>Deadlines are rows, nothing lost. The sweeper claims each one with a lease, processes, escalates anything breached. Alert before breach.</td></tr>
+  <tr><td>Two operators, same case, same second</td><td>Both carry the expected version. One commits; the other gets a conflict, reloads, sees it's decided. Never last-write-wins.</td></tr>
+  <tr><td>Upload succeeds, commit fails</td><td>The file is an orphan, not evidence. A cleanup job deletes it. Bytes existing is not evidence; a committed EvidenceItem that passed its checks is.</td></tr>
+  <tr><td>Bad policy release misclassifies 5,000 cases</td><td>Freeze that version, find cases by version, fix forward with new audited events. Never rewrite history.</td></tr>
+  <tr><td>Operator credits a friend</td><td>Roles and four-eyes above a threshold; actor on every event; the ledger independently limits what this platform may ask for.</td></tr>
+  <tr><td>Single point of failure?</td><td>The case database's primary. Synchronous replica, automated failover in seconds; during it, commands get "try again", reads keep working.</td></tr>
+</table>
+<p><strong>Degrades, never dies.</strong> Network down: cases still open, submissions queue. Ledger down: decisions continue, credits pend with their keys. Storage down: uploads refused, nothing else. Search down: Ops works from queues. Kafka down: commands fine, notifications late.</p>
+
+<h2 id="tenfold">8. "Ten times the volume"</h2>
+<ol>
+  <li><strong>Ask what grew.</strong> Cases, documents, operators?</li>
+  <li><strong>Do the maths.</strong> 700k cases a day is 8 writes a second, 80 at peak. The database is still fine. Evidence storage becomes a cost. Operations becomes 5,000 people.</li>
+  <li><strong>Scale what scales:</strong> workers, adapters, the search index, storage. All idempotent, all horizontal.</li>
+  <li><strong>Say what doesn't:</strong> Operations. People don't scale by adding machines. The real lever is automation, decided from shadow results.</li>
+  <li><strong>Protect the rules</strong> while scaling. A "performance improvement" that bends one is a bug.</li>
+</ol>
+<div class="say"><p class="label">When they suggest caching the case</p><p>"I'd push back. Ops reads a case to decide on it, and a cached case is a stale decision input: two operators both read it, both think it's undecided. If it's read latency, I'd serve the snapshot from a replica and cache the versioned policy instead, because a version is a safe cache key."</p></div>
+
+<h2 id="rollout">9. Rollout, in three lines</h2>
+<p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
+<p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file; never rebuild with a new run id.</p>
+
+<h2 id="never">10. Never say</h2>
+<ul>
+  <li>"Opening the case credits the customer." (Credit is a separate policy decision.)</li>
+  <li>"The scheduler will handle the deadline." (The row is the obligation.)</li>
+  <li>"Resubmit with a fresh reference." (That can open a second dispute.)</li>
+  <li>"The case is won, so she's been paid." (Decision and settlement are different.)</li>
+  <li>"Roll back the policy and fix the statuses." (Fix forward, with events.)</li>
+  <li>"It'll be a lot of data, so we need something scalable." (Say the number and what it decides.)</li>
+  <li>"Let's cache the case." (A cached decision input is a stale one.)</li>
+</ul>
+
+<footer>
+  Condensed on 1 October 2026 from <em>The chargeback platform, end to end</em> and <em>Mock interview: the chargeback platform, minute by minute</em>. Every number and key here matches those guides; when a line feels thin, the section with the same name in the big guide is the place to read.
+</footer>
+</main>
+</div>
+</body>
+</html>

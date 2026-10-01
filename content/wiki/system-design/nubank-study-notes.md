@@ -17,6 +17,16 @@ Each guide also has an **Open full page** button. That loads the original HTML a
 > [!tip] Reading order for the last six days
 > Start with **Nubank's prep document, decoded**: it re-weights everything else. It says the round grades rough numbers that end in a decision, a visible v1 that you break yourself before v2, a named single point of failure with a degradation story, security and abuse, and polite pushback on the interviewer's suggestions. The four older guides were updated on 29 September 2026 so each of those now has a home: numbers and the v1 storyline in the chargeback guide (sections 3 and 6) and in the mock at 4:30 and 13:00; the degradation matrix and security table in the chargeback guide (section 11) and the ledger guide (section 11); schema evolution and caching in the ledger follow-ups (section 13); the ride-hailing and ad-click sketches in the pivot guide (section 6). The day-by-day plan is section 9 of the decoded document, and Friday's reading is its section 11: four Nubank posts, each with a sentence ready to cite. Then read **The Hello Interview method, applied to Nubank's hour**: Nubank's interviewers recommended that video as the way to run the round, and the guide turns its four steps into the step names you say aloud, with chargebacks and the ledger scripted minute by minute in section 7.
 
+## Chargebacks on one card
+
+The chargeback material condensed to what is worth memorising, in plain words and in the order you say it: the one sentence, the hour in four steps, the five questions, the numbers, the seven rules, the six nouns and three operations, the drawing with the key on every arrow, Ana's R$300 money story, the failure table, the tenfold answer, rollout, and the things never to say. Four pages. Read this before the big guide, and go to the big guide only where a line here feels thin.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-chargeback-one-card.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-chargeback-one-card.html" type="text/html" title="Chargebacks on one card">
+
 ## Nubank's prep document, decoded
 
 They sent the rubric. This guide explains every concept the candidate PDF names in plain terms, shows how each one already lives in the chargeback and ledger designs, and adds the two things those designs didn't stress: rough numbers, and a v1-then-iterate storyline. Includes the seven evaluation signals, the ten keys with a sentence for each, the arithmetic table to memorise, a graceful degradation matrix, a security and abuse table, two generic-prompt sketches, a six-day plan, the questions to ask at the end, and, in sections 11 and 12, a reading list in Nubank's own words (four engineering posts with a citation sentence each, the Datomic trade-off, the video they recommend) plus six small edges for the last days.
