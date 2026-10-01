@@ -121,6 +121,7 @@
   .draw { background: var(--paper-tint); border: 1px dashed var(--rule); border-radius: 6px; padding: 14px 18px; margin: 14px 0 26px; }
   .draw .label { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
   .draw pre { background: none; border: none; padding: 0; margin: 0; font-size: 13.5px; }
+  .draw svg { width: 100%; height: auto; display: block; }
   .clock { font-size: 13px; color: var(--ink-soft); margin: 40px 0 12px; padding-top: 14px; border-top: 1px solid var(--rule); }
   .note { font-size: 14.5px; color: var(--ink-soft); font-style: italic; margin: 0 0 18px; }
 </style>
@@ -156,7 +157,7 @@
 </header>
 
 <h2 id="setup">Before you start</h2>
-<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. Timestamps are where you should be, not where you must be; if you're five minutes behind at the architecture stage, cut the deep dive, never the failures.</p>
+<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. They are drawn here in the same style as the guides' diagrams, with colour for the consistency line; on the real board you draw the same boxes and arrows in one pen and say the colours out loud. Timestamps are where you should be, not where you must be; if you're five minutes behind at the architecture stage, cut the deep dive, never the failures.</p>
 <p>The candidate's answers below are deliberately spoken, not written: short sentences, one idea each, said while drawing. That is the register to practise.</p>
 
 <!-- ============================================================ -->
@@ -188,12 +189,31 @@
 <div class="turn c"><p class="who">Candidate</p>
 <p>Then my boundary sentence is: this is a case-management system for the issuer side. It coordinates four things, customer intake, evidence, deadlines, and messages to the card network, plus money actions it asks the ledger to perform. Case acceptance is synchronous; everything external, network, ledger, documents, is asynchronous with an explicit Processing state. It is not the ledger and it is not the network.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 4</p><pre>BOUNDARY
-  We are: ISSUER dispute platform  (BR, MX · Visa, MC · Colombia later)
-  We own: case, evidence, deadlines, network messages, money INTENT
-  We call: ledger (money) · card network · object storage · notifications · identity
-  Sync: accept case, validate, current state     Async: everything external (Processing)
-  Opening a case ≠ moving money.  Provisional credit = separate policy decision.</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 4</p>
+<svg viewBox="0 0 680 386" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 4: the boundary</title>
+<desc>The platform is the issuer-side dispute platform for Brazil and Mexico on Visa and Mastercard, with Colombia later. It owns the case, evidence metadata, deadlines, network messages and money intent. It calls the ledger, the card network, object storage, notifications and identity. Acceptance is synchronous; everything external is asynchronous and shown as Processing. Opening a case does not move money.</desc>
+<defs><marker id="arrow-mk-boundary" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="190" y="20" width="300" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="340.0" y="38" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">ISSUER dispute platform</text><text x="340.0" y="56" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">BR, MX · Visa, MC · Colombia later</text></g>
+<path d="M190 48 L150 48 L150 92" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-boundary)"/>
+<path d="M490 48 L530 48 L530 92" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-boundary)"/>
+<text x="150" y="106" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">We own</text>
+<text x="530" y="106" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">We call</text>
+<g><rect x="30" y="120" width="240" height="32" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="150.0" y="136.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">case: state, history, policy vN</text></g>
+<g><rect x="30" y="160" width="240" height="32" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="150.0" y="176.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">evidence metadata; bytes elsewhere</text></g>
+<g><rect x="30" y="200" width="240" height="32" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="150.0" y="216.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">deadlines, as rows</text></g>
+<g><rect x="30" y="240" width="240" height="32" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="150.0" y="256.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">network messages, stable refs</text></g>
+<g><rect x="30" y="280" width="240" height="32" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="150.0" y="296.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">money INTENT, never money</text></g>
+<g><rect x="410" y="120" width="240" height="32" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="530.0" y="136.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#3C3489">ledger: moves the money</text></g>
+<g><rect x="410" y="160" width="240" height="32" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="530.0" y="176.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#3C3489">card network: carries the dispute</text></g>
+<g><rect x="410" y="200" width="240" height="32" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="530.0" y="216.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#3C3489">object storage: holds documents</text></g>
+<g><rect x="410" y="240" width="240" height="32" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="530.0" y="256.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#3C3489">notifications: tells Ana</text></g>
+<g><rect x="410" y="280" width="240" height="32" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="530.0" y="296.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#3C3489">identity: who is acting</text></g>
+<rect x="30" y="330" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="337" dominant-baseline="central" font-size="12" fill="#3E4A63">Sync: accept, validate, current state</text>
+<rect x="350" y="330" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="372" y="337" dominant-baseline="central" font-size="12" fill="#3E4A63">Async: everything external, shown as Processing</text>
+<text x="340" y="368" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#3E4A63">Opening a case is not moving money. Provisional credit is a separate policy decision.</text>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m4">4:30</p>
@@ -208,10 +228,26 @@
 <p>So the decision the numbers force: this is not a throughput problem. One well-indexed relational database handles it and would still handle ten times this. It is a correctness, deadline and people problem. That's where I'll spend the design: audit, durable deadlines, safe money intent, reconciliation, and measuring what to automate.</p>
 <p>And my scope: the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest. The network is an adapter, the ledger is an existing system, and I'll come back to reporting and analytics only if we have time.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 5 (side notes)</p><pre>NUMBERS  100M customers · 2B tx/mo · 0.1% disputed → 2M/mo ≈ 70k/day ≈ 0.8/s avg, ~8/s peak
-         events 20 × 1KB/case → 40 GB/mo · evidence 2 × 2MB/case → 8 TB/mo (object storage)
-         30% manual × 40/day → ~500 reviewers   ⇒ NOT throughput; correctness + deadlines + people
-SCOPE    issuer workflow + provisional credit · network = adapter · ledger = existing · reporting later</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 5 (side notes)</p>
+<svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 5: numbers and scope</title>
+<desc>One hundred million customers and two billion card transactions a month with a dispute rate of a tenth of a percent give two million disputes a month, seventy thousand a day, under one per second on average and about eight at peak. Events are forty gigabytes a month, evidence eight terabytes a month in object storage, and thirty percent manual review at forty cases a day means about five hundred reviewers. So this is not a throughput problem; the scope is the issuer workflow with provisional credit.</desc>
+<defs><marker id="arrow-mk-numbers" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="30" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">100M customers</text><text x="120.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">2B card tx / month</text></g>
+<line x1="210" y1="58" x2="248" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-numbers)"/><text x="229" y="44" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">0.1%</text>
+<g><rect x="250" y="30" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="340.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">2M disputes / month</text><text x="340.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">≈ 70k / day</text></g>
+<line x1="430" y1="58" x2="468" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-numbers)"/><text x="449" y="44" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">÷100k</text>
+<g><rect x="470" y="30" width="180" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="560.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">0.8 / s average</text><text x="560.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">~8 / s peak</text></g>
+<g><rect x="30" y="120" width="190" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="125.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Events</text><text x="125.0" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">20 × 1 KB → 40 GB / month</text></g>
+<g><rect x="250" y="120" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="340.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Evidence</text><text x="340.0" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">2 × 2 MB → 8 TB / month</text></g>
+<g><rect x="460" y="120" width="190" height="56" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="555.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Reviewers</text><text x="555.0" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">30% × 40 / day → ~500</text></g>
+<text x="125" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">half a terabyte a year</text>
+<text x="340" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">object storage, never the database</text>
+<text x="555" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">the real ceiling: people</text>
+<g><rect x="30" y="220" width="620" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="340.0" y="240.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">⇒ NOT a throughput problem: correctness + deadlines + people</text></g>
+<g><rect x="30" y="272" width="620" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="340.0" y="292.0" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#2C2C2A">SCOPE  issuer workflow + provisional credit · network = adapter · ledger = existing · reporting later</text></g>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m5">5:00</p>
@@ -226,12 +262,29 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>Seven: every decision records the policy version that evaluated it, so deploying a new rule can't silently change the meaning of an old decision.</p>
 <p>The trade I'm making up front: this workflow is slow compared to authorisation, weeks not milliseconds, so I'll spend nothing on raw speed and everything on deadline, audit and money correctness.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 7</p><pre>RULES (must hold under retries, crashes, weeks)
-  1 valid transitions only, versioned policy      5 network ref stable across retries
-  2 actor + reason + time on every action         6 evidence versioned, ACL, retention
-  3 deadlines are ROWS, not timers                7 policy version recorded per decision
-  4 each money action has its own key
-  slow workflow · strict correctness</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 7</p>
+<svg viewBox="0 0 680 256" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 7: the seven rules</title>
+<desc>Seven invariants: valid transitions only under a versioned policy; actor, reason and time on every action; deadlines are rows, not timers; each money action has its own key; the network reference is stable across retries; evidence is versioned, access-controlled and retained; and the policy version is recorded per decision. The workflow is slow but correctness is strict.</desc>
+<defs><marker id="arrow-mk-rules" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="20" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="40.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">valid transitions only, versioned policy</text></g>
+<circle cx="30" cy="20" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="30" y="20.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">1</text>
+<g><rect x="350" y="20" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="500.0" y="40.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">actor + reason + time on every action</text></g>
+<circle cx="350" cy="20" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="350" y="20.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">2</text>
+<g><rect x="30" y="70" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="90.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">deadlines are ROWS, not timers</text></g>
+<circle cx="30" cy="70" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="30" y="70.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">3</text>
+<g><rect x="350" y="70" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="500.0" y="90.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">each money action has its own key</text></g>
+<circle cx="350" cy="70" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="350" y="70.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">4</text>
+<g><rect x="30" y="120" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="140.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">network reference stable across retries</text></g>
+<circle cx="30" cy="120" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="30" y="120.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">5</text>
+<g><rect x="350" y="120" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="500.0" y="140.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">evidence versioned, ACL, retention</text></g>
+<circle cx="350" cy="120" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="350" y="120.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">6</text>
+<g><rect x="30" y="170" width="300" height="40" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="190.0" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">policy version recorded per decision</text></g>
+<circle cx="30" cy="170" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="30" y="170.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">7</text>
+<g><rect x="350" y="170" width="300" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="500.0" y="190.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">slow workflow · strict correctness</text></g>
+<text x="340" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#3E4A63">the rules must hold under retries, crashes, concurrent operators and weeks of elapsed time</text>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m8">8:00</p>
@@ -245,14 +298,25 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <div class="turn c"><p class="who">Candidate</p>
 <p>Because a status row can only tell you where the case is, never how it got there or who did it, and this system exists to answer "how did it get there" to an auditor or a regulator. The events are the truth; the snapshot is a materialised current view so reads are one row instead of a replay. They're written in the same commit, and I can verify or rebuild the snapshot from the events at any time. It's event history plus a current aggregate, not full event sourcing where every read replays.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 10</p><pre>NOUNS                                      case = aggregate root
-  DisputeCase   snapshot: state, amount, country, network, reason, owner, policy vN, version
-  CaseEvent     immutable: OPENED, EVIDENCE_ADDED, SUBMITTED, NETWORK_ACKED, WON ...
-  Deadline      row: type, due_at, status OPEN|CLAIMED|DONE|BREACHED
-  EvidenceItem  metadata → object storage: version, checksum, scan status
-  NetworkSubmission  stable ref NB-CB-812-1, acked?
-  FinancialAction    CB-812:PROVISIONAL_CREDIT:v1  (intent here, posting in ledger)
-  events + snapshot in ONE commit; snapshot rebuildable</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 10</p>
+<svg viewBox="0 0 680 372" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 10: the six nouns</title>
+<desc>DisputeCase is the snapshot with state, amount, country, network, reason, owner, policy version and version. CaseEvent is an immutable fact. Deadline is a row with type, due time and status. EvidenceItem is metadata pointing to object storage with version, checksum and scan status. NetworkSubmission is the stable reference and whether it was acknowledged. FinancialAction is one money step with its own ledger key. The case is the aggregate root; events and snapshot are written in one commit.</desc>
+<defs><marker id="arrow-mk-nouns" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="340" y="28" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">case = aggregate root; everything changes through commands</text>
+<g><rect x="30" y="50" width="300" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">DisputeCase</text><text x="180.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">snapshot: state, amount, country, network,</text><text x="180.0" y="102" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">reason, owner, policy vN, version</text></g>
+<g><rect x="350" y="50" width="300" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="500.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">CaseEvent</text><text x="500.0" y="86" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">immutable: OPENED, EVIDENCE_ADDED,</text><text x="500.0" y="102" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">SUBMITTED, NETWORK_ACKED, WON … + actor, reason, time</text></g>
+<g><rect x="30" y="126" width="300" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="144" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Deadline</text><text x="180.0" y="162" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">row: type, due_at,</text><text x="180.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">status OPEN | CLAIMED | DONE | BREACHED</text></g>
+<g><rect x="350" y="126" width="300" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="500.0" y="144" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">EvidenceItem</text><text x="500.0" y="162" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">metadata → object storage:</text><text x="500.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">object version, checksum, scan status</text></g>
+<g><rect x="30" y="202" width="300" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="220" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">NetworkSubmission</text><text x="180.0" y="238" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">stable reference NB-CB-812-1</text><text x="180.0" y="254" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">acked? reused on every retry</text></g>
+<g><rect x="350" y="202" width="300" height="64" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="500.0" y="220" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">FinancialAction</text><text x="500.0" y="238" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">CB-812:PROVISIONAL_CREDIT:v1</text><text x="500.0" y="254" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">intent here, posting in the ledger</text></g>
+<rect x="30" y="296" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="303" dominant-baseline="central" font-size="12" fill="#3E4A63">In the case commit, strongly consistent</text>
+<rect x="30" y="320" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="52" y="327" dominant-baseline="central" font-size="12" fill="#3E4A63">Metadata here; the bytes live elsewhere</text>
+<rect x="30" y="344" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="52" y="351" dominant-baseline="central" font-size="12" fill="#3E4A63">Intent here; the money moves in the ledger</text>
+<text x="650" y="303" text-anchor="end" dominant-baseline="central" font-size="11" fill="#5F5E5A">events + snapshot in ONE commit;</text>
+<text x="650" y="319" text-anchor="end" dominant-baseline="central" font-size="11" fill="#5F5E5A">snapshot rebuildable from events</text>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m11">11:00</p>
@@ -270,9 +334,39 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>Let me start with the simplest thing that could work, and then break it myself. One dispute service, one Postgres with a cases table and a status column, synchronous calls to the network API and the ledger, and a cron job that checks deadlines every hour. Pros: one service, one database, easy to build and to understand, and at under one case a second it's fast enough.</p>
 <p>Four problems I'd hit in the first month. A status column can't tell an auditor who moved the case or why, so audit becomes a separate log that can disagree with the truth. The synchronous network and ledger calls hold a transaction open across a slow external hop; a timeout leaves the case not matching reality, and a retry can credit twice. The cron job is the only guardian of a legal deadline, so if it dies the deadline dies with it. And two operators updating the same row is last-write-wins, silently. Let me fix those in that order; the fixes are the design.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 14</p><pre>v1   [app] → [dispute service] → [Postgres: cases + status column]
-                        ↘ network API (sync)   ↘ ledger (sync)   ↘ cron: deadlines hourly
-     fine at 0.8/s.  flaws: ① no audit  ② sync external calls inside txn  ③ cron = only deadline guard  ④ last write wins</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 14</p>
+<svg viewBox="0 0 680 430" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Chargebacks v1: one service, one table, synchronous calls</title>
+<desc>A mobile app calls one dispute service, which updates a status column in a single Postgres table, calls the card network and the ledger synchronously inside the same transaction, and relies on an hourly cron job for deadlines. Two operators can update the same row. Four numbered flaws are marked.</desc>
+<defs><marker id="arrow-cb-v1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="40" y="40" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">App</text><text x="120.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana taps dispute</text></g>
+<line x1="200" y1="68" x2="258" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="260" y="40" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Dispute service</text><text x="350.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">one process, one codebase</text></g>
+<line x1="350" y1="96" x2="350" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="342" y="147" text-anchor="end" dominant-baseline="central" font-size="11" fill="#5F5E5A">UPDATE cases SET status = …</text>
+<g><rect x="260" y="200" width="180" height="72" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="350.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">One Postgres</text><text x="350.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">cases table, status column</text><text x="350.0" y="252" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">no history, no actor, no reason</text></g>
+<line x1="440" y1="60" x2="498" y2="60" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/><text x="469" y="46" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">in the txn</text>
+<g><rect x="500" y="32" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="50" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network API</text><text x="575.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">called synchronously</text></g>
+<path d="M440 80 L470 80 L470 158 L498 158" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="500" y="130" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="575.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">credit, synchronously</text></g>
+<g><rect x="40" y="200" width="160" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="120.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Cron job</text><text x="120.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">checks deadlines hourly</text></g>
+<line x1="200" y1="228" x2="258" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<g><rect x="500" y="208" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="575.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Two operators</text><text x="575.0" y="244" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">edit the same row</text></g>
+<line x1="498" y1="236" x2="442" y2="236" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v1)"/>
+<circle cx="445" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="445" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
+<circle cx="470" cy="119" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="119.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
+<circle cx="205" cy="205" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="205" y="205.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
+<circle cx="470" cy="260" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="470" y="260.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
+<text x="40" y="318" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">The flaws, in the order they would hurt in the first month:</text>
+<circle cx="47" cy="344" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="344.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">1</text>
+<text x="66" y="344" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">a status column can't say who moved the case or why; audit is a separate log that can disagree</text>
+<circle cx="47" cy="368" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="368.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">2</text>
+<text x="66" y="368" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">external calls inside the transaction: a timeout leaves a mismatch, a retry can credit twice</text>
+<circle cx="47" cy="392" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="392.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">3</text>
+<text x="66" y="392" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">the cron job is the only guardian of a legal deadline; if it dies, the deadline dies with it</text>
+<circle cx="47" cy="416" r="11" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="47" y="416.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#791F1F">4</text>
+<text x="66" y="416" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">two operators on one row: last write wins, silently</text>
+</svg>
+</div>
 
 <div class="turn c"><p class="who">Candidate</p>
 <p>Here's the write path, v2. Every change is a command. A command is authenticated and authorised. I check its idempotency key and the case version it expects. I validate the transition against the current policy version for that country and network. Then, in one commit, I write the new event, the updated snapshot and version, any deadlines created or completed, the idempotency record, and outbox rows for every side effect this transition implies. I return the accepted state by name, "submitted", "provisional credit pending", not an HTTP 200.</p>
@@ -280,25 +374,37 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>Two more pieces. Deadlines: a timer wakes workers near the due time, and an independent sweeper periodically queries the deadline rows for anything due or near due and catches whatever the timer missed. Search: Operations finds cases by country, age, reason, deadline through an index built from events; it may lag; Ops opens the authoritative case by id before acting.</p>
 <p>What v2 costs, so it's said: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to show. I pay that for a rebuildable audit trail and money that can't be credited twice.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 18 (v2)</p><pre>                 command (key, expected version)
-                          │
-              ┌───────────▼────────────┐
-              │ auth · idempotency ·    │
-              │ version check           │
-              ├────────────────────────┤
-              │ validate vs policy vN   │
-              ├────────────────────────┤     ┌──────────────┐    ┌──────────────┐
-              │ ONE COMMIT:             │────▶│ outbox       │───▶│ workers:     │
-              │  event + snapshot       │     │ rows         │    │ network      │
-              │  + deadlines            │     └──────────────┘    │ ledger       │
-              │  + idempotency record   │                         │ storage      │
-              │  + outbox rows          │◀─── observed result ────│ notify       │
-              └───────────┬────────────┘     (new CaseEvent)      └──────────────┘
-                          │
-                 return accepted STATE
-
-   deadline rows ◀── timer (fast path)      search index ◀── events (Ops discovery only)
-                 ◀── sweeper (safety net)</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 18 (v2)</p>
+<svg viewBox="0 0 680 690" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Chargebacks v2: the atomic case commit, side effects after</title>
+<desc>A case command is authenticated and checked for idempotency and expected version, validated against a policy version, then committed atomically as an event, snapshot, deadlines, idempotency record and outbox rows; the accepted state is returned. Outbox workers then call the card network, ledger and notification service and record observed results as new case events. A search index is built for operations, and a timer plus sweeper read saved deadlines. Numbered badges show which v1 flaw each piece fixes.</desc>
+<defs><marker id="arrow-cb-v2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="180" y="40" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Case command</text><text x="300.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana disputes a purchase, key K1</text></g>
+<line x1="300" y1="96" x2="300" y2="118" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="120" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Auth, idempotency, version</text><text x="300.0" y="156" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Expected case version 7</text></g>
+<circle cx="178" cy="118" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="178" y="118.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">4</text>
+<line x1="300" y1="176" x2="300" y2="198" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="200" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Validate transition</text><text x="300.0" y="236" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Against policy version 12</text></g>
+<line x1="300" y1="256" x2="300" y2="278" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="170" y="280" width="260" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="300.0" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">One atomic commit</text><text x="300.0" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Event, snapshot, deadlines, key, outbox</text></g>
+<circle cx="168" cy="278" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="168" y="278.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">1</text>
+<line x1="300" y1="336" x2="300" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="180" y="360" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="300.0" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Return accepted state</text><text x="300.0" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Intent is durable now</text></g>
+<line x1="430" y1="308" x2="458" y2="308" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="280" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="298" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox workers</text><text x="550.0" y="316" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Network, ledger, notify</text></g>
+<circle cx="458" cy="278" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="458" y="278.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">2</text>
+<line x1="550" y1="336" x2="550" y2="358" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="360" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="378" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Observed results</text><text x="550.0" y="396" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Saved as case events</text></g>
+<line x1="550" y1="416" x2="550" y2="438" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-v2)"/>
+<g><rect x="460" y="440" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="458" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Search index</text><text x="550.0" y="476" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Ops discovery only</text></g>
+<g><rect x="460" y="520" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="538" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Timer + sweeper</text><text x="550.0" y="556" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Reads saved deadlines</text></g>
+<circle cx="458" cy="518" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="458" y="518.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">3</text>
+<path d="M458 548 L445 548 L445 330 L432 330" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-cb-v2)"/>
+<rect x="180" y="596" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="202" y="603" dominant-baseline="central" font-size="12" fill="#3E4A63">Strongly consistent: case truth, deadlines, intent</text>
+<rect x="180" y="620" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="202" y="627" dominant-baseline="central" font-size="12" fill="#3E4A63">Asynchronous: side effects, projections, recovery</text>
+<circle cx="187" cy="651" r="11" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="187" y="651.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">n</text><text x="202" y="651" dominant-baseline="central" font-size="12" fill="#3E4A63">Which v1 flaw this piece fixes</text>
+</svg>
+</div>
 
 <div class="turn i"><p class="who">Interviewer</p><p>Why not use a workflow engine for all of this? We have one.</p></div>
 
@@ -328,17 +434,36 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>Now the outcome. If she wins in full, finalise: the credit stands. If she loses, a new action, reverse provisional v1, asks the ledger for a linked reversal; the original posting is untouched. If she wins R$200 of 300, one adjustment for the difference, final adjustment v2, minus 100. Never edit the credit amount.</p>
 <p>The case closes only when both are true: the workflow decision is recorded, and every required ledger action is confirmed. And at the end I reconcile three truths: the network's award, our recorded decision, and the ledger's postings. They must agree on outcome and amount.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 28</p><pre>PROVISIONAL CREDIT
-  policy says yes ─▶ commit: FinancialAction CB-812:PROVISIONAL_CREDIT:v1 + outbox
-                  ─▶ worker → ledger(key) → Ana +300 / clearing −300 → tx 9182
-                  ─▶ event PROVISIONAL_CREDIT_POSTED(tx 9182)
-
-  outcome:  WIN     → finalise (credit stands)
-            LOSS    → CB-812:REVERSE_PROVISIONAL:v1   (linked reversal, original untouched)
-            PARTIAL → CB-812:FINAL_ADJUSTMENT:v2  −100  (one posting for the difference)
-
-  case state  ≠  money state        WON = decision · SETTLED = fact
-  close only when both done · reconcile 3 truths: network award = our decision = ledger</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 28</p>
+<svg viewBox="0 0 680 470" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Provisional credit: intent here, posting there, three truths at the end</title>
+<desc>Policy says credit applies. The case commit saves a FinancialAction with a semantic key and an outbox row; a worker sends it to the ledger, which posts a balanced pair and returns a transaction id, recorded as a case event. The outcome from the network leads to finalisation, a linked reversal, or one adjustment for the difference, each with its own key. The case closes only when decision and settlement agree with the network's award.</desc>
+<defs><marker id="arrow-cb-prov" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Policy says yes</text><text x="105.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">product, country, risk</text></g>
+<line x1="180" y1="68" x2="208" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="210" y="40" width="210" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case commit</text><text x="315.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">FinancialAction + outbox</text><text x="315.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:PROVISIONAL_CREDIT:v1</text></g>
+<line x1="420" y1="72" x2="458" y2="72" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="460" y="40" width="190" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="555.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Worker → ledger</text><text x="555.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Ana +300, clearing −300</text><text x="555.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">returns tx 9182</text></g>
+<path d="M555 104 L555 130 L315 130 L315 106" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<text x="435" y="144" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">observed result comes back as the event PROVISIONAL_CREDIT_POSTED(tx 9182)</text>
+<g><rect x="30" y="190" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="208" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Network award</text><text x="105.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">weeks later</text></g>
+<path d="M180 205 L205 205 L205 190 L228 190" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<line x1="180" y1="218" x2="228" y2="218" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<path d="M180 231 L205 231 L205 246 L228 246" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<g><rect x="230" y="164" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">WIN: finalise</text><text x="325.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">credit stands</text></g>
+<g><rect x="230" y="220" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="238" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">LOSS: linked reversal</text><text x="325.0" y="256" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:REVERSE_PROVISIONAL:v1</text></g>
+<g><rect x="230" y="276" width="190" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="325.0" y="294" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">PARTIAL: one adjustment</text><text x="325.0" y="312" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">CB-812:FINAL_ADJUSTMENT:v2, −100</text></g>
+<text x="325" y="342" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">each outcome is a new posting; the original is never edited</text>
+<g><rect x="460" y="190" width="190" height="110" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="555.0" y="208" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Close only when</text><text x="555.0" y="226" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">decision recorded AND</text><text x="555.0" y="242" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">every ledger action confirmed</text></g>
+<text x="555" y="274" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#BA7517">network award = case decision</text>
+<text x="555" y="288" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#BA7517">= ledger posting</text>
+<line x1="420" y1="245" x2="458" y2="245" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-cb-prov)"/>
+<rect x="30" y="380" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="387" dominant-baseline="central" font-size="12" fill="#3E4A63">Case truth: the intent, its key, and the events that record what the ledger did</text>
+<rect x="30" y="404" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="52" y="411" dominant-baseline="central" font-size="12" fill="#3E4A63">The ledger's job: post once per key, return the prior posting on a retry</text>
+<rect x="30" y="428" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="52" y="435" dominant-baseline="central" font-size="12" fill="#3E4A63">Reconciliation: three truths that must agree on outcome and amount</text>
+<text x="30" y="456" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">WON is a decision. Financially settled is a fact.</text>
+</svg>
+</div>
 
 <div class="turn i"><p class="who">Interviewer</p><p>Why is the key that specific? Why not just the case id?</p></div>
 
@@ -370,12 +495,21 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>What does not scale by adding machines: Operations. If ten times the cases means ten times the manual reviews, that's the real ceiling. So the honest performance lever at scale is automation, and I'd decide what to automate from shadow results, precision and recall by reason and market, not from average handle time.</p>
 <p>And on latency specifically: the customer-facing path is one indexed read plus one commit. Policy evaluation is precomputed at case open. If p99 is bad, it's a hot partition, a lock held across a slow call, or a synchronous call that shouldn't be there, in that order. I would not cache the case; a cached case is exactly what lets two operators decide it twice.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p><pre>10x  = 700k/day ≈ 8/s avg · 80/s peak · 400 GB/mo events · 80 TB/mo evidence · ~5k reviewers
-     measure: p99 cmd, queue age/dependency, oldest deadline, outbox lag, index lag
-     scales: workers, adapters, index, evidence        partition: case store by case_id
-     check first: sweeper query → index (status, due_at), batches, SKIP LOCKED
-     does NOT scale: Ops  → automate from shadow results (precision/recall), not AHT
-     never: cache the case</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 36 (added to the side)</p>
+<svg viewBox="0 0 680 300" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 36: tenfold</title>
+<desc>Tenfold is seven hundred thousand cases a day: eight writes per second on average, eighty at peak, four hundred gigabytes of events and eighty terabytes of evidence a month, and about five thousand reviewers. Measure p99 of the command path, queue age per dependency, oldest deadline, outbox lag and index lag. Workers, adapters, the index and evidence scale horizontally; the case store partitions by case id; the sweeper query is the first thing to check; Operations does not scale, so automate from shadow results; never cache the case.</desc>
+<defs><marker id="arrow-mk-tenfold" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="20" width="620" height="40" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="340.0" y="40.0" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#2C2C2A">10× = 700k/day ≈ 8/s avg · 80/s peak · 400 GB/mo events · 80 TB/mo evidence · ~5k reviewers</text></g>
+<g><rect x="30" y="80" width="200" height="64" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="130.0" y="98" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Measure</text><text x="130.0" y="116" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">p99 cmd · queue age per dependency</text><text x="130.0" y="132" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">oldest deadline · outbox · index lag</text></g>
+<g><rect x="240" y="80" width="200" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="340.0" y="98" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Scales by machines</text><text x="340.0" y="116" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7">workers, adapters, index,</text><text x="340.0" y="132" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7">evidence scanning</text></g>
+<g><rect x="450" y="80" width="200" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="550.0" y="98" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Partition</text><text x="550.0" y="116" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">case store by case_id;</text><text x="550.0" y="132" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">no transaction spans two cases</text></g>
+<g><rect x="30" y="160" width="200" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="130.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Check first</text><text x="130.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">sweeper: index (status, due_at),</text><text x="130.0" y="212" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">bounded batches, SKIP LOCKED</text></g>
+<g><rect x="240" y="160" width="200" height="64" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="340.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">Does NOT scale</text><text x="340.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#A32D2D">Ops: automate from shadow results,</text><text x="340.0" y="212" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#A32D2D">precision / recall, not AHT</text></g>
+<g><rect x="450" y="160" width="200" height="64" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="550.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">Never</text><text x="550.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#A32D2D">cache the case:</text><text x="550.0" y="212" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#A32D2D">two operators decide it twice</text></g>
+<text x="340" y="258" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#3E4A63">ask "tenfold what?" first; answer in the order you would actually look</text>
+</svg>
+</div>
 
 <p class="note">The interviewer makes a suggestion. The prep document says they welcome pushback; silence here reads as passivity.</p>
 <div class="turn i"><p class="who">Interviewer</p><p>I'd actually push you to cache the case. Ops reads are most of the traffic, and a cache in front of the case store is the standard move.</p></div>
@@ -419,15 +553,39 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <div class="turn c"><p class="who">Candidate</p>
 <p>Freeze that policy version for new evaluations first. Then find affected cases by version, which I can do precisely because every decision recorded its version. Classify impact: customer harm, money moved, deadlines affected. Run an approved remediation command that appends corrective events and any required financial actions, case by case, with the reason. Notify customers and regulators as required. Reconcile every corrected case. Then the retrospective: why tests and rollout gates didn't catch it. What I don't do is rewrite the event history or bulk-edit statuses; the wrong decision happened and the record must say so.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 42</p><pre>FAILURES  (what committed · retry with which id · what duplicates · customer sees · alert · operator)
-  network timeout    → UNKNOWN; query same ref; never new ref; persist attempts; "awaiting"
-  workers down 1h    → rows survive; sweeper claims w/ lease; alert time-to-breach; Ops list
-  2 operators        → expected version; one commits, one conflicts; both in audit
-  bad policy v13     → freeze v13; find by version; fix forward w/ events; never rewrite
-  ledger timeout     → retry same key; settlement-pending until observed
-  SPOF = case DB primary → sync replica · auto failover · cmds "try again" · reads from replica
-  degrade: network↓ queue + stable ref · ledger↓ credits pend · storage↓ uploads refused · search↓ id queues
-  insider  → roles · 4-eyes · limits · actor+reason on every event · ledger enforces independently</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 42</p>
+<svg viewBox="0 0 680 482" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 42: failures</title>
+<desc>Eight failures with their answers: network timeout means unknown, query the same reference; workers down for an hour, rows survive and the sweeper claims with a lease; two operators, the expected version lets one commit; a bad policy version is frozen and fixed forward; a ledger timeout retries the same key; the single point of failure is the case database primary with a synchronous replica and automated failover; each dependency degrades rather than dies; insider abuse is contained by roles, four-eyes, limits and the ledger enforcing independently.</desc>
+<defs><marker id="arrow-mk-failures" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="100" y="24" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">Failure</text>
+<text x="430" y="24" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#3E4A63">What committed · what retries with which id · what the customer sees · who is paged</text>
+<g><rect x="30" y="40" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="63.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">network timeout</text></g>
+<line x1="200" y1="63" x2="218" y2="63" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="40" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="56" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">UNKNOWN, not failed: query the same reference; never a new one</text><text x="435.0" y="73" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">persist every attempt; customer sees "awaiting"</text></g>
+<g><rect x="30" y="94" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="117.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">workers down 1 h</text></g>
+<line x1="200" y1="117" x2="218" y2="117" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="94" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="110" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">rows survive; sweeper claims with a lease</text><text x="435.0" y="127" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">alert on time-to-breach; Ops gets the list</text></g>
+<g><rect x="30" y="148" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="171.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">two operators</text></g>
+<line x1="200" y1="171" x2="218" y2="171" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="148" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="164" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">expected version: one commits, one conflicts</text><text x="435.0" y="181" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">both attempts in the audit trail</text></g>
+<g><rect x="30" y="202" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="225.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">bad policy v13</text></g>
+<line x1="200" y1="225" x2="218" y2="225" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="202" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="218" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">freeze v13; find cases by version; fix forward with events</text><text x="435.0" y="235" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">never rewrite history</text></g>
+<g><rect x="30" y="256" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="279.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">ledger timeout</text></g>
+<line x1="200" y1="279" x2="218" y2="279" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="256" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="272" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">retry the same key; settlement-pending until observed</text><text x="435.0" y="289" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">never a second key</text></g>
+<g><rect x="30" y="310" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="333.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">SPOF: case DB primary</text></g>
+<line x1="200" y1="333" x2="218" y2="333" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="310" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="326" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">sync replica, automated failover</text><text x="435.0" y="343" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">commands "try again"; reads from the replica</text></g>
+<g><rect x="30" y="364" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="387.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">dependency down</text></g>
+<line x1="200" y1="387" x2="218" y2="387" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="364" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="380" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">network ↓ queue + stable ref · ledger ↓ credits pend</text><text x="435.0" y="397" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">storage ↓ uploads refused · search ↓ id queues</text></g>
+<g><rect x="30" y="418" width="170" height="46" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="115.0" y="441.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">insider abuse</text></g>
+<line x1="200" y1="441" x2="218" y2="441" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-failures)"/>
+<g><rect x="220" y="418" width="430" height="46" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="435.0" y="434" text-anchor="middle" dominant-baseline="central" font-size="12.5" font-weight="600" fill="#085041">roles, four-eyes, limits, actor + reason on every event</text><text x="435.0" y="451" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">the ledger enforces independently</text></g>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m43">43:00</p>
@@ -440,14 +598,34 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>Inbound: download the response file, checksum it, dedupe by file id so a file delivered twice is ignored, parse row by row, quarantine bad rows without dropping the file, and turn each good row into a case command keyed by file id plus row id. So a half-processed file can be re-run safely.</p>
 <p>Failures change shape but not discipline. Upload timeout is unknown: check the remote directory for the run's file and checksum before re-uploading the same file under the same name; never rebuild with a new run id, that resends two hundred disputes. No response for two days: our cases are fine; the reconciliation queue ages, and its oldest item is what pages someone, plus escalation for any case near its deadline.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 45</p><pre>FILE VARIANT   (same nouns + BatchRun + ReconciliationItem)
-  OUT  claim QUEUED→run 2026-09-06-14 (one txn) → build CSV deterministically → checksum
-       → FTP name=run id → run UPLOADED → rows AWAITING_ANSWER
-  IN   download → checksum → dedupe file id → parse rows → bad→quarantine
-       → command per row, key = file id : row id
-  idempotent at 3 levels: row (submission ref) · file (run id/checksum) · run (unique id)
-  upload timeout = unknown → ls remote first → same file, same name · never new run id
-  alert: age of oldest unanswered row</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 45</p>
+<svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 45: the file variant</title>
+<desc>Outbound: claim every queued submission into a run named by date and slot in one transaction, build the CSV deterministically with a checksum, upload under the run id, mark the run uploaded and the rows awaiting answer. Inbound: download and checksum the response file, dedupe by file id, parse row by row with bad rows quarantined, and turn each good row into a case command keyed by file id and row id. Idempotent at the row, file and run level; an upload timeout means list the remote directory before re-uploading the same file; alert on the age of the oldest unanswered row.</desc>
+<defs><marker id="arrow-mk-file" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="40" y="28" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">OUT</text>
+<g><rect x="40" y="40" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="115.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Claim</text><text x="115.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">QUEUED → run 2026-09-06-14</text></g>
+<line x1="190" y1="68" x2="208" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="210" y="40" width="140" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="280.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Build CSV</text><text x="280.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7">deterministic + checksum</text></g>
+<line x1="350" y1="68" x2="368" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="370" y="40" width="130" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="435.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">FTP upload</text><text x="435.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">name = run id</text></g>
+<line x1="500" y1="68" x2="518" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="520" y="40" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="590.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Run UPLOADED</text><text x="590.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">rows AWAITING_ANSWER</text></g>
+<text x="115" y="112" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">one transaction</text>
+<text x="590" y="112" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">→ reconciliation queue</text>
+<text x="40" y="148" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">IN</text>
+<g><rect x="40" y="160" width="150" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="115.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Download</text><text x="115.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">checksum, keep original</text></g>
+<line x1="190" y1="188" x2="208" y2="188" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="210" y="160" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="280.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Dedupe file id</text><text x="280.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">seen? stop</text></g>
+<line x1="350" y1="188" x2="368" y2="188" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="370" y="160" width="130" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="435.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Parse rows</text><text x="435.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">bad → quarantine</text></g>
+<line x1="500" y1="188" x2="518" y2="188" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-file)"/>
+<g><rect x="520" y="160" width="140" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="590.0" y="178" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Command per row</text><text x="590.0" y="196" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key = file id : row id</text></g>
+<rect x="40" y="244" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="251" dominant-baseline="central" font-size="12" fill="#3E4A63">Idempotent at 3 levels: row (submission ref) · file (run id, checksum) · run (unique id)</text>
+<rect x="40" y="268" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="275" dominant-baseline="central" font-size="12" fill="#3E4A63">Upload timeout = unknown → list the remote directory first → same file, same name · never a new run id</text>
+<text x="40" y="300" text-anchor="start" dominant-baseline="central" font-size="12" fill="#3E4A63">Alert: age of the oldest unanswered row.</text>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m45">45:00</p>
@@ -459,12 +637,28 @@ SCOPE    issuer workflow + provisional credit · network = adapter · ledger = e
 <p>For Colombia: centralise the mechanics and a governed policy framework; the Colombia owner publishes a versioned rule package under common contracts and tests. No fork, and no forcing every local rule into global code.</p>
 <p>The trade-off I'd flag as biggest: automation versus human review. I'd automate only what shadow results prove we can measure, gradually, with thresholds and easy escalation.</p></div>
 
-<div class="draw"><p class="label">Whiteboard, minute 49</p><pre>ROLLOUT  1 country · 1 network · 1 reason family
-         shadow (no side effects possible) → submissions [kill switch] → money [kill switch]
-OWNERS   platform: mechanics · legal: rule meaning · ops: queues · network: adapters
-         ledger: money · product: customer wording
-CO       central mechanics + versioned policy package per country; no fork
-TRADE    automation vs review → decide from shadow precision/recall</pre></div>
+<div class="draw"><p class="label">Whiteboard, minute 49</p>
+<svg viewBox="0 0 680 280" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Whiteboard, minute 49: rollout and ownership</title>
+<desc>Rollout: one country, one network, one reason-code family; shadow with no side effects possible, then submissions behind a kill switch, then money actions behind their own. Owners: platform owns mechanics, Legal owns rule meaning, Ops owns queues, network teams own adapters, the ledger team owns money, Product owns wording. Colombia gets central mechanics plus a versioned policy package, no fork. The biggest trade-off is automation versus review, decided from shadow precision and recall.</desc>
+<defs><marker id="arrow-mk-rollout" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="340" y="26" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">ROLLOUT  one country · one network · one reason-code family</text>
+<g><rect x="30" y="44" width="180" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="120.0" y="62" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Shadow</text><text x="120.0" y="80" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">no side effects possible</text></g>
+<line x1="210" y1="72" x2="238" y2="72" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-rollout)"/>
+<g><rect x="240" y="44" width="190" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="335.0" y="62" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Submissions</text><text x="335.0" y="80" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">behind a kill switch</text></g>
+<line x1="430" y1="72" x2="458" y2="72" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-mk-rollout)"/>
+<g><rect x="460" y="44" width="190" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="555.0" y="62" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Money actions</text><text x="555.0" y="80" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">behind its own kill switch</text></g>
+<text x="340" y="128" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#3E4A63">OWNERS</text>
+<g><rect x="30" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="77.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Platform</text><text x="77.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">mechanics</text></g>
+<g><rect x="135" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="182.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Legal</text><text x="182.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">rule meaning</text></g>
+<g><rect x="240" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="287.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ops</text><text x="287.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">queues</text></g>
+<g><rect x="345" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="392.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Network</text><text x="392.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">adapters</text></g>
+<g><rect x="450" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="497.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="497.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">money</text></g>
+<g><rect x="555" y="142" width="95" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="602.5" y="160" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Product</text><text x="602.5" y="178" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">wording</text></g>
+<g><rect x="30" y="216" width="300" height="44" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180.0" y="234" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#085041">CO: central mechanics + versioned</text><text x="180.0" y="252" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">policy package per country; no fork</text></g>
+<g><rect x="350" y="216" width="300" height="44" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="500.0" y="234" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="600" fill="#633806">TRADE: automation vs review</text><text x="500.0" y="252" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">decide from shadow precision / recall</text></g>
+</svg>
+</div>
 
 <!-- ============================================================ -->
 <p class="clock" id="m50">50:00</p>
@@ -508,7 +702,7 @@ TRADE    automation vs review → decide from shadow precision/recall</pre></div
 <p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time; the point is that the answer doesn't depend on when it's asked.</p>
 
 <footer>
-  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>.
+  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The whiteboards were redrawn as diagrams on 30 September 2026. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>.
 </footer>
 </main>
 </div>
