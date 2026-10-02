@@ -204,6 +204,9 @@ def md_blocks(src):
             flush()
             spoken_callout = False
             continue
+        if re.match(r"\[[^\]]+\]:\s*\S+", s):
+            flush()
+            continue
         if s.startswith("<") or s.startswith("#") or s.startswith("|"):
             flush()
             if s.startswith("|"):

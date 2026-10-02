@@ -262,7 +262,8 @@
     <li><a href="#failures">8. When things break</a></li>
     <li><a href="#tenfold">9. "Ten times the volume"</a></li>
     <li><a href="#rollout">10. Rollout, in three lines</a></li>
-    <li><a href="#never">11. Never say</a></li>
+    <li><a href="#lead">11. Lead signals, in their words</a></li>
+    <li><a href="#never">12. Never say</a></li>
   </ol>
 </nav>
 <main>
@@ -437,7 +438,57 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <p>One transfer type, one country. Shadow the old ledger: post to both, compare totals, nobody reads the new one. Then a small cohort behind a kill switch. Partition only when a measurement says so, never pre-emptively.</p>
 <p><strong>Schema changes after launch:</strong> add fields, never repurpose. Expand, migrate, contract. Events carry a schema version, and consumers accept N and N+1 during a rollout. Never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache. Never the thing that decides, which is the available balance.</p>
 
-<h2 id="never">11. Never say</h2>
+<h2 id="lead">11. Lead signals, in their words</h2>
+<p class="question">The Buenos Aires Lead posting names four things: trade-offs said out loud, failure-domain isolation, observability, and disaster recovery. Here is where each one lives in this design, and the sentence to say.</p>
+
+<h3>Communicating trade-offs</h3>
+<p>A trade-off has three parts: the choice, what it buys, and what it costs. Say all three, every time. Three choices carry this design.</p>
+<ul>
+  <li><strong>The clearing account instead of two-phase commit.</strong> It buys transfers across shards with no locks held between databases, and an in-between state that anyone can see. It costs a Processing state and a clearing balance to watch.</li>
+  <li><strong>A version check instead of a row lock.</strong> It buys no waiting and no deadlocks. It costs retries when one account is hot.</li>
+  <li><strong>The outbox instead of publishing inside the request.</strong> It buys a "Sent" that never waits on Kafka. It costs a feed that can lag behind the money.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"Clearing instead of 2PC: I gain operability and lose the clean all-or-nothing. The customer sees Processing between the legs, and a stuck transfer is a visible row with an age, not an in-doubt lock."</p></div>
+
+<h3>Failure-domain isolation</h3>
+<p>A failure domain is the set of things that break together. A Lead keeps each domain small, so that a failure stays local and the rest of the bank keeps working.</p>
+<ul>
+  <li><strong>A partition is a failure domain.</strong> Customers split by customer id. When one partition goes down, only its customers wait, and transfers to them sit in clearing.</li>
+  <li><strong>The posting path is its own domain.</strong> Kafka, the projections and the feed sit after the commit. Their failure makes the list late, never a debit wrong.</li>
+  <li><strong>Hot accounts get split.</strong> A merchant or clearing account is scoped per day, per shard and per rail, so one busy account can't slow every customer.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"A partition is my failure domain. If one goes down, only its customers wait. Transfers to them sit in clearing, visible by amount and age, and nothing else stops."</p></div>
+
+<h3>Observability</h3>
+<p>Measure the things that move money wrongly or late. Kafka's health on its own says little about the customer.</p>
+<ul>
+  <li><strong>Six numbers to watch:</strong>
+    <ul>
+      <li>Posting p99.</li>
+      <li>Version conflicts per account.</li>
+      <li>The age of the oldest outbox row.</li>
+      <li>Replica lag.</li>
+      <li>The clearing balance, and the age of its oldest item.</li>
+      <li>Reconciliation mismatches.</li>
+    </ul>
+  </li>
+  <li><strong>One id across everything.</strong> The client's key and the transaction id travel into every entry, event and external call. So one id tells the whole story of one transfer.</li>
+  <li><strong>One alert does most of the work.</strong> The age of the oldest outbox row catches Kafka down, a dead worker, a poison row and a partition with no consumer.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"I alert on the age of the oldest outbox row, not on Kafka health. That one number catches Kafka down, a crashed worker and a poison row. And clearing is watched like a customer account, by amount and by age."</p></div>
+
+<h3>Disaster recovery</h3>
+<p>Disaster recovery has two numbers. The recovery point is how much committed money you may lose. The recovery time is how long until the bank works again. State both for each disaster, and say who decides.</p>
+<ul>
+  <li><strong>A zone dies.</strong> The synchronous replica in another zone takes over in seconds. Recovery point: zero. During the switch, new debits are rejected and reads keep working from projections.</li>
+  <li><strong>A region dies.</strong> An asynchronous replica in a second region takes over, and a human decides when. Recovery point: the last few seconds of transfers. The books still balance, because a commit is lost whole, never half. Reconciliation against the event stream, the rails and the client's own record finds the lost transfers. They are re-posted once, under their original keys.</li>
+  <li><strong>Bad code or bad data.</strong> Entries are never edited, so recovery is fix-forward with new linked postings. Projections rebuild from the journal. An account aggregate is rebuilt from its entries in an audited repair.</li>
+  <li><strong>Restores are fast because of checkpoints.</strong> A rebuild replays each account from its last checkpoint, not from the first entry.</li>
+</ul>
+<p>The region numbers are an assumption to say out loud. Synchronous replication across regions would make the recovery point zero, but every commit would pay a 50 to 150 ms hop. The posting budget is tens of milliseconds, so the trade is a few seconds of exposure that reconciliation repairs.</p>
+<div class="say"><p class="label">Say it</p><p>"Losing a zone costs seconds and no money. Losing a region is a human decision with a few seconds of exposure. The books still balance because commits are lost whole, and reconciliation with the rails and the clients re-posts what was lost, once, under the original keys."</p></div>
+
+<h2 id="never">12. Never say</h2>
 <ul>
   <li>"Kafka gives us exactly-once." (Your ledger makes the effect happen once; the network can't.)</li>
   <li>"Roll back the transfer because the event didn't go out." (Committed money is a fact; the outbox republishes.)</li>

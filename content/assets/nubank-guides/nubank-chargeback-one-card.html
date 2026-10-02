@@ -262,7 +262,8 @@
     <li><a href="#failures">8. When things break</a></li>
     <li><a href="#tenfold">9. "Ten times the volume"</a></li>
     <li><a href="#rollout">10. Rollout, in three lines</a></li>
-    <li><a href="#never">11. Never say</a></li>
+    <li><a href="#lead">11. Lead signals, in their words</a></li>
+    <li><a href="#never">12. Never say</a></li>
   </ol>
 </nav>
 <main>
@@ -446,7 +447,56 @@
 <p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
 <p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file. Never rebuild with a new run id.</p>
 
-<h2 id="never">11. Never say</h2>
+<h2 id="lead">11. Lead signals, in their words</h2>
+<p class="question">The Buenos Aires Lead posting names four things: trade-offs said out loud, failure-domain isolation, observability, and disaster recovery. Here is where each one lives in this design, and the sentence to say.</p>
+
+<h3>Communicating trade-offs</h3>
+<p>A trade-off has three parts: the choice, what it buys, and what it costs. Say all three, every time. Three choices carry this design.</p>
+<ul>
+  <li><strong>The outbox instead of a synchronous call.</strong> It buys a case that is never half done. It costs a worker fleet and in-flight states, such as "credit pending", that the product has to show.</li>
+  <li><strong>Events plus a snapshot instead of a status column.</strong> It buys the audit trail and "the case as of any date". It costs two writes per command.</li>
+  <li><strong>Case state apart from money state.</strong> It buys honesty: "won" is a decision, "paid" is a fact. It costs a reconciliation of three truths before the case closes.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"I chose the outbox over calling the ledger inside the request. I gain a case that can't be half done. I lose immediacy: Ana sees 'credit pending' for a few seconds, and the product has to show that state."</p></div>
+
+<h3>Failure-domain isolation</h3>
+<p>A failure domain is the set of things that break together. A Lead keeps each domain small, so that a failure stays local and the rest of the platform keeps working.</p>
+<ul>
+  <li><strong>One domain per dependency.</strong> The network, the ledger, storage, search and notifications each sit behind their own adapter and outbox rows. When one of them dies, only its work waits.</li>
+  <li><strong>One kill switch per side effect.</strong> Network submissions and money actions stop separately. Committed work stays visible while a switch is off.</li>
+  <li><strong>The case store splits by case id</strong> when failover size or isolation demands it, not for throughput. No transaction spans two cases, so a split never breaks a rule.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"Each dependency is its own failure domain. If the network dies, only submissions queue. Cases still open, operators still decide, and credits still reach the ledger with their keys."</p></div>
+
+<h3>Observability</h3>
+<p>Measure the things that hurt a customer or break a legal deadline. Raw error counts come second.</p>
+<ul>
+  <li><strong>Five numbers to watch:</strong>
+    <ul>
+      <li>Queue age per dependency.</li>
+      <li>The oldest unprocessed deadline, and its time to breach.</li>
+      <li>The age of the oldest outbox row.</li>
+      <li>The p99 of the command path.</li>
+      <li>Reconciliation exceptions.</li>
+    </ul>
+  </li>
+  <li><strong>One id across everything.</strong> Each command carries a correlation id into every event, message and external call. So one id tells the whole story of one case.</li>
+  <li><strong>The event history is the first debugging tool.</strong> "What happened to CB-812?" is a query, not an investigation.</li>
+</ul>
+<div class="say"><p class="label">Say it</p><p>"When one case is wrong, I read its events. When many are wrong, I read the dependency dashboards. External latency up with healthy queues means a dependency. Queue age up with normal latency means us."</p></div>
+
+<h3>Disaster recovery</h3>
+<p>Disaster recovery has two numbers. The recovery point is how much committed work you may lose. The recovery time is how long until the platform works again. State both for each disaster, and say who decides.</p>
+<ul>
+  <li><strong>A zone dies.</strong> The synchronous replica in another zone takes over in seconds. Recovery point: zero. During the switch, commands get "try again" and reads keep working.</li>
+  <li><strong>A region dies.</strong> An asynchronous replica in a second region takes over, and a human decides when. Recovery point: the last few seconds of commands. The apps retry unanswered commands with their keys. Reconciliation with the network and the ledger finds any side effect that went out but was not recorded.</li>
+  <li><strong>Bad code or a bad policy corrupts cases.</strong> History is immutable, so recovery is fix-forward. Freeze the version, find the cases by version, and write correcting events. Rebuild the snapshots from the events.</li>
+  <li><strong>The deadline rows survive any restore.</strong> A restored database still knows every legal obligation, because deadlines are rows, not timers in memory.</li>
+</ul>
+<p>The region numbers are an assumption to say out loud. Synchronous replication across regions would make the recovery point zero, but every commit would pay a 50 to 150 ms hop. For a workflow that runs over weeks, a few seconds of exposure that reconciliation repairs is the better trade.</p>
+<div class="say"><p class="label">Say it</p><p>"Losing a zone costs us seconds and no data. Losing a region is a human decision: the replica there can miss the last few seconds of commands. The apps retry with the same keys, and reconciliation against the network and the ledger catches anything that went out but wasn't recorded."</p></div>
+
+<h2 id="never">12. Never say</h2>
 <ul>
   <li>"Opening the case credits the customer." (Credit is a separate policy decision.)</li>
   <li>"The scheduler will handle the deadline." (The row is the obligation.)</li>
