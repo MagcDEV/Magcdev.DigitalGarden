@@ -294,11 +294,11 @@
 <ol>
   <li>Are we the <strong>issuer</strong> (the customer's bank) or the acquirer (the merchant's bank)? Assume issuer.</li>
   <li>Which countries and networks on day one? Each changes rules and deadlines.</li>
-  <li>Who owns the rules and deadlines? Legal does; we implement them as <strong>versioned policy</strong>.</li>
+  <li>Who owns the rules and deadlines? Legal does. We implement them as <strong>versioned policy</strong>.</li>
   <li>Does opening a case move money? No. Provisional credit is a separate decision.</li>
   <li>What already exists? A ledger, a card transaction store, identity, storage, notifications. We integrate, we don't rebuild.</li>
 </ol>
-<p>Plus one shape question: is the network a real-time API or files by FTP? Design for the API; say how a file changes it.</p>
+<p>Plus one shape question: is the network a real-time API or files by FTP? Design for the API. Say how a file changes it.</p>
 
 <h3>The features (what users can do)</h3>
 <p>A customer disputes a transaction and sees its status. An operator reviews evidence and decides. The platform submits to the network and records the outcome. The platform asks the ledger for credit, and for its reversal. <strong>Below the line:</strong> fraud scoring, the merchant side, reporting.</p>
@@ -330,7 +330,7 @@
   <div><span>Deadline</span><span>A row with a due time, a type and a status. Not a timer in memory.</span></div>
   <div><span>EvidenceItem</span><span>Metadata about a document: where the bytes are, checksum, scan status, version. The bytes live in object storage.</span></div>
   <div><span>NetworkSubmission</span><span>The stable reference we sent to the network, and whether they acknowledged it.</span></div>
-  <div><span>FinancialAction</span><span>One money step with its own ledger key, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. We record the intent here; the ledger posts the money.</span></div>
+  <div><span>FinancialAction</span><span>One money step with its own ledger key, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. We record the intent here. The ledger posts the money.</span></div>
 </div>
 <p><strong>Three operations.</strong> Open a case (with an idempotency key from the app). Run a command on a case (type, expected version, reason, key). Read a case (snapshot, or history as of a date). Everything is a command on the case. Nobody edits a status column.</p>
 
@@ -395,13 +395,13 @@
   <li><strong>Ana taps "I don't recognise this purchase".</strong> Her app creates an idempotency key, K1, once for this tap, and sends an OpenDispute command with it. If the network is slow and the app retries, it sends the same K1.</li>
   <li><strong>The case service checks, then validates.</strong> Is this really Ana? Has K1 been seen before (if yes, return the same case and stop)? What case version does the command expect (none, it's new)? Then, under policy version 12 for Brazil and Visa: Ana owns the card, there is no open case for this transaction, and the purchase is inside the dispute window.</li>
   <li><strong>One commit writes five things together.</strong> A CaseEvent OPENED (actor Ana, time, policy v12). The DisputeCase snapshot (state OPENED, version 1). A Deadline row: Ana must supply evidence within 10 days. The record of K1. And outbox rows: notify Ana, and evaluate provisional credit. All or nothing.</li>
-  <li><strong>The service answers "case CB-812 opened".</strong> Ana's app shows "under review". Nothing outside the platform has been called yet; that is on purpose. The promise to call them is already saved, in the outbox rows.</li>
-  <li><strong>After the commit, workers read the outbox.</strong> The credit worker evaluates policy: Ana is owed provisional credit. It sends a RequestProvisionalCredit command, which goes through boxes 2 and 3 again; that commit writes a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and a new outbox row. The ledger worker picks it up and calls the ledger with exactly that key.</li>
-  <li><strong>The ledger posts the money.</strong> +300 to Ana, −300 to the disputes clearing account, and it returns transaction 9182. If the call times out, the worker retries the same key; the ledger either returns 9182 or posts once now. Never a new key.</li>
+  <li><strong>The service answers "case CB-812 opened".</strong> Ana's app shows "under review". Nothing outside the platform has been called yet. That is on purpose. The promise to call them is already saved, in the outbox rows.</li>
+  <li><strong>After the commit, workers read the outbox.</strong> The credit worker evaluates policy: Ana is owed provisional credit. It sends a RequestProvisionalCredit command, which goes through boxes 2 and 3 again. That commit writes a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and a new outbox row. The ledger worker picks it up and calls the ledger with exactly that key.</li>
+  <li><strong>The ledger posts the money.</strong> +300 to Ana, −300 to the disputes clearing account, and it returns transaction 9182. If the call times out, the worker retries the same key. The ledger either returns 9182 or posts once now. Never a new key.</li>
   <li><strong>What the worker saw comes back as an event.</strong> PROVISIONAL_CREDIT_POSTED, tx 9182. Ana sees R$300 in her account. The case still says "under review": won is a decision and paid is a fact, and neither has happened yet.</li>
-  <li><strong>Ana uploads a screenshot</strong> of her chat with the merchant. The app asks for a staged upload; the bytes go straight to encrypted object storage, which returns a token and a checksum. The case row never holds the file.</li>
+  <li><strong>Ana uploads a screenshot</strong> of her chat with the merchant. The app asks for a staged upload. The bytes go straight to encrypted object storage, which returns a token and a checksum. The case row never holds the file.</li>
   <li><strong>A command links that exact object version to the case</strong> (through box 3 again): an EvidenceItem in state UPLOADED. A scan worker checks checksum, format and malware, then a command moves it to EVIDENCE_READY. Only now is it evidence the platform may send.</li>
-  <li><strong>Submission to the network.</strong> A worker evaluates eligibility under policy v12: ELIGIBLE. A Submit command writes a NetworkSubmission with reference <code>NB-CB-812-1</code> and an outbox row, and returns "submitted", which means durably intended. The adapter sends it with that reference. The network acknowledges; a worker writes NETWORK_ACKED (step 7 again). In that same commit the evidence deadline is completed and a new Deadline row is created: the merchant has 30 days to respond. Had the adapter's call timed out, it would query the network by <code>NB-CB-812-1</code> before ever sending again.</li>
+  <li><strong>Submission to the network.</strong> A worker evaluates eligibility under policy v12: ELIGIBLE. A Submit command writes a NetworkSubmission with reference <code>NB-CB-812-1</code> and an outbox row, and returns "submitted", which means durably intended. The adapter sends it with that reference. The network acknowledges. A worker writes NETWORK_ACKED (step 7 again). In that same commit the evidence deadline is completed and a new Deadline row is created: the merchant has 30 days to respond. Had the adapter's call timed out, it would query the network by <code>NB-CB-812-1</code> before ever sending again.</li>
   <li><strong>Thirty days of waiting.</strong> The deadline row sits in the database. A timer wakes a worker near the due time. A sweeper reads due and near-due rows every few minutes, in case the timer died. Alerts fire before breach. In Ana's case nothing fires, because the network answers in time.</li>
   <li><strong>Meanwhile, Ops can see it.</strong> Every event also updates the search index. So an operator sees CB-812 in the "awaiting network" queue with its age and deadline. If the index lags, Ops still opens the real case by id before acting on it.</li>
   <li><strong>Week four: the award.</strong> The network returns its decision. A Decide command (boxes 2, 3) writes the event. Won in full: the credit stands and the FinancialAction is finalised. Lost: a new action <code>CB-812:REVERSE_PROVISIONAL:v1</code> asks the ledger for a linked reversal, through steps 5, 6 and 7 again. Ana may go negative, which is a product decision made before launch. Won R$200 of 300: one adjustment <code>FINAL_ADJUSTMENT:v2</code> for −100. The case closes only when the decision is recorded <em>and</em> every ledger action is confirmed. The three truths must agree: the network's award, our decision, the ledger's postings. Ana gets a notification. The events tell the whole story to any auditor, as of any date.</li>
@@ -444,7 +444,7 @@
 
 <h2 id="rollout">10. Rollout, in three lines</h2>
 <p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
-<p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file; never rebuild with a new run id.</p>
+<p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file. Never rebuild with a new run id.</p>
 
 <h2 id="never">11. Never say</h2>
 <ul>
@@ -458,7 +458,7 @@
 </ul>
 
 <footer>
-  Condensed on 1 October 2026 from <em>The chargeback platform, end to end</em> and <em>Mock interview: the chargeback platform, minute by minute</em>. Every number and key here matches those guides. When a line feels thin, the section with the same name in the big guide is the place to read. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
+  Condensed on 1 October 2026 from <em>The chargeback platform, end to end</em> and <em>Mock interview: the chargeback platform, minute by minute</em>. Every number and key here matches those guides. When a line feels thin, the section with the same name in the big guide is the place to read. Prose shortened on 2 October 2026 toward Simplified Technical English (ASD-STE100 Issue 9), at about 80% strictness. Spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>

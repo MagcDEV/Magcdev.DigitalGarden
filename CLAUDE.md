@@ -4,9 +4,9 @@ Read this every time you work on this project.
 
 ## What This Is
 
-Manuel's study notebook for his software engineering career, rendered with **Quartz** (Obsidian-flavored markdown → static site) and readable in **Obsidian** locally. Any topic that helps the career belongs here: system design, Go and other languages, DSA and LeetCode, tools, architecture, a specific company's interview, career topics. Manuel decides what goes in; the LLM writes it up clearly and links it. There is no fixed syllabus and no required pipeline.
+Manuel's study notebook for his software engineering career, rendered with **Quartz** (Obsidian-flavored markdown → static site) and readable in **Obsidian** locally. Any topic that helps the career belongs here: system design, Go and other languages, DSA and LeetCode, tools, architecture, a specific company's interview, career topics. Manuel decides what goes in. The LLM writes it up clearly and links it. There is no fixed syllabus and no required pipeline.
 
-The `digital-garden` skill in `.claude/skills/` carries the operations (add, study, capture, review, build a guide, condense, quiz, enhance, what next) and the writing rules. This file holds the layout and conventions.
+The `digital-garden` skill in `.claude/skills/` carries the operations (add, study, capture, review, build a guide, condense, quiz, enhance, what next). The `ste-study-guides` skill carries the writing rules. This file holds the layout and conventions.
 
 ## Layout
 
@@ -83,7 +83,7 @@ description: "One-line summary used in listings and OG cards."
 ## Quartz Compatibility Rules
 
 - Use `[[wikilinks]]` for internal links (Quartz resolves shortest-path)
-- Use `> [!type]` callout syntax (tip, info, warning, abstract, etc.)
+- Use `> [!type]` callout syntax (tip, info, warning, abstract, and others)
 - Mermaid diagrams work inside ` ```mermaid ` code blocks
 - LaTeX works with `$inline$` and `$$block$$` (KaTeX engine)
 - Files in `templates/` and `private/` are ignored by Quartz
@@ -92,10 +92,9 @@ description: "One-line summary used in listings and OG cards."
 
 ## Writing Standards
 
-- **Self-contained notes.** Readable without any other page open; links let the reader go deeper.
-- **Plain, tight prose.** One idea per sentence, 20 words or fewer for instructions and 25 for explanation, active voice, present tense. One term per concept; use the term the existing notes use.
-- **Spoken lines stay spoken.** Scripts, "say it" boxes and "never say" lists keep their rhythm.
-- **Code that runs.** Go by default; the topic's own language when the topic is another language or tool.
+- **Self-contained notes.** Readable without any other page open. Links let the reader go deeper.
+- **Simplified Technical English at about 80%.** The `ste-study-guides` skill in `.claude/skills/` holds the rules (ASD-STE100 Issue 9 without its dictionary), the spoken-line exemptions, and a checker script. Use it for every guide and explanation.
+- **Code that runs.** Go by default. Use the topic's own language when the topic is another language or tool.
 - **Depth over breadth.** One thorough note beats five shallow ones.
 - **Trade-offs on design topics.** Compare alternatives and say what each costs.
 - **Recognition signals on pattern notes.** "Use this when you see…", a Go template, a graded problem list.

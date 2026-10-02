@@ -6,7 +6,7 @@ description: |
 
 # Study notebook operator
 
-The garden is Manuel's notebook for his software engineering career. He decides what goes in; you write it up clearly and link it. Any topic that helps the career belongs: a Kubernetes concept, a company's interview rubric, a Go idiom, a LeetCode pattern, a book chapter, a tool. There is no fixed syllabus and no required pipeline.
+The garden is Manuel's notebook for his software engineering career. He decides what goes in. You write it up clearly and link it. Any topic that helps the career belongs: a Kubernetes concept, a company's interview rubric, a Go idiom, a LeetCode pattern, a book chapter, a tool. There is no fixed syllabus and no required pipeline.
 
 Read `CLAUDE.md` at the project root first. It holds the layout and conventions as they are right now.
 
@@ -21,7 +21,7 @@ content/
 └── index.md
 ```
 
-A **standalone guide** is a self-contained HTML page under `content/assets/<subject>/`, embedded from a wiki page with `cssclasses: [<subject>]` through an `<embed class="guide-frame">` plus an "Open full page" form. `content/wiki/system-design/nubank-study-notes.md` is the model. Use it for long, designed material (diagrams, mock interviews, one-card summaries); use markdown for everything else.
+A **standalone guide** is a self-contained HTML page under `content/assets/<subject>/`, embedded from a wiki page with `cssclasses: [<subject>]` through an `<embed class="guide-frame">` plus an "Open full page" form. `content/wiki/system-design/nubank-study-notes.md` is the model. Use it for long, designed material: diagrams, mock interviews, one-card summaries, animations. Use markdown for everything else.
 
 Source files carry `processed` and `compiled_to` so the inbox can be swept later. A note may exist with no source behind it.
 
@@ -37,7 +37,9 @@ Pick the branch the request fits. Each one ends with the notebook updated and cr
 
 **Process sources.** Sweep `sources/` for `processed: false` and run the capture branch on each. Done when none remain and the report lists each source and the notes it touched.
 
-**Build a study guide** (a long guide, a mock interview, a condensed card). Write a standalone HTML guide in the house style of the existing ones: table of contents, sections with a one-line question under each heading, SVG diagrams in the three-colour scheme, a "say it" box for spoken lines, light and dark palettes. Embed it from the area's wiki page. Done when it opens standalone and inside the wiki page in both themes.
+**Build a study guide** (a long guide, a mock interview, a condensed card, an animation). Write a standalone HTML guide in the house style of the existing ones. That style has a table of contents and a one-line question under each heading. It has SVG diagrams in the three-colour scheme, "say it" boxes for spoken lines, and light and dark palettes.
+
+Write the guide's prose under the `ste-study-guides` skill. Embed the guide from the area's wiki page. Done when its checker targets pass and it opens standalone and inside the wiki page in both themes.
 
 **Condense.** Turn a long note or guide into the part worth memorising, in the order it is said aloud. Keep the originals' terms exactly.
 
@@ -49,14 +51,13 @@ Pick the branch the request fits. Each one ends with the notebook updated and cr
 
 ## Writing the notes
 
-- **Self-contained.** A note reads without any other page open; links let the reader go deeper.
-- **Plain, tight prose.** One idea per sentence, 20 words or fewer for instructions and 25 for explanation, active voice, present tense. One term per concept across a note and its guides; pick the term the existing notes use.
-- **Spoken lines stay spoken.** Scripts, "say it" boxes and "never say" lists keep their rhythm; the length rule applies to explanation, not to what is said aloud.
+- **Self-contained.** A note reads without any other page open. Links let the reader go deeper.
+- **Simplified Technical English at about 80%.** Load the `ste-study-guides` skill for every guide, card, mock or explanation you write or rewrite, and run its checker before you call the work done. It owns the sentence, term and paragraph rules, and it says which spoken lines stay exempt.
 - **Code that runs.** Go by default. When the topic is another language or tool, write that language.
 - **Depth over breadth.** One thorough note beats five shallow ones.
 - **Trade-offs on design topics.** Compare alternatives and say what each costs.
 - **Recognition signals on pattern notes.** "Use this when you see…", a Go template, and a graded problem list.
-- **Links everywhere.** Every concept links to its neighbours; the notebook's value is the graph.
+- **Links everywhere.** Every concept links to its neighbours. The notebook's value is the graph.
 - **Quartz markdown.** `[[wikilinks]]`, `> [!type]` callouts, ` ```go ` blocks, Mermaid diagrams, KaTeX math. Tags live in frontmatter.
 
 Frontmatter templates for sources, wiki notes and guide pages: `references/frontmatter.md`.

@@ -293,7 +293,8 @@
 <header class="hero">
   <h1>The chargeback platform, end to end</h1>
   <p class="lede">How a multi-country card dispute platform fits together: cases, evidence, deadlines, network submissions and the money it asks the ledger to move. Written to be understood first, then practised in the four steps of the method Nubank's interviewers recommend: requirements, entities and API, a high-level design that serves the features, and deep dives one quality at a time.</p>
-  <p class="source">Compiled from the <em>Nubank Lead System Design Study Guide</em> (Mock B: card disputes and chargebacks), plus what 2026 candidates report about the round itself (see section 2). Companion to the ledger notes; the ledger is the system this platform sends money commands to. Updated 6 September 2026; the numbers, the v1 storyline, the single point of failure, the degradation matrix and the security table were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>). Restructured 1 October 2026 around the four steps of the Hello Interview method (see <em>The Hello Interview method, applied to Nubank's hour</em>); the v1 in section 6 now starts at the rung a Lead draws.</p>
+  <p class="source">Compiled from the <em>Nubank Lead System Design Study Guide</em> (Mock B: card disputes and chargebacks), plus what 2026 candidates report about the round itself (see section 2). Companion to the ledger notes. The ledger is the system this platform sends money commands to. Updated 6 September 2026. The numbers, the v1 storyline, the single point of failure, the degradation matrix and the security table were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>).</p>
+  <p class="source">Restructured 1 October 2026 around the four steps of the Hello Interview method (see <em>The Hello Interview method, applied to Nubank's hour</em>). The v1 in section 6 now starts at the rung a Lead draws.</p>
 </header>
 
 <!-- ============================================================ -->
@@ -302,7 +303,8 @@
 
 <p class="thesis">The chargeback platform is a case-management system. It owns the story of one dispute: what happened, who did it, when, and under which rule. It asks other systems to do things: the card network to carry the dispute, object storage to hold documents, the ledger to move money. It is not the ledger and it is not the network.</p>
 
-<p>The ledger had to be fast and never wrong about money. This system is slow: a case lives for weeks. Its job has four parts. Never lose a deadline. Never forget a side effect it promised. Never lose the audit trail. Never confuse "the case is won" with "the customer has been paid". Here is the complete system you would arrive at by the end of the interview:</p>
+<p>The ledger had to be fast and never wrong about money. This system is slow: a case lives for weeks.</p>
+<p>Its job has four parts. Never lose a deadline. Never forget a side effect it promised. Never lose the audit trail. Never confuse "the case is won" with "the customer has been paid". Here is the complete system you would arrive at by the end of the interview:</p>
 
 <figure>
 <svg viewBox="0 0 680 650" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
@@ -339,15 +341,15 @@
   <div><span>Deadline</span><span>A due time saved as a row in the database with a type (respond to network, chase customer for evidence) and a status (open, claimed, done, breached). Not an in-memory timer.</span></div>
   <div><span>EvidenceItem</span><span>Metadata for one document version: object reference in encrypted storage, checksum, media type, scan status, uploader, retention class. The bytes live in object storage, never in the case row.</span></div>
   <div><span>NetworkSubmission</span><span>The stable external reference we sent to the card network for this case, and whether the network acknowledged it. Reused on every retry so a resubmission can never open a second dispute.</span></div>
-  <div><span>FinancialAction</span><span>One money step the case intends: provisional credit, reversal, adjustment. Each carries its own ledger idempotency key, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. The intent is committed here; the posting happens in the ledger.</span></div>
+  <div><span>FinancialAction</span><span>One money step the case intends: provisional credit, reversal, adjustment. Each carries its own ledger idempotency key, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. The intent is committed here. The posting happens in the ledger.</span></div>
 </div>
 <p>The case is the aggregate root. Everything changes through <em>commands</em>, never by editing a status column.</p>
 
 <h3 id="walkthrough">One dispute, start to finish</h3>
 <ol>
   <li>Ana taps "I don't recognize this purchase" on a R$300 card transaction. The app sends an <code>OpenDispute</code> command with an idempotency key. The platform checks three things. She owns the card. No open case already exists for this transaction and reason family. The transaction is within the dispute window under policy version 12.</li>
-  <li>In one commit it writes: a CaseEvent <code>OPENED</code>, the DisputeCase snapshot (state OPENED, version 1, policy v12), a Deadline row (customer must supply evidence within 10 days), the idempotency record, and outbox rows (notify Ana; evaluate provisional credit). It returns "case CB-812 opened".</li>
-  <li>Policy says provisional credit applies. A worker issues the <code>RequestProvisionalCredit</code> command; the commit records a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and an outbox row. After commit, a worker sends that command to the ledger. The ledger posts R$300 to Ana's account and returns its transaction id. A new CaseEvent <code>PROVISIONAL_CREDIT_POSTED</code> records the observed result. Ana sees the money; the case says "under review".</li>
+  <li>In one commit it writes: a CaseEvent <code>OPENED</code>, the DisputeCase snapshot (state OPENED, version 1, policy v12), a Deadline row (customer must supply evidence within 10 days), the idempotency record, and outbox rows (notify Ana, and evaluate provisional credit). It returns "case CB-812 opened".</li>
+  <li>Policy says provisional credit applies. A worker issues the <code>RequestProvisionalCredit</code> command. The commit records a FinancialAction with key <code>CB-812:PROVISIONAL_CREDIT:v1</code> and an outbox row. After commit, a worker sends that command to the ledger. The ledger posts R$300 to Ana's account and returns its transaction id. A new CaseEvent <code>PROVISIONAL_CREDIT_POSTED</code> records the observed result. Ana sees the money. The case says "under review".</li>
   <li>Ana uploads a screenshot. The bytes go to encrypted object storage via a staged upload. The commit writes an EvidenceItem in state <code>UPLOADED</code>. A scan worker checks checksum, format and malware, then a command moves it to <code>EVIDENCE_READY</code>. It is not usable evidence until then.</li>
   <li>A worker evaluates eligibility against policy v12, the case moves to <code>ELIGIBLE</code>, and a <code>Submit</code> command creates a NetworkSubmission with reference <code>NB-CB-812-1</code>. After commit, the network adapter sends it. The network acknowledges, and a new event records it. The old deadline is completed. A new one is created from the network's response window: the merchant has 30 days to represent.</li>
   <li>Weeks later the network returns the award. If Ana wins in full, the case is <code>WON</code> and the FinancialAction is finalized. If she loses, a <code>REVERSE_PROVISIONAL:v1</code> action asks the ledger for a linked reversal. If she wins R$200 of R$300, one <code>FINAL_ADJUSTMENT:v2</code> for −R$100. The case closes only when the workflow decision <em>and</em> the financial settlement are both confirmed. The three truths must agree: network award, case decision, ledger posting.</li>
@@ -397,7 +399,7 @@
 </table>
 
 <h3 id="stages">How this maps to the four steps, and to the seven stages</h3>
-<p>The video Nubank's interviewers recommend runs a round in four steps: requirements, a bridge of entities and API, a high-level design that serves only the features, and deep dives that take the qualities one at a time. This guide is ordered in those steps. The seven stages of the earlier mocks are still here; they are what each step contains.</p>
+<p>The video Nubank's interviewers recommend runs a round in four steps: requirements, a bridge of entities and API, a high-level design that serves only the features, and deep dives that take the qualities one at a time. This guide is ordered in those steps. The seven stages of the earlier mocks are still here. They are what each step contains.</p>
 <table>
   <tr><th>Step</th><th>Sections</th><th>Stages it holds</th><th>What you do</th></tr>
   <tr><td>1 Requirements</td><td>3, 4</td><td>1 Clarify, 2 Invariants</td><td>Features as "users can…" lines with a below-the-line list; the scale question, then the arithmetic; the qualities in context with a number each, said as the seven invariants. End with the scope sentence.</td></tr>
@@ -419,7 +421,7 @@
 <h3>What candidates report</h3>
 <div class="rows">
   <div><span>Length</span><span>45 to 60 minutes: about 40 minutes of actual design after introductions and your own questions. Enough for one system done properly. Not enough for a tour of everything you know.</span></div>
-  <div><span>People</span><span>One or two engineers, often from a platform or core banking team. One 2026 candidate had two interviewers, one of whom seemed disengaged. Don't read the room too hard; keep talking to the one who is engaged.</span></div>
+  <div><span>People</span><span>One or two engineers, often from a platform or core banking team. One 2026 candidate had two interviewers, one of whom seemed disengaged. Don't read the room too hard. Keep talking to the one who is engaged.</span></div>
   <div><span>Tool</span><span>A shared whiteboard such as Miro or Excalidraw. No code. Practise drawing the section 1 diagram from memory in under three minutes.</span></div>
   <div><span>Prompt</span><span>Chargebacks is the single most-reported 2026 prompt: three separate candidates name it. One describes a "chargeback ingest system" that stores transactions in CSV and sends them by FTP to Mastercard four times daily. The other recurring prompts are a double-entry ledger, a real-time fraud or risk pipeline, and a credit limit or card authorisation service.</span></div>
   <div><span>Rhythm</span><span>Roughly every ten minutes the interviewer adds a constraint that breaks the current design. Volume goes up tenfold. A downstream service goes away. A regulator asks for a case as it stood three months ago. A Lead candidate who did not pass reported many questions about scalability and performance.</span></div>
@@ -439,12 +441,13 @@
 <p>Nubank sends candidates a PDF, <em>Preparing for your System Design Interview</em>. It is decoded in full in <em>Nubank's prep document, decoded</em>. The five things it says that the candidate reports above don't:</p>
 <div class="rows">
   <div><span>Generic prompts</span><span>Its worked example is ride-hailing and its recommended video is an ad-click aggregator. Chargebacks is still the most-reported prompt, but the interviewers think in general distributed-systems terms and may hand you a non-banking problem. Section 6 of the pivot guide has two ten-minute sketches as insurance.</span></div>
-  <div><span>Numbers</span><span>"Precision isn't the goal; clear mathematical reasoning is." Rough arithmetic that ends in a decision is expected. This guide reasons from invariants; section 3 now adds the arithmetic, and the scaling answer below says what tenfold actually is.</span></div>
+  <div><span>Numbers</span><span>"Precision isn't the goal; clear mathematical reasoning is." Rough arithmetic that ends in a decision is expected. This guide reasons from invariants. Section 3 now adds the arithmetic, and the scaling answer below says what tenfold actually is.</span></div>
   <div><span>Don't draw early</span><span>Drawing an architecture in the first three minutes is, in their words, the most common way a strong engineer scores poorly. Spend the full five to eight minutes on step 1 and say the scoping decision out loud.</span></div>
   <div><span>Begin simple, then iterate</span><span>They want to hear "my first idea is X, its pros are, its cons are, so next I…". Section 6 opens with the v1 a Lead actually draws, names the rung below it in one sentence, and lists the gaps each deep dive closes.</span></div>
   <div><span>Two-way discussion</span><span>They welcome pushback on their own suggestions. When the interviewer proposes a cache or a workflow engine, disagree politely with a reason if you have one. Silence reads as passivity.</span></div>
 </div>
-<p>The PDF grades seven signals, not four. Problem breakdown. Architecture fundamentals, where they name immutability explicitly. Scalability and performance: "if traffic goes up ten times, what breaks first". Reliability and maintainability: replication and recovery, graceful degradation, security and abuse, monitoring and debugging. Trade-offs: "what you gave up" matters more than which database you picked. Collaboration. Pragmatic thinking: real constraints such as the FTP file are not obstacles to argue with. The four signals above are where this design already shows them; section 11 adds the two it lacked, degradation and security.</p>
+<p>The PDF grades seven signals, not four. Problem breakdown. Architecture fundamentals, where they name immutability explicitly. Scalability and performance: "if traffic goes up ten times, what breaks first". Reliability and maintainability: replication and recovery, graceful degradation, security and abuse, monitoring and debugging. Trade-offs: "what you gave up" matters more than which database you picked. Collaboration. Pragmatic thinking: real constraints such as the FTP file are not obstacles to argue with.</p>
+<p>The four signals above are where this design already shows them. Section 11 adds the two it lacked, degradation and security.</p>
 
 <h3>The hour, minute by minute</h3>
 <p>Nubank's PDF splits the hour into three phases: intros and problem statement (0–8), collaborative problem-solving (8–55), and your questions (55–60). The four steps fit inside that split like this, at the pace the video sets for senior and staff candidates. Drawing by about minute 15, so that more than half the hour is deep dives.</p>
@@ -467,18 +470,19 @@
 <h3 id="scaling">When they push on scalability and performance</h3>
 <p>A Lead candidate who did not pass in late 2025 reported that the questions were mostly about scalability and performance. This is the most common shape of the ten-minute interruption. For a Lead role it is where the bar sits. The question is not "can you add machines". It is "do you know which part of your own design does not get faster by adding machines, and what would you do about it".</p>
 
-<p><strong>The five-step answer, every time.</strong> Say the steps out loud; the structure is half the score.</p>
+<p><strong>The five-step answer, every time.</strong> Say the steps out loud. The structure is half the score.</p>
 <ol>
-  <li><strong>Ask what grew.</strong> Cases per day, files per day, documents per case, operators, countries? Each stresses a different part. "Tenfold" with no noun is a trap; name the noun yourself if they don't.</li>
+  <li><strong>Ask what grew.</strong> Cases per day, files per day, documents per case, operators, countries? Each stresses a different part. "Tenfold" with no noun is a trap. Name the noun yourself if they don't.</li>
   <li><strong>Name the bottleneck, with a number you'd measure.</strong> Queue age, p99 of the command path, oldest unprocessed deadline, outbox lag, database write throughput, index lag. A bottleneck you can't measure is a guess.</li>
   <li><strong>Scale what scales.</strong> Anything idempotent and stateless goes horizontal: workers, adapters, parsers, projections.</li>
-  <li><strong>Say what doesn't, and why.</strong> The claim step is one conditional update; the case store is a single write authority per case; Operations is people. Naming these honestly is the Lead signal.</li>
+  <li><strong>Say what doesn't, and why.</strong> The claim step is one conditional update. The case store is a single write authority per case. Operations is people. Naming these honestly is the Lead signal.</li>
   <li><strong>Protect the invariants while you scale.</strong> Whatever you change, transitions stay validated, deadlines stay durable, keys stay stable, history stays append-only. If a "performance improvement" needs one of those to bend, it isn't one.</li>
 </ol>
 
-<p><strong>Step 2, with arithmetic.</strong> From the section 3 numbers, tenfold cases is 700,000 a day. That is about 8 writes per second average and 80 at peak, 400 GB of events a month, 80 TB of evidence a month, and around 5,000 reviewers if nothing is automated. Say those out loud. They show three things. The database is still not the problem at tenfold. Evidence retention becomes a real cost line. Operations is the ceiling by an order of magnitude. That is the whole argument for spending the answer on automation instead of sharding. It is what Nubank's prep document means by "use numbers to decide".</p>
+<p><strong>Step 2, with arithmetic.</strong> From the section 3 numbers, tenfold cases is 700,000 a day. That is about 8 writes per second average and 80 at peak, 400 GB of events a month, 80 TB of evidence a month, and around 5,000 reviewers if nothing is automated. Say those out loud.</p>
+<p>They show three things. The database is still not the problem at tenfold. Evidence retention becomes a real cost line. Operations is the ceiling by an order of magnitude. That is the whole argument for spending the answer on automation instead of sharding. It is what Nubank's prep document means by "use numbers to decide".</p>
 
-<p><strong>What each part of this design does under load.</strong> Have this table in your head; draw the row they ask about.</p>
+<p><strong>What each part of this design does under load.</strong> Have this table in your head. Draw the row they ask about.</p>
 <table>
   <tr><th>Part</th><th>Scales by</th><th>Limit to name</th><th>What you'd do</th></tr>
   <tr><td>Case commands</td><td>Case id. No transaction spans two cases, so the store partitions cleanly by case.</td><td>Write throughput of one partition; a single hot case (one dispute with thousands of events) is the pathological shape.</td><td>Partition by case id from day one; cap events per case with policy; snapshot so reads never replay the full history.</td></tr>
@@ -499,7 +503,7 @@
 
 <h3>Their vocabulary, used lightly</h3>
 <p>You don't need Clojure. You need three sentences in their language, each said once at the moment it fits. "Your Datomic transaction function is where my check-and-write becomes one atomic operation." "Kafka carries the outbox events between services; every consumer dedupes on a correlation id, which is how you already do it." "The case is an append-only history plus a materialised snapshot, the same shape as an immutable database with a current view."</p>
-<p>Section 11 of <em>Nubank's prep document, decoded</em> goes one step further: four of their own engineering posts, each with a sentence that cites it. Two fit this design. The incidents post: end a bad-day answer with "…and then a blameless postmortem on your template". The evergreen-cache post: cache under a version key, never the thing that decides. Read them on Friday; cite one, not four.</p>
+<p>Section 11 of <em>Nubank's prep document, decoded</em> goes one step further: four of their own engineering posts, each with a sentence that cites it. Two fit this design. The incidents post: end a bad-day answer with "…and then a blameless postmortem on your template". The evergreen-cache post: cache under a version key, never the thing that decides. Read them on Friday. Cite one, not four.</p>
 
 <div class="trap"><p class="label">Caveat</p><p>The candidate material above is self-reported. Nubank publishes no question bank, sample sizes are small, and none of the reports come from the Buenos Aires team. Interviewers for Argentina may be drawn from Brazil, Mexico or the US. Prepare chargebacks first, the ledger second. Be able to pivot the same four steps to an authoriser, a credit-limit service, or a generic prompt.</p></div>
 
@@ -508,8 +512,9 @@
 <p class="question">The first half of step 1: what am I actually building, for whom, and at what volume? Features first, then the scale question, then (section 4) the qualities.</p>
 
 <h3>Issuer, acquirer and network</h3>
-<p>Three parties. The <strong>issuer</strong> is the cardholder's bank (Nubank, for Ana). The <strong>acquirer</strong> is the merchant's bank. The <strong>card network</strong> (Visa, Mastercard, Elo) carries the rules, the messages and the deadlines between them. Ana disputes a purchase with her issuer. The issuer submits the dispute through the network. The acquirer and merchant may respond with their own evidence ("representment"). The network arbitrates.</p>
-<p>Default to the issuer workflow: the customer opens the dispute, and that is Nubank's seat. Keep the network and acquirer behind adapters. Don't quietly build both sides in one vague workflow; they have different actors, evidence, rules and owners.</p>
+<p>Three parties. The <strong>issuer</strong> is the cardholder's bank (Nubank, for Ana). The <strong>acquirer</strong> is the merchant's bank. The <strong>card network</strong> (Visa, Mastercard, Elo) carries the rules, the messages and the deadlines between them.</p>
+<p>Ana disputes a purchase with her issuer. The issuer submits the dispute through the network. The acquirer and merchant may respond with their own evidence ("representment"). The network arbitrates.</p>
+<p>Default to the issuer workflow: the customer opens the dispute, and that is Nubank's seat. Keep the network and acquirer behind adapters. Don't quietly build both sides in one vague workflow. They have different actors, evidence, rules and owners.</p>
 
 <h3>Features, written as expectations</h3>
 <p>Write the functional requirements the way the video does. One line for what each kind of user expects of the system. Then a short list you label "below the line (out of scope)" and get the interviewer to nod at.</p>
@@ -519,20 +524,21 @@
   <li>The platform submits the dispute to the card network and records the outcome.</li>
   <li>The platform asks the ledger for provisional credit, and for its reversal or adjustment when the outcome is known.</li>
 </ol>
-<p><strong>Below the line:</strong> fraud scoring, the acquirer and merchant side, the network's own systems, reporting dashboards (come back if there is time). Say the list only if it comes naturally; its purpose is agreement on a boundary, not completeness.</p>
+<p><strong>Below the line:</strong> fraud scoring, the acquirer and merchant side, the network's own systems, reporting dashboards (come back if there is time). Say the list only if it comes naturally. Its purpose is agreement on a boundary, not completeness.</p>
 
 <h3>What you must establish before drawing</h3>
 <ul>
   <li>Issuer side, acquirer side, or both.</li>
   <li>Countries, networks, reason codes. Each changes deadlines, evidence requirements and message formats.</li>
-  <li>Who owns policy and legal deadlines. Legal, compliance, network specialists and Operations own the <em>meaning</em>; engineering implements versioned, testable rules and records which version was applied.</li>
-  <li>When provisional credit is owed. Not every opened dispute credits the customer; it's a separate policy decision by product, jurisdiction and risk.</li>
+  <li>Who owns policy and legal deadlines. Legal, compliance, network specialists and Operations own the <em>meaning</em>. Engineering implements versioned, testable rules and records which version was applied.</li>
+  <li>When provisional credit is owed. Not every opened dispute credits the customer. It's a separate policy decision by product, jurisdiction and risk.</li>
   <li>What already exists: card transaction store, identity, the ledger, object storage, notifications, network gateways. Integrate, don't rebuild.</li>
   <li>Volume, document sizes, retention, and how much of the work is manual operations.</li>
 </ul>
 
 <h3 id="numbers">The numbers, before drawing</h3>
-<p>Ask for the scale before you write the qualities. The video Nubank recommends does it in that order, because the qualities are written in terms of the numbers. Nubank's prep document asks how you support decisions with numbers, "even as rough estimates". Say the assumptions, do the arithmetic on the board, and land on a decision. A day is 86,400 seconds; call it 100,000, so per-day volume divided by 100k is per second. A month is about 2.6 million seconds. Peak is three to ten times average; say which multiplier you chose and why.</p>
+<p>Ask for the scale before you write the qualities. The video Nubank recommends does it in that order, because the qualities are written in terms of the numbers. Nubank's prep document asks how you support decisions with numbers, "even as rough estimates". Say the assumptions, do the arithmetic on the board, and land on a decision.</p>
+<p>A day is 86,400 seconds. Call it 100,000, so per-day volume divided by 100k is per second. A month is about 2.6 million seconds. Peak is three to ten times average. Say which multiplier you chose and why.</p>
 <pre><code>Assume 100M customers, ~2B card transactions / month
 Dispute rate ~0.1%                → 2M disputes / month  ≈ 70k / day  ≈ 0.8 / s average, ~8 / s peak
 Events per case ~20 × 1 KB        → 40M events / month  ≈ 40 GB / month  ≈ 0.5 TB / year
@@ -540,8 +546,9 @@ Evidence: 2 files × 2 MB per case → 8 TB / month         (object storage, not
 Deadlines: ~3 per case            → 6M rows / month; sweeper scans the OPEN ones only
 Batch file: 70k rows / 4 slots    → ~18k rows per file; a few MB; trivial to build, painful to resend
 Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers</code></pre>
-<p><strong>The decision the numbers force.</strong> Under one write per second average and tens at peak, a single well-indexed relational database is not the bottleneck. It won't be at ten times either. Partition by case id for isolation and failover size, not for throughput. Two costs scale badly. Evidence storage is cheap, but plan retention. Human review is expensive, so automation is the real lever. So the design spends its complexity on correctness, deadlines and reconciliation, and on measuring what to automate. Replace every assumption with whatever the interviewer gives you; the reasoning is the score, not the figures.</p>
-<p><strong>The reference figures to have memorised.</strong> One Postgres node: thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB. One Kafka partition: tens of thousands of small messages per second. Same-region hop about 1 ms; cross-region 50 to 150 ms; a disk commit 1 to 10 ms. A small JSON event is about 1 KB, a photo about 1 MB, a scanned PDF about 10 MB. A human reviews maybe 30 to 60 cases a day.</p>
+<p><strong>The decision the numbers force.</strong> Under one write per second average and tens at peak, a single well-indexed relational database is not the bottleneck. It won't be at ten times either. Partition by case id for isolation and failover size, not for throughput.</p>
+<p>Two costs scale badly. Evidence storage is cheap, but plan retention. Human review is expensive, so automation is the real lever. So the design spends its complexity on correctness, deadlines and reconciliation, and on measuring what to automate. Replace every assumption with whatever the interviewer gives you. The reasoning is the score, not the figures.</p>
+<p><strong>The reference figures to have memorised.</strong> One Postgres node: thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB. One Kafka partition: tens of thousands of small messages per second. Same-region hop about 1 ms, cross-region 50 to 150 ms, and a disk commit 1 to 10 ms. A small JSON event is about 1 KB, a photo about 1 MB, a scanned PDF about 10 MB. A human reviews maybe 30 to 60 cases a day.</p>
 <div class="say"><p class="label">The sentence to say in minute eight</p><p>"So I'll scope to the issuer-side dispute workflow with provisional credit, because that's where correctness is hardest; I'll treat the network as an adapter and the ledger as an existing system, and come back to reporting if we have time. At roughly 70,000 cases a day this is not a throughput problem; it's a correctness, deadline and people problem, and that shapes every choice I make next."</p></div>
 <div class="trap"><p class="label">Avoid saying</p><p>"It'll be a lot of data, so we need something scalable." And the opposite error: over-engineering a system whose numbers say one database is fine. "At this volume one Postgres is enough, and here's the number that would change my mind" is a strong answer.</p></div>
 
@@ -549,7 +556,7 @@ Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers
 <p>Case acceptance, validation errors and the current customer-visible state return synchronously. Network submission, evidence processing and financial actions are asynchronous, with explicit Processing states and SLAs. "Synchronous" means <em>durable acceptance</em>, not completion of every external step. Never block Ana's request on the card network.</p>
 
 <h3>What changes between countries and networks, and what doesn't</h3>
-<p>Changes: reason codes, deadlines, evidence requirements, message formats, provisional-credit rules, representment stages, currencies, retention. Stable: versioned case transitions, durable obligations, audit, idempotent side effects, reconciliation. Put the variation in policies and adapters; never fork the platform per country.</p>
+<p>Changes: reason codes, deadlines, evidence requirements, message formats, provisional-credit rules, representment stages, currencies, retention. Stable: versioned case transitions, durable obligations, audit, idempotent side effects, reconciliation. Put the variation in policies and adapters. Never fork the platform per country.</p>
 
 <div class="recap"><p class="label">Say it in 30–60 seconds</p><p>A dispute platform is a case-management system that coordinates four things: customer intake, evidence, deadlines, and messages to the card network, plus money actions it asks the ledger to do. It is not the ledger and not the network. I clarify: are we the issuer, the acquirer, or both? Which countries and networks? Who owns the legal rules and deadlines? And does opening a case ever move money by itself, or is provisional credit a separate policy decision?</p></div>
 
@@ -581,7 +588,7 @@ Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers
   <li><strong>Every action records actor, reason and time.</strong> Events are the audit trail. There is no such thing as an anonymous status change.</li>
   <li><strong>Deadlines are deterministic and cannot disappear.</strong> A due date is a durable business obligation stored transactionally, not an in-memory timer. If every worker is down at noon, the row still exists and a sweeper finds it later.</li>
   <li><strong>Financial actions are separately idempotent.</strong> Each credit, reversal or adjustment has its own stable key. So a retry never credits twice, and one case can legitimately have several money steps.</li>
-  <li><strong>Network submissions reuse stable external references.</strong> The same reference on every retry; a fresh reference could open a duplicate dispute at the network.</li>
+  <li><strong>Network submissions reuse stable external references.</strong> The same reference on every retry. A fresh reference could open a duplicate dispute at the network.</li>
   <li><strong>Evidence is versioned, access-controlled and retained by policy.</strong> A replaced document is a new version linked to the old one. The old object is never overwritten. The case records which version was sent externally.</li>
   <li><strong>The case records which policy version evaluated it.</strong> Otherwise a rule deployment silently changes the meaning of old decisions.</li>
 </ol>
@@ -590,7 +597,7 @@ Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers
 <ul>
   <li><em>How do you guarantee a deadline is never silently missed?</em> You can't guarantee workers never fail. So you guarantee the obligation stays durable and observable. Store it transactionally. Schedule a timer. Run an independent sweeper. Alert before and after breach. Leases or conditional claims make retries safe.</li>
   <li><em>Can an operator move a case from opened to won?</em> Only if a versioned policy explicitly permits that command and the operator has the role. Otherwise the state machine rejects it. High-value overrides need four-eyes approval. Never a direct status-column update.</li>
-  <li><em>How do you prevent duplicate disputes for the same purchase?</em> Request idempotency alone isn't enough: two different taps have two different keys. Add a business uniqueness rule on transaction, claimant, reason family, disputed amount scope and case lifecycle. Return the existing case or a deterministic conflict. Don't key on transaction id alone; partial disputes are legitimate.</li>
+  <li><em>How do you prevent duplicate disputes for the same purchase?</em> Request idempotency alone isn't enough: two different taps have two different keys. Add a business uniqueness rule on transaction, claimant, reason family, disputed amount scope and case lifecycle. Return the existing case or a deterministic conflict. Don't key on transaction id alone. Partial disputes are legitimate.</li>
   <li><em>Can a policy change alter an already-open case?</em> Normally no. The case keeps the version used for each decision. A new legal rule triggers an explicit re-evaluation command that records old and new outcomes. A version transition is a business event, not an invisible reread of config.</li>
   <li><em>Which invariant matters most when the network is unavailable?</em> Durable case state, durable deadlines and a stable submission identity. Queue the work and show the customer Reviewing or Delayed. Never fabricate a network outcome, never duplicate a submission, and never mark FAILED because a dependency timed out.</li>
 </ul>
@@ -604,13 +611,13 @@ Ops: 30% need a human, 40 / day   → 2M × 0.3 / 30 days / 40 ≈ 500 reviewers
 <p class="question">The bridge between the requirements and the drawing. Only the entities needed to enforce transitions, deadlines, audit and linked financial actions, and the three operations that act on them.</p>
 
 <h3>Event plus snapshot</h3>
-<p>Every command appends a CaseEvent and updates the DisputeCase snapshot in the same transaction. Events explain how the case got here; the snapshot makes reads one row. The snapshot can always be verified or rebuilt from the events. This is event history plus a materialised current aggregate, not full event sourcing where every read replays. Never keep only a mutable status row.</p>
+<p>Every command appends a CaseEvent and updates the DisputeCase snapshot in the same transaction. Events explain how the case got here. The snapshot makes reads one row. The snapshot can always be verified or rebuilt from the events. This is event history plus a materialised current aggregate, not full event sourcing where every read replays. Never keep only a mutable status row.</p>
 <pre><code>Snapshot: CB-812   state=SUBMITTED   version=9   policy=v12
 Events:   OPENED → PROVISIONAL_CREDIT_REQUESTED → PROVISIONAL_CREDIT_POSTED
           → EVIDENCE_ADDED → EVIDENCE_READY → ELIGIBLE → SUBMITTED</code></pre>
 
 <h3>FinancialAction: intent here, posting there</h3>
-<p>The FinancialAction row and its stable ledger key are part of the case transaction. The remote ledger posting is <em>not</em>. The outbox delivers the command; a later case event records what the ledger did. That avoids a distributed transaction without ever forgetting intended work. Never hold the case transaction open across a ledger call.</p>
+<p>The FinancialAction row and its stable ledger key are part of the case transaction. The remote ledger posting is <em>not</em>. The outbox delivers the command. A later case event records what the ledger did. That avoids a distributed transaction without ever forgetting intended work. Never hold the case transaction open across a ledger call.</p>
 <p>The key is semantic. It names the business action being retried, not the HTTP request:</p>
 <pre><code>CB-812:PROVISIONAL_CREDIT:v1
 CB-812:REVERSE_PROVISIONAL:v1
@@ -627,7 +634,8 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <p>Complete or cancel the old obligation through an event. Then create the new deadline from the network response and the applicable policy version, in the same case commit. Keep both for audit. Calculate time zones and business calendars explicitly. Never mutate the original due date without history.</p>
 
 <h3>Concurrency: the case version</h3>
-<p>Case id is the aggregate key. Every command carries the case version it expects. A conditional update accepts one command; a stale command reloads and re-evaluates. This is the ledger's account version, applied per case. Under high contention a per-case queue is the alternative. Never serialise all cases globally.</p>
+<p>Case id is the aggregate key. Every command carries the case version it expects. A conditional update accepts one command. A stale command reloads and re-evaluates. This is the ledger's account version, applied per case.</p>
+<p>Under high contention a per-case queue is the alternative. Never serialise all cases globally.</p>
 
 <h3 id="api">The API: three operations, each with its key</h3>
 <p>The video's bridge for a product-shaped prompt is entities plus API. The entities are the six nouns of section 1. The API is deliberately small, because every change to a case is a command on the aggregate, not a separate endpoint per field. Who is acting comes from the authentication token, never from the body.</p>
@@ -649,12 +657,13 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <p class="question">The design that serves the features, drawn by about minute 15, starting from the rung a Lead starts at.</p>
 
 <h3 id="v1">Begin at the good rung: the v1 a Lead draws, and the rung below it</h3>
-<p>Nubank's prep document wants you to start with a first idea, find its flaws yourself, and fix them in order. The video Nubank recommends adds the floor. A high-level design that cannot serve the features "would not pass at any level". A senior or staff candidate "won't start with the crappy solution; you'll start a little further on". Reconcile the two like this. Name the rung below the floor in one sentence, so the interviewer hears you considered it. Draw the rung that works. Then spend the minutes you saved on the deep dives, where a Lead is actually graded.</p>
+<p>Nubank's prep document wants you to start with a first idea, find its flaws yourself, and fix them in order. The video Nubank recommends adds the floor. A high-level design that cannot serve the features "would not pass at any level". A senior or staff candidate "won't start with the crappy solution; you'll start a little further on".</p>
+<p>Reconcile the two like this. Name the rung below the floor in one sentence, so the interviewer hears you considered it. Draw the rung that works. Then spend the minutes you saved on the deep dives, where a Lead is actually graded.</p>
 <p><strong>The rung you name and don't draw.</strong> One service, one table with a status column, synchronous calls to the network and the ledger, a cron for deadlines. It is fine at 0.8 cases a second. It has four flaws you would meet in the first month, which is why you don't spend five minutes drawing it:</p>
 <ol>
   <li>A status column can't answer "who moved this case and why", so audit is a separate log that can disagree with the truth.</li>
   <li>Synchronous network and ledger calls hold a database transaction open across a slow external hop. A timeout leaves the case in a state that doesn't match reality. A retry can credit twice.</li>
-  <li>The cron job is the only guardian of legal deadlines; if it dies, deadlines die with it.</li>
+  <li>The cron job is the only guardian of legal deadlines. If it dies, deadlines die with it.</li>
   <li>Two operators updating the same row: last write wins, silently.</li>
 </ol>
 <figure>
@@ -691,7 +700,8 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 </svg>
 <figcaption>The rung below the floor, kept here so you can name its four flaws in one sentence: one service, one table, one cron. Every box is neutral because nothing has a consistency story. Don't draw it in the interview. A design that cannot keep audit, retries or deadlines is not a high-level design a Lead shows.</figcaption>
 </figure>
-<p><strong>The v1 you draw.</strong> It is the section 1 diagram, and each of its pieces exists to remove one of those four flaws. Events plus snapshot in one commit (flaw 1). Commit first, side effects after from an outbox, with a stable key on every external call (flaw 2). Deadline rows read by a timer and swept by a sweeper (flaw 3). An expected case version at the door (flaw 4). Say what it costs as you draw it: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to display. That is the "good" rung. It serves every feature. It is the shape you would be comfortable shipping to one country. Nothing in it is so weak that the deep dives have to start by replacing it.</p>
+<p><strong>The v1 you draw.</strong> It is the section 1 diagram, and each of its pieces exists to remove one of those four flaws. Events plus snapshot in one commit (flaw 1). Commit first, side effects after from an outbox, with a stable key on every external call (flaw 2). Deadline rows read by a timer and swept by a sweeper (flaw 3). An expected case version at the door (flaw 4).</p>
+<p>Say what it costs as you draw it: two writes per command instead of one, a worker fleet, and explicit in-flight states the product has to display. That is the "good" rung. It serves every feature. It is the shape you would be comfortable shipping to one country. Nothing in it is so weak that the deep dives have to start by replacing it.</p>
 <figure>
 <svg viewBox="0 0 680 690" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Chargebacks v2: the atomic case commit, side effects after</title>
@@ -724,7 +734,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 </svg>
 <figcaption>Your v1 is the section 1 diagram with one addition: each green badge says which flaw of the undrawn rung that piece removes. Events plus snapshot in the commit fix flaw 1. Workers after commit, with stable keys, fix flaw 2. Deadline rows read by the timer and swept by the sweeper fix flaw 3. The expected version at the door fixes flaw 4.</figcaption>
 </figure>
-<p><strong>What v1 does not yet handle, and which dive closes each gap.</strong> Say this list out loud right after the drawing; it is your deep-dive menu, and choosing from it is the staff signal.</p>
+<p><strong>What v1 does not yet handle, and which dive closes each gap.</strong> Say this list out loud right after the drawing. It is your deep-dive menu, and choosing from it is the staff signal.</p>
 <table>
   <tr><th>Gap in v1</th><th>Quality it threatens</th><th>Closed in</th></tr>
   <tr><td>The timer alone finds due deadlines</td><td>Deadlines never missed silently</td><td>Section 7: timer plus sweeper, conditional claims with a lease, alerts before and after breach.</td></tr>
@@ -734,7 +744,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <tr><td>No story for the bad day</td><td>Degrade, don't die; security and abuse</td><td>Section 11: six questions per failure, the single point of failure, the degradation matrix, the security table.</td></tr>
   <tr><td>Everything on at once</td><td>Reaching the design safely</td><td>Section 12: one country, one network, shadow, kill switches, owners.</td></tr>
 </table>
-<p><strong>v3 scales and operates</strong>, and you only go there when the numbers or the interviewer ask. Partition the case store by case id when failover size or isolation demands it; the numbers don't demand it for throughput. Move Ops discovery fully to projections and add a columnar store for reporting. Add the batch-file variant of section 10 for networks that require it. Automate review from shadow results, with a kill switch per side effect.</p>
+<p><strong>v3 scales and operates</strong>, and you only go there when the numbers or the interviewer ask. Partition the case store by case id when failover size or isolation demands it. The numbers don't demand it for throughput. Move Ops discovery fully to projections and add a columnar store for reporting. Add the batch-file variant of section 10 for networks that require it. Automate review from shadow results, with a kill switch per side effect.</p>
 <figure>
 <svg viewBox="0 0 680 600" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Chargebacks v3: partitioned store, horizontal everything else</title>
@@ -773,7 +783,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <text x="120" y="562" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Partition by case id because no transaction spans two cases: for isolation and failover size, not throughput.</text>
 <text x="120" y="582" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">The one thing that still doesn't scale by adding machines is Operations; automation is the lever.</text>
 </svg>
-<figcaption>Nothing in the write path changes shape; it multiplies. The case store splits by case id, each partition with its own synchronous replica. Each partition's outbox feeds the purple row. Every box there scales by adding machines, because every job is idempotent or rebuildable. Operations is the box that isn't here, because it doesn't scale by adding machines.</figcaption>
+<figcaption>Nothing in the write path changes shape. It multiplies. The case store splits by case id, each partition with its own synchronous replica. Each partition's outbox feeds the purple row. Every box there scales by adding machines, because every job is idempotent or rebuildable. Operations is the box that isn't here, because it doesn't scale by adding machines.</figcaption>
 </figure>
 <div class="say"><p class="label">The words that make this a collaboration signal</p><p>"The simplest version is one table with a status column and synchronous calls; it works for a week and then fails audit, retries and deadlines, so I won't draw it. My first version commits events, snapshot, deadlines and outbox rows together and does every external call afterwards. It costs a second write and a worker fleet. It doesn't yet handle four things, and those are where I'd like to go deep."</p></div>
 
@@ -863,7 +873,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <rect x="40" y="314" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="321" dominant-baseline="central" font-size="12" fill="#3E4A63">Timers and sweepers are delivery; neither is the truth. Never rebuild deadlines from memory.</text>
 <text x="40" y="342" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Measure: oldest unprocessed deadline, count near breach.</text>
 </svg>
-<figcaption>The row is written in the same commit as the transition that created it. The timer is the fast path; the sweeper is the path that still works when the timer has lost everything. Both end at the same conditional claim. So a duplicate worker fails the claim instead of doing the work twice. An expired lease hands a dead worker's deadline to the next one.</figcaption>
+<figcaption>The row is written in the same commit as the transition that created it. The timer is the fast path. The sweeper is the path that still works when the timer has lost everything. Both end at the same conditional claim. So a duplicate worker fails the claim instead of doing the work twice. An expired lease hands a dead worker's deadline to the next one.</figcaption>
 </figure>
 <p>When the network responds, the old deadline is completed by an event. A new one is created from the response window under the applicable policy version, in the same commit. Both stay for audit.</p>
 
@@ -902,7 +912,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <ul>
   <li><strong>Bytes</strong> go to encrypted object storage via a staged upload that returns a token and a checksum. The case commit links exactly that object version. If the commit fails, the object is an orphan, and a lifecycle job deletes it after quarantine.</li>
   <li><strong>Metadata</strong> lives in the case store: evidence id, object version, checksum, media type, scan status, uploader, timestamps, retention class, and which network submission included it.</li>
-  <li><strong>Usable</strong> means EVIDENCE_READY. Bytes existing is not enough; the file must first pass checksum, format, malware and access checks. A failed scan leaves it UPLOADED or QUARANTINED, and the case cannot submit it. Record the scan result without exposing the unsafe content. Failed scans are not overridden casually.</li>
+  <li><strong>Usable</strong> means EVIDENCE_READY. Bytes existing is not enough. The file must first pass checksum, format, malware and access checks. A failed scan leaves it UPLOADED or QUARANTINED, and the case cannot submit it. Record the scan result without exposing the unsafe content. Failed scans are not overridden casually.</li>
   <li><strong>Replacement</strong> is a new EvidenceItem version linked to the prior one. The old object is immutable. The case records which version went to the network.</li>
   <li><strong>Access</strong> is via short-lived authorized URLs, logged. Deletion follows retention and legal-hold policy, never a user's whim while a case is live.</li>
 </ul>
@@ -911,7 +921,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <!-- ============================================================ -->
 <h2 id="provisional">9. Step 4 · Deep dive: provisional credit</h2>
-<p class="question">Quality served: money idempotent under retry, with partial wins. Where long-running case state meets customer money; the dive to choose if the interviewer doesn't steer.</p>
+<p class="question">Quality served: money idempotent under retry, with partial wins. Where long-running case state meets customer money. The dive to choose if the interviewer doesn't steer.</p>
 
 <h3>The lifecycle</h3>
 <ol>
@@ -920,7 +930,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <li>After commit, a worker sends that command to the ledger. The ledger posts a balanced transaction (Ana +300, a disputes-clearing or provisional-credit expense account −300) and returns tx id. The worker records <code>PROVISIONAL_CREDIT_POSTED</code> as a case event with the ledger's transaction id.</li>
   <li>Outcome arrives from the network:
     <ul>
-      <li><strong>Win in full</strong>: finalize. The credit stands; a finalization action may move the clearing side to the recovered-from-network side.</li>
+      <li><strong>Win in full</strong>: finalize. The credit stands. A finalization action may move the clearing side to the recovered-from-network side.</li>
       <li><strong>Loss</strong>: <code>CB-812:REVERSE_PROVISIONAL:v1</code> asks the ledger for a linked reversal (Ana −300). The original posting is untouched.</li>
       <li><strong>Partial win</strong> (R$200 of 300): compute the final entitled amount, compare with what was provisionally posted, and create one linked adjustment for the difference: <code>CB-812:FINAL_ADJUSTMENT:v2</code> for −100. Handle currency and rounding explicitly.</li>
     </ul>
@@ -966,10 +976,10 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <h3>The follow-ups</h3>
 <ul>
   <li><em>The customer spends the provisional credit and then loses.</em> The reversal may leave a debt or a negative available balance. Whether that becomes a debt, a negative balance or a hardship arrangement is product and regulatory policy, decided before launch. Technically: record the loss, ask the ledger for the linked reversal, present a clear repayment experience. Risk may cap credits or delay availability, but that is a business lever. The system cannot take money that isn't there, and you don't design as if it could.</li>
-  <li><em>How do you know whether a timed-out ledger credit was posted?</em> Retry the exact same FinancialAction key. The ledger returns the prior transaction if it committed, or posts it once now. The case stays settlement-pending until a durable result is observed. Never infer failure from a timeout; never issue a new key.</li>
+  <li><em>How do you know whether a timed-out ledger credit was posted?</em> Retry the exact same FinancialAction key. The ledger returns the prior transaction if it committed, or posts it once now. The case stays settlement-pending until a durable result is observed. Never infer failure from a timeout. Never issue a new key.</li>
   <li><em>Is winning the same as settlement?</em> No. WON is a workflow decision. Financially settled means every required ledger action is confirmed and reconciled.</li>
   <li><em>The network award conflicts with our recorded outcome.</em> Put the case in a reconciliation-exception state. Preserve both facts, stop automatic closure, route it to an owned queue. After investigation, append an auditable correction event and any required ledger adjustment. Alert by amount, age and deadline impact. Never silently make one record match the other.</li>
-  <li><em>Who may issue a manual credit or reversal?</em> Only a narrowly authorised Operations role, through a controlled command with reason, evidence, amount limits and immutable audit. High-value actions need a second approver. The ledger independently enforces which command types it accepts. Engineers and DBAs do not bypass the workflow; nobody edits a balance by hand.</li>
+  <li><em>Who may issue a manual credit or reversal?</em> Only a narrowly authorised Operations role, through a controlled command with reason, evidence, amount limits and immutable audit. High-value actions need a second approver. The ledger independently enforces which command types it accepts. Engineers and DBAs do not bypass the workflow. Nobody edits a balance by hand.</li>
 </ul>
 
 <div class="recap"><p class="label">Say it in 30–60 seconds</p><p>Provisional credit is where long-running case state meets customer money. When policy allows it, the case commit saves a FinancialAction with a key like CB-812:PROVISIONAL_CREDIT:v1, and the outbox sends that command to the ledger. If we win, we finalize. If we lose, we ask the ledger for a linked reversal. If we win partially, one adjustment for the difference. Case state and money state stay visibly separate: "won" is a decision, "financially settled" is a fact. At the end I reconcile three truths: the network's award, our case decision, and the ledger posting.</p></div>
@@ -1013,13 +1023,13 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <rect x="40" y="510" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="517" dominant-baseline="central" font-size="12" fill="#3E4A63">External, can fail or arrive twice</text>
 <rect x="340" y="486" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="362" y="493" dominant-baseline="central" font-size="12" fill="#3E4A63">Watched by Operations</text>
 </svg>
-<figcaption>Every uploaded row lands in the reconciliation queue; every parsed answer removes one. Whatever is left is what you don't know yet, and its age is the number that pages someone.</figcaption>
+<figcaption>Every uploaded row lands in the reconciliation queue. Every parsed answer removes one. Whatever is left is what you don't know yet, and its age is the number that pages someone.</figcaption>
 </figure>
 
 <h3>The nouns this adds</h3>
 <div class="rows">
   <div><span>BatchRun</span><span>One scheduled cycle: id like <code>2026-09-06-14</code> (date and slot), the file name, the row count, a checksum of the file, and a status: BUILDING, UPLOADED, ACKNOWLEDGED, FAILED. Written to the database before the file leaves.</span></div>
-  <div><span>BatchRow</span><span>One case's line in one file: the case id, the NetworkSubmission reference from section 5, the run it went out in, and a status: QUEUED, SENT, ANSWERED, REJECTED. The row id <em>is</em> the NetworkSubmission reference; that is what makes retries safe.</span></div>
+  <div><span>BatchRow</span><span>One case's line in one file: the case id, the NetworkSubmission reference from section 5, the run it went out in, and a status: QUEUED, SENT, ANSWERED, REJECTED. The row id <em>is</em> the NetworkSubmission reference. That is what makes retries safe.</span></div>
   <div><span>InboundFile</span><span>A file we received: its name, checksum, when it arrived, how many rows parsed, how many quarantined. The original bytes are kept in object storage untouched.</span></div>
   <div><span>ReconciliationItem</span><span>A row we sent that has no answer yet, with the time it was sent. Aged continuously.</span></div>
 </div>
@@ -1027,14 +1037,14 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <h3>One day, walked through</h3>
 <ol>
-  <li><strong>13:58.</strong> Ana's case CB-812 reached ELIGIBLE this morning; its Submit command created NetworkSubmission <code>NB-CB-812-1</code> in state QUEUED. Two hundred other cases are in the same state.</li>
+  <li><strong>13:58.</strong> Ana's case CB-812 reached ELIGIBLE this morning. Its Submit command created NetworkSubmission <code>NB-CB-812-1</code> in state QUEUED. Two hundred other cases are in the same state.</li>
   <li><strong>14:00, claim.</strong> The batch job creates BatchRun <code>2026-09-06-14</code>. In one database transaction it claims every QUEUED submission by setting it to SENT-IN-RUN <code>2026-09-06-14</code>, with a conditional update on rows still QUEUED. A second job starting by accident claims zero rows and does nothing.</li>
   <li><strong>14:00, build.</strong> The job reads the claimed rows and writes the CSV deterministically: sorted by row id, fixed columns, fixed encoding. It computes a checksum, stores the file in object storage, and records the checksum and row count on the run. Building is repeatable: the same claimed rows always produce the same bytes.</li>
   <li><strong>14:01, upload.</strong> FTP the file under a name derived from the run id. Mark the run UPLOADED with the server's response. The rows are now AWAITING_ANSWER and each one becomes a ReconciliationItem.</li>
-  <li><strong>14:01, tell the case.</strong> One CaseEvent per row, <code>SUBMITTED_IN_BATCH 2026-09-06-14</code>, through the normal command path, so the case history says exactly which file carried it. Complete the "submit by" deadline; open the "expect network answer by" deadline from policy.</li>
-  <li><strong>Next morning, 07:00.</strong> A response file appears on the FTP. Download it, checksum it, store the original. Check the file id against InboundFile; if seen, stop, this is the same file delivered twice. Parse it row by row. Each good row references our row id <code>NB-CB-812-1</code> and carries an outcome (accepted, rejected with reason code, or a later award). It becomes a case command with idempotency key <code>file-id:row-id</code>. Each bad row (unknown reference, malformed, wrong amount) goes to a quarantine table with the raw line and a reason; the file's other rows still process.</li>
+  <li><strong>14:01, tell the case.</strong> One CaseEvent per row, <code>SUBMITTED_IN_BATCH 2026-09-06-14</code>, through the normal command path, so the case history says exactly which file carried it. Complete the "submit by" deadline. Open the "expect network answer by" deadline from policy.</li>
+  <li><strong>Next morning, 07:00.</strong> A response file appears on the FTP. Download it, checksum it, store the original. Check the file id against InboundFile. If seen, stop, this is the same file delivered twice. Parse it row by row. Each good row references our row id <code>NB-CB-812-1</code> and carries an outcome (accepted, rejected with reason code, or a later award). It becomes a case command with idempotency key <code>file-id:row-id</code>. Each bad row (unknown reference, malformed, wrong amount) goes to a quarantine table with the raw line and a reason. The file's other rows still process.</li>
   <li><strong>07:02.</strong> CB-812's row says "accepted". Its ReconciliationItem is closed, a <code>NETWORK_ACKED</code> event is appended, and the deadline moves to the merchant's representment window. A row for CB-640 says "rejected: invalid reason code" → event <code>NETWORK_REJECTED</code>, case goes back to an Ops queue with the reason, no new submission until a human fixes the input.</li>
-  <li><strong>Every hour.</strong> A reconciliation sweeper ages every open item. Anything older than the expected answer window (say, two cycles) is alerted on; anything approaching a dispute deadline is escalated. Operations sees both count and age of the oldest item.</li>
+  <li><strong>Every hour.</strong> A reconciliation sweeper ages every open item. Anything older than the expected answer window (say, two cycles) is alerted on. Anything approaching a dispute deadline is escalated. Operations sees both count and age of the oldest item.</li>
 </ol>
 
 <h3>Idempotency at three levels</h3>
@@ -1055,18 +1065,25 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <h3>The failures the interviewer will insert</h3>
 <div class="rows">
-  <div><span>Upload times out</span><span>Unknown, not failed. The file may be on the server. List the remote directory for the run's file name; if present and the size and checksum match, mark UPLOADED. If absent, re-upload the <em>same</em> file under the <em>same</em> name. Never rebuild with a new run id, that would resend 200 disputes.</span></div>
+  <div><span>Upload times out</span><span>Unknown, not failed. The file may be on the server. List the remote directory for the run's file name. If present and the size and checksum match, mark UPLOADED. If absent, re-upload the <em>same</em> file under the <em>same</em> name. Never rebuild with a new run id, that would resend 200 disputes.</span></div>
   <div><span>Job crashes mid-build</span><span>Rows are claimed, no file uploaded. On restart the job finds a run in BUILDING, rebuilds the file deterministically from the claimed rows, and continues. If a run is stuck in BUILDING past a threshold, alert. An operator can release the rows back to QUEUED with an audited command.</span></div>
-  <div><span>Response file arrives twice</span><span>Same file id and checksum → stop. Same name, different checksum → this is a new version; quarantine both, alert, human decides. Never silently apply the second.</span></div>
+  <div><span>Response file arrives twice</span><span>Same file id and checksum → stop. Same name, different checksum → this is a new version. Quarantine both, alert, human decides. Never silently apply the second.</span></div>
   <div><span>Half the rows are garbage</span><span>Process the good rows, quarantine the bad ones with the raw line, alert on quarantine count. Never reject the whole file because of one row, and never guess what a malformed row meant.</span></div>
-  <div><span>A row references a case we don't know</span><span>Quarantine with reason UNKNOWN_REFERENCE. It could be a network error, a case from another environment, or a bug in our own reference format. Ops resolves it; the platform does not invent a case.</span></div>
+  <div><span>A row references a case we don't know</span><span>Quarantine with reason UNKNOWN_REFERENCE. It could be a network error, a case from another environment, or a bug in our own reference format. Ops resolves it. The platform does not invent a case.</span></div>
   <div><span>The 14:00 slot is missed</span><span>Deadlines are rows, not timers. The next run picks up everything QUEUED. The deadline sweeper flags any case whose "submit by" date now falls before the next slot, and escalates it for a manual out-of-cycle submission.</span></div>
   <div><span>No response file for two days</span><span>Nothing about our cases is wrong. The reconciliation queue grows, and its oldest-item age crosses the threshold. Someone pages the network team. Any case approaching its dispute deadline is escalated with evidence of the upload.</span></div>
-  <div><span>Volume goes up tenfold</span><span>The file is bigger; nothing structural changes. Build streams rows instead of loading them all. If a single file exceeds the network's size limit, split into numbered parts under one run (<code>2026-09-06-14-part-3</code>). Parse inbound files in parallel by row range, since each row's command is independently idempotent. The one thing that cannot scale by adding workers is the claim step, and that's one indexed conditional update.</span></div>
+  <div><span>Volume goes up tenfold</span><span>The file is bigger. Nothing structural changes. Build streams rows instead of loading them all. If a single file exceeds the network's size limit, split into numbered parts under one run (<code>2026-09-06-14-part-3</code>). Parse inbound files in parallel by row range, since each row's command is independently idempotent. The one thing that cannot scale by adding workers is the claim step, and that's one indexed conditional update.</span></div>
 </div>
 
 <h3>Why files at all, and what to say if asked</h3>
-<p>Because the counterparty decided. Card networks and many banks still run scheduled file exchange for disputes, and the issuer doesn't choose the protocol. The design response is to treat the file like any other unreliable external call. Durable intent before sending. A stable identity per unit of work. Observations recorded as events. Unanswered work aged and visible. If the network offers a real-time API later, only the adapter changes. The case model and the reconciliation model stay. Nubank's PDF calls this pragmatic thinking: the constraint is a fact, not an obstacle to argue with.</p>
+<p>Because the counterparty decided. Card networks and many banks still run scheduled file exchange for disputes, and the issuer doesn't choose the protocol. The design response is to treat the file like any other unreliable external call:</p>
+<ul>
+  <li>Durable intent before sending.</li>
+  <li>A stable identity per unit of work.</li>
+  <li>Observations recorded as events.</li>
+  <li>Unanswered work aged and visible.</li>
+</ul>
+<p>If the network offers a real-time API later, only the adapter changes. The case model and the reconciliation model stay. Nubank's PDF calls this pragmatic thinking: the constraint is a fact, not an obstacle to argue with.</p>
 
 <div class="recap"><p class="label">Say it in 30–60 seconds</p><p>Four times a day I claim every case that is ready, in one transaction, into a batch run with an id made from the date and the slot. I build a CSV deterministically from the claimed rows, each row carrying the case's stable submission reference, upload it under a name derived from the run id, and mark the run uploaded. Every row is now "awaiting answer" and sits in a reconciliation queue. When a response file arrives, I dedupe it by file id, parse it row by row, quarantine bad rows without dropping the file, and turn each good row into a case command keyed by file id plus row id. Anything sent and unanswered ages; the age of the oldest item is what pages someone. A timeout on upload is unknown, not failed: I check the remote directory before I re-upload the same file, and I never rebuild with a new run id.</p></div>
 
@@ -1096,10 +1113,12 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 </table>
 
 <h3 id="spof">Your single point of failure, named</h3>
-<p>Nubank's prep document says to assume things will fail. A host dies. A single point of failure. Degrade instead of die. What you monitor. Point at your own diagram and name it before they ask. The single point of failure here is the case database's primary. A synchronous replica in another zone, and automated failover in seconds to a minute. During the failover window the API returns "try again" for commands, while reads keep working from the snapshot replica. Money follows the stricter rule: the ledger declines during its own failover rather than approving from a replica. Everything else in the diagram is one of two kinds. Stateless and horizontal: API instances, workers, adapters, behind a load balancer. Or a rebuildable projection: search, dashboards.</p>
+<p>Nubank's prep document says to assume things will fail. It names four topics: a host that dies, a single point of failure, degrading instead of dying, and what you monitor.</p>
+<p>Point at your own diagram and name it before they ask. The single point of failure here is the case database's primary. A synchronous replica in another zone, and automated failover in seconds to a minute. During the failover window the API returns "try again" for commands, while reads keep working from the snapshot replica. Money follows the stricter rule: the ledger declines during its own failover rather than approving from a replica.</p>
+<p>Everything else in the diagram is one of two kinds. Stateless and horizontal: API instances, workers, adapters, behind a load balancer. Or a rebuildable projection: search, dashboards.</p>
 
 <h3 id="degradation">Graceful degradation matrix</h3>
-<p>When a dependency is down, the product gets worse in a controlled way instead of failing entirely. Have this table ready; draw the row they ask about.</p>
+<p>When a dependency is down, the product gets worse in a controlled way instead of failing entirely. Have this table ready. Draw the row they ask about.</p>
 <table>
   <tr><th>Down</th><th>Still works</th><th>Degrades to</th><th>Customer sees</th></tr>
   <tr><td>Card network</td><td>Opening cases, evidence, decisions, credits</td><td>Submissions queue with stable references</td><td>"Sent to the network, awaiting response"</td></tr>
@@ -1171,7 +1190,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <div><span>Legal / compliance</span><span>Rule meaning: eligibility, statutory deadlines, evidence requirements, versioned and approved.</span></div>
   <div><span>Operations</span><span>Queues, exception procedures, the 3 a.m. decisions.</span></div>
   <div><span>Network teams</span><span>Adapters, message formats, certification.</span></div>
-  <div><span>Ledger team</span><span>Money correctness; independently enforces allowed command types.</span></div>
+  <div><span>Ledger team</span><span>Money correctness. Independently enforces allowed command types.</span></div>
   <div><span>Product</span><span>What the customer reads, when they see money, and the Processing / Delayed states.</span></div>
 </div>
 
@@ -1222,7 +1241,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <!-- ============================================================ -->
 <h2 id="practice">14. Practice next</h2>
 <p class="question">How to drill this alongside the ledger.</p>
-<p>Run the two mocks back to back. The four steps are identical; only the nouns change. Say each step's 30–60 second version out loud with a timer, naming the step as you enter it. Then take the follow-ups without notes. This material should let you take these cold:</p>
+<p>Run the two mocks back to back. The four steps are identical. Only the nouns change. Say each step's 30–60 second version out loud with a timer, naming the step as you enter it. Then take the follow-ups without notes. This material should let you take these cold:</p>
 <ul>
   <li>Issuer versus acquirer, and why you default to issuer.</li>
   <li>Why opening a case doesn't move money.</li>
@@ -1258,14 +1277,14 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <!-- ============================================================ -->
 <h2 id="glossary">15. Glossary, from zero</h2>
-<p class="question">Every term this guide uses, explained as if you'd never heard it. Grouped by theme; each entry says where the term shows up.</p>
+<p class="question">Every term this guide uses, explained as if you'd never heard it. Grouped by theme. Each entry says where the term shows up.</p>
 
 <h3>The card-dispute business</h3>
 <div class="rows">
   <div><span>Chargeback</span><span>When a cardholder says "I didn't make this purchase" or "I paid but never got the goods", their bank can pull the money back from the merchant's bank through the card network. That reversal is a chargeback. The whole process around it is a dispute.</span></div>
   <div><span>Issuer</span><span>The bank that gave the customer the card. Nubank is the issuer for Ana. The issuer is the one who receives the complaint and files the dispute.</span></div>
-  <div><span>Acquirer</span><span>The merchant's bank; the one that "acquires" card payments on the merchant's behalf. It receives the dispute and defends the merchant.</span></div>
-  <div><span>Card network</span><span>Visa, Mastercard, Elo. They don't hold anyone's money; they set the rules, carry the messages between issuer and acquirer, and arbitrate when the two disagree.</span></div>
+  <div><span>Acquirer</span><span>The merchant's bank. The one that "acquires" card payments on the merchant's behalf. It receives the dispute and defends the merchant.</span></div>
+  <div><span>Card network</span><span>Visa, Mastercard, Elo. They don't hold anyone's money. They set the rules, carry the messages between issuer and acquirer, and arbitrate when the two disagree.</span></div>
   <div><span>Reason code</span><span>A short code the network defines for why a dispute is being raised: "fraud, card not present", "goods not received", "duplicate charge". Each code has its own deadlines and evidence rules.</span></div>
   <div><span>Representment</span><span>The merchant's reply: "here is proof the customer did buy this". It re-presents the transaction. The issuer then has a window to respond again.</span></div>
   <div><span>Arbitration / award</span><span>When issuer and acquirer can't agree, the network decides. Its decision is the award: who wins, and for how much.</span></div>
@@ -1273,12 +1292,12 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <div><span>Partial win</span><span>The network awards part of the disputed amount. If Ana disputed R$300 and gets R$200, the issuer has to adjust the provisional credit by the R$100 difference.</span></div>
   <div><span>Statutory deadline</span><span>A deadline set by law or regulation (not just network rules). Miss it and there may be legal consequences, not only a lost dispute.</span></div>
   <div><span>Retention / legal hold</span><span>How long you must keep documents (retention), and a rule that says "don't delete this, it may be needed in a legal matter" (legal hold).</span></div>
-  <div><span>PII</span><span>Personally identifiable information: names, document numbers, addresses. Must be protected; must not leak into logs.</span></div>
+  <div><span>PII</span><span>Personally identifiable information: names, document numbers, addresses. Must be protected. Must not leak into logs.</span></div>
 </div>
 
 <h3>How money is represented</h3>
 <div class="rows">
-  <div><span>Ledger</span><span>The system that records every movement of money and knows every balance. The chargeback platform never moves money itself; it asks the ledger to.</span></div>
+  <div><span>Ledger</span><span>The system that records every movement of money and knows every balance. The chargeback platform never moves money itself. It asks the ledger to.</span></div>
   <div><span>Entry / posting</span><span>One recorded line of money movement against one account. "Posting" is the act of writing entries. Once posted, an entry is never edited.</span></div>
   <div><span>Posted balance</span><span>The sum of all entries on an account. The money that has actually moved.</span></div>
   <div><span>Hold</span><span>A reservation. A card purchase first places a hold ("R$80 is spoken for") and only later becomes a real posting when the merchant settles.</span></div>
@@ -1292,13 +1311,13 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <div class="rows">
   <div><span>Transaction (database)</span><span>A group of database writes that either all happen or none happen. Not to be confused with a card transaction (a purchase). In this guide, "one commit" and "one transaction" mean the database kind.</span></div>
   <div><span>Atomic / atomic commit</span><span>"Atomic" means indivisible. An atomic commit is a transaction that finishes completely or not at all. There is no moment where half of it is saved.</span></div>
-  <div><span>Commit</span><span>The instant a database transaction becomes permanent. Before commit, nothing has happened; after, it survives crashes.</span></div>
+  <div><span>Commit</span><span>The instant a database transaction becomes permanent. Before commit, nothing has happened. After, it survives crashes.</span></div>
   <div><span>Rollback</span><span>Cancelling a transaction before commit so nothing it wrote is kept.</span></div>
-  <div><span>Row / table / column</span><span>A table is a spreadsheet-like structure; a row is one record in it; a column is one field. "A deadline is a row" means it's a saved record, not something floating in memory.</span></div>
+  <div><span>Row / table / column</span><span>A table is a spreadsheet-like structure. A row is one record in it. A column is one field. "A deadline is a row" means it's a saved record, not something floating in memory.</span></div>
   <div><span>Index</span><span>A lookup structure that lets the database find rows by a column quickly, like a book's index. "Index on (status, due_at)" means "make it fast to find rows with a given status and due time".</span></div>
   <div><span>Unique constraint</span><span>A rule the database enforces: no two rows may have the same value in this column. Used to guarantee an idempotency key or a run id can only exist once.</span></div>
   <div><span>Conditional update</span><span>A write that only happens if some condition is still true: "update this case, but only if its version is still 7". If someone changed it in between, the update does nothing and you know.</span></div>
-  <div><span>Version (on a case or account)</span><span>A counter that goes up by one every time the record changes. Commands say "I read version 7"; the conditional update checks it's still 7. This is how two people acting at once can't both win.</span></div>
+  <div><span>Version (on a case or account)</span><span>A counter that goes up by one every time the record changes. Commands say "I read version 7". The conditional update checks it's still 7. This is how two people acting at once can't both win.</span></div>
   <div><span>Optimistic concurrency</span><span>Letting everyone read freely and only checking for conflicts at write time (with the version). "Optimistic" because you assume conflicts are rare.</span></div>
   <div><span>Row lock / SELECT FOR UPDATE</span><span>The pessimistic alternative: grab the row so nobody else can touch it until you're done. Simpler, but people wait, and locks can deadlock.</span></div>
   <div><span>Deadlock</span><span>Two operations each waiting for a lock the other holds, forever. Avoided by always taking locks in the same order.</span></div>
@@ -1310,8 +1329,8 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <div><span>Distributed transaction / 2PC</span><span>Trying to make one atomic commit across two separate databases. Two-phase commit (2PC) is the classic protocol for it: "everyone prepare", then "everyone commit". Works, but blocks and is painful to recover. This guide avoids it by giving each system its own commit and linking them with keys and events.</span></div>
   <div><span>Saga</span><span>A multi-step operation where each step is its own commit and progress is saved. A failed later step is undone by a compensating step (a linked reversal), not by rolling back.</span></div>
   <div><span>Partition / shard</span><span>Splitting data across several databases by a key (case id, customer id) so each one handles a share. "Hot partition" is one shard getting far more traffic than the others.</span></div>
-  <div><span>NoSQL</span><span>Databases that aren't traditional relational tables (key-value, document stores). Often cited as a scaling fix; in this guide, "move to NoSQL" is a wrong answer because the store isn't the bottleneck.</span></div>
-  <div><span>Datomic / Clojure</span><span>Nubank's database and programming language. Datomic never overwrites data; it keeps every past value, which is why "reproduce the case as of a date" is natural for them. Clojure is a functional language on the JVM. You don't need either; you need to know why they chose them (immutability).</span></div>
+  <div><span>NoSQL</span><span>Databases that aren't traditional relational tables (key-value, document stores). Often cited as a scaling fix. In this guide, "move to NoSQL" is a wrong answer because the store isn't the bottleneck.</span></div>
+  <div><span>Datomic / Clojure</span><span>Nubank's database and programming language. Datomic never overwrites data. It keeps every past value, which is why "reproduce the case as of a date" is natural for them. Clojure is a functional language on the JVM. You don't need either. You need to know why they chose them (immutability).</span></div>
 </div>
 
 <h3>Events, queues and workers</h3>
@@ -1319,15 +1338,15 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <div><span>Event</span><span>A record that something happened: "case opened", "network acknowledged". Written once, never changed. The case's history is its list of events.</span></div>
   <div><span>Snapshot / aggregate</span><span>The current summary of a case, kept alongside the events so you don't have to replay the whole history to know its state. Can always be rebuilt from the events.</span></div>
   <div><span>Aggregate root</span><span>The one entity that owns a group of related records and is the only door for changing them. Here, the case: you change the case through commands, never by editing an event or a deadline directly.</span></div>
-  <div><span>Command</span><span>A request to change something: "open a dispute", "submit to network". Commands are validated; events are what gets recorded when a command is accepted.</span></div>
+  <div><span>Command</span><span>A request to change something: "open a dispute", "submit to network". Commands are validated. Events are what gets recorded when a command is accepted.</span></div>
   <div><span>Event sourcing</span><span>Storing only the events and deriving all state from them. This guide uses events plus a snapshot, which is event history without making every read replay it.</span></div>
-  <div><span>Projection / read model</span><span>A copy of data shaped for a particular question (the search index, the Ops dashboard), built from events. Can lag; can be thrown away and rebuilt.</span></div>
+  <div><span>Projection / read model</span><span>A copy of data shaped for a particular question (the search index, the Ops dashboard), built from events. It can lag, and it can be thrown away and rebuilt.</span></div>
   <div><span>Idempotent / idempotency</span><span>Doing the same thing twice has the same effect as doing it once. Sending "credit Ana R$300" twice must credit her once. Achieved with an idempotency key.</span></div>
-  <div><span>Idempotency key</span><span>A stable identifier that travels with a request so the receiver can recognise a repeat. Generated once where the intent is born; reused on every retry.</span></div>
+  <div><span>Idempotency key</span><span>A stable identifier that travels with a request so the receiver can recognise a repeat. Generated once where the intent is born, and reused on every retry.</span></div>
   <div><span>Semantic key</span><span>An idempotency key that names the business action, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>, instead of a random id. It tells you what is being retried.</span></div>
   <div><span>Outbox</span><span>A table where you write "send this message later" in the same commit as the change it describes. A worker then sends it. Guarantees you never record a change without its message or a message without its change.</span></div>
   <div><span>Kafka</span><span>A system that stores streams of messages durably and in order and lets many consumers read them. Nubank uses it to move events between services. It is not a database and not the source of truth.</span></div>
-  <div><span>Topic / partition (Kafka)</span><span>A topic is a named stream; it's split into partitions so it can be spread across machines. Messages with the same key go to the same partition, so they stay in order.</span></div>
+  <div><span>Topic / partition (Kafka)</span><span>A topic is a named stream. It's split into partitions so it can be spread across machines. Messages with the same key go to the same partition, so they stay in order.</span></div>
   <div><span>Consumer</span><span>A program that reads messages from Kafka and does something with them, like updating the search index.</span></div>
   <div><span>At-least-once delivery</span><span>A guarantee that every message will arrive, possibly more than once. The normal case. It's why consumers must dedupe.</span></div>
   <div><span>Dedupe (deduplicate)</span><span>Recognising and ignoring a repeat, usually by remembering the ids you've already handled.</span></div>
@@ -1346,7 +1365,7 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 
 <h3>Files, storage and evidence</h3>
 <div class="rows">
-  <div><span>Object storage</span><span>A service for storing files (S3-style): you put bytes in, get a reference back. Built for big files; not a database.</span></div>
+  <div><span>Object storage</span><span>A service for storing files (S3-style): you put bytes in, get a reference back. Built for big files, not a database.</span></div>
   <div><span>Staged upload</span><span>Uploading a file to a temporary spot first, getting a token that identifies it, then linking it to the case in a commit. If the commit fails, the file is an orphan and gets cleaned up.</span></div>
   <div><span>Checksum</span><span>A short fingerprint computed from a file's bytes. If the bytes change, the checksum changes. Used to prove you got the exact file you expected.</span></div>
   <div><span>Malware scan</span><span>Checking an uploaded file for viruses or malicious content before anyone opens it.</span></div>
@@ -1364,9 +1383,9 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
 <div class="rows">
   <div><span>Latency</span><span>How long one request takes, start to finish.</span></div>
   <div><span>Throughput / TPS</span><span>How many requests per second the system handles. TPS is transactions per second.</span></div>
-  <div><span>p50, p99</span><span>Percentiles of latency. p50: half of requests are faster than this. p99: 99% are faster; only 1 in 100 is slower. Engineers watch p99 because averages hide the slow cases customers actually notice. "p99 is bad" means the slowest 1% of requests are too slow.</span></div>
-  <div><span>Critical path</span><span>The steps that must finish before the customer gets an answer. Anything on it adds latency; anything you can move off it makes the response faster.</span></div>
-  <div><span>Synchronous / asynchronous</span><span>Synchronous: the caller waits for the result. Asynchronous: the caller gets "accepted" and the work happens later. The atomic commit is synchronous; calling the card network is asynchronous.</span></div>
+  <div><span>p50, p99</span><span>Percentiles of latency. p50: half of requests are faster than this. p99: 99% are faster. Only 1 in 100 is slower. Engineers watch p99 because averages hide the slow cases customers actually notice. "p99 is bad" means the slowest 1% of requests are too slow.</span></div>
+  <div><span>Critical path</span><span>The steps that must finish before the customer gets an answer. Anything on it adds latency. Anything you can move off it makes the response faster.</span></div>
+  <div><span>Synchronous / asynchronous</span><span>Synchronous: the caller waits for the result. Asynchronous: the caller gets "accepted" and the work happens later. The atomic commit is synchronous. Calling the card network is asynchronous.</span></div>
   <div><span>SLA</span><span>Service level agreement: a promised limit, like "a case reaches the network within one business day". Used to define when Processing has gone on too long.</span></div>
   <div><span>Metric</span><span>A number the system reports about itself continuously: queue age, error rate, p99.</span></div>
   <div><span>Alert / page / on-call</span><span>An alert fires when a metric crosses a threshold. Paging means waking the on-call engineer, the person responsible for responding right now.</span></div>
@@ -1376,31 +1395,31 @@ CB-812:FINAL_ADJUSTMENT:v2</code></pre>
   <div><span>Kill switch</span><span>A control that stops a feature or a side effect immediately (no more network submissions, no more credits) without stopping the whole system or losing saved work.</span></div>
   <div><span>Shadow mode / shadow results</span><span>Running the new system alongside the old one on real inputs, with all of its actions switched off. It computes what it <em>would</em> do, and you record that. Then you compare its outputs (eligibility, deadlines, decisions) against what the trusted process actually did. "Shadow results" are those comparisons. You only trust the new system with real actions after the shadow results are good enough.</span></div>
   <div><span>Cohort</span><span>A defined slice of customers (say, 1% in one city) you enable something for first, so a mistake affects few people.</span></div>
-  <div><span>Rollout / rollback</span><span>Turning something on gradually (rollout) and turning it back off if it misbehaves (rollback). Note: rolling back code is fine; "rolling back" committed money or history is not.</span></div>
+  <div><span>Rollout / rollback</span><span>Turning something on gradually (rollout) and turning it back off if it misbehaves (rollback). Note: rolling back code is fine. "rolling back" committed money or history is not.</span></div>
   <div><span>Precision and recall</span><span>Two ways to measure an automated decision. Precision: of the cases it flagged, how many were right? Recall: of the cases that should have been flagged, how many did it catch? You can't judge automation without both.</span></div>
   <div><span>Four-eyes</span><span>A rule that a sensitive action needs two people: one to do it, one to approve it.</span></div>
   <div><span>Separation of duties</span><span>Making sure the person who can request something can't also approve it, and engineers can't bypass the workflow to edit money.</span></div>
   <div><span>Audit / audit trail</span><span>The complete record of who did what, when, and why, kept so it can be checked later by someone outside the team.</span></div>
   <div><span>Rate limit</span><span>A cap on how many requests a caller can make per second. Mentioned in this guide only as something generic web-system designs obsess over and this round doesn't.</span></div>
   <div><span>Cache</span><span>A fast copy of data kept close to where it's needed. Great for display, dangerous for decisions, because a copy can be stale.</span></div>
-  <div><span>CDN</span><span>Content delivery network: servers around the world that serve static files fast. Irrelevant to a dispute platform; another generic-design tell.</span></div>
+  <div><span>CDN</span><span>Content delivery network: servers around the world that serve static files fast. Irrelevant to a dispute platform. Another generic-design tell.</span></div>
   <div><span>Horizontal scaling</span><span>Handling more load by adding more machines doing the same job. Works for anything stateless and idempotent (workers). Doesn't work for the one thing that must decide (the write authority) or for people.</span></div>
 </div>
 
 <h3>Architecture words</h3>
 <div class="rows">
   <div><span>Adapter</span><span>A small component that translates between your system and an outside one (the network's message format, the FTP server). Only the adapter changes when the outside changes.</span></div>
-  <div><span>Hexagonal architecture</span><span>A way of organising a service so the business rules sit in the middle and every outside thing (database, network, queue) talks to them through adapters. Nubank uses it; it's why "only the adapter changes" is natural for them.</span></div>
+  <div><span>Hexagonal architecture</span><span>A way of organising a service so the business rules sit in the middle and every outside thing (database, network, queue) talks to them through adapters. Nubank uses it. It's why "only the adapter changes" is natural for them.</span></div>
   <div><span>Policy / policy version</span><span>The business rules (eligibility, deadlines, evidence needed), kept as versioned, testable code or configuration. Every decision records which version it used.</span></div>
-  <div><span>Workflow engine</span><span>Software that runs multi-step processes with timers and retries for you. Useful as plumbing; must not become the owner of your business rules.</span></div>
+  <div><span>Workflow engine</span><span>Software that runs multi-step processes with timers and retries for you. Useful as plumbing. Must not become the owner of your business rules.</span></div>
   <div><span>State machine / transition</span><span>A defined set of states (OPENED, SUBMITTED, WON) and the allowed moves between them (transitions). The case only moves through allowed transitions.</span></div>
   <div><span>Invariant</span><span>A rule that must be true no matter what breaks: "entries balance", "a deadline never disappears". You state them before designing so the design is judged against them.</span></div>
   <div><span>Boundary</span><span>What this system owns and what it merely talks to. Deciding it first stops you rebuilding the ledger or the network by accident.</span></div>
-  <div><span>Fail closed / fail open</span><span>What to do when you can't decide: refuse (closed) or allow (open). For money, closed is the safe default; open is a risk decision someone must own.</span></div>
+  <div><span>Fail closed / fail open</span><span>What to do when you can't decide: refuse (closed) or allow (open). For money, closed is the safe default. Open is a risk decision someone must own.</span></div>
 </div>
 
 <footer>
-  Study notes compiled from the <em>Nubank Lead System Design Study Guide</em>, Mock B: card disputes and chargebacks, on 4 September 2026; interview-format and batch-file material added 6 September 2026 from Nubank's hiring page and candidate reports on Glassdoor and 1Point3Acres; numbers, v1 storyline, single point of failure, degradation matrix and security table added 29 September 2026 from Nubank's candidate PDF <em>Preparing for your System Design Interview</em>. Prose tightened for clarity the same day; every interview sentence and recap is unchanged. Companion to <em>The ledger, end to end</em> and <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 around the four steps of the method Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>); section 6 now starts the design at the rung a Lead draws, and sections 3 to 5 carry the features, qualities and API in the video's form. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
+  Study notes compiled from the <em>Nubank Lead System Design Study Guide</em>, Mock B: card disputes and chargebacks, on 4 September 2026. Interview-format and batch-file material added 6 September 2026 from Nubank's hiring page and candidate reports on Glassdoor and 1Point3Acres. Numbers, v1 storyline, single point of failure, degradation matrix and security table added 29 September 2026 from Nubank's candidate PDF <em>Preparing for your System Design Interview</em>. Prose tightened for clarity the same day. Every interview sentence and recap is unchanged. Companion to <em>The ledger, end to end</em> and <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 around the four steps of the method Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>). Section 6 now starts the design at the rung a Lead draws, and sections 3 to 5 carry the features, qualities and API in the video's form. Prose shortened on 2 October 2026 toward Simplified Technical English (ASD-STE100 Issue 9), at about 80% strictness. Spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>

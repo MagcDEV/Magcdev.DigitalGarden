@@ -285,7 +285,7 @@
 <header class="hero">
   <h1>Pivot insurance: if the prompt isn't the ledger or chargebacks</h1>
   <p class="lede">Nubank says you "design a system from scratch". The reported prompts cluster around chargebacks and the ledger, but the round also produces card authorisation, credit limits, real-time fraud and PIX. This guide gets each one to a confident step-1 sentence and a drawn first version in ten minutes of prep. It reuses the pieces you already have, in the four steps of the method Nubank's interviewers recommend: requirements, entities and API, a high-level design that serves the features, deep dives one quality at a time.</p>
-  <p class="source">Compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built" and "swap the nouns" sections) and 2026 candidate reports. Third of three: read after <em>The ledger, end to end</em> and <em>The chargeback platform, end to end</em>. The authoriser latency budget and the two generic sketches in section 6 were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>). Restructured 1 October 2026 around the four steps of the Hello Interview method (see <em>The Hello Interview method, applied to Nubank's hour</em>); each sketch now names the rung it doesn't draw and starts at the one a Lead draws.</p>
+  <p class="source">Compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built" and "swap the nouns" sections) and 2026 candidate reports. Third of three: read after <em>The ledger, end to end</em> and <em>The chargeback platform, end to end</em>. The authoriser latency budget and the two generic sketches in section 6 were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>). Restructured 1 October 2026 around the four steps of the Hello Interview method (see <em>The Hello Interview method, applied to Nubank's hour</em>). Each sketch now names the rung it doesn't draw and starts at the one a Lead draws.</p>
 </header>
 
 <!-- ============================================================ -->
@@ -329,10 +329,11 @@
 
 <!-- ============================================================ -->
 <h2 id="authoriser">2. Card authorisation and the credit limit service</h2>
-<p class="question">Prompt shapes: "Design the authorisation path for a card transaction", "Design a credit limit service", "Approve a purchase in a few hundred milliseconds". It was Nubank's first product; rehearse it once out loud.</p>
+<p class="question">Prompt shapes: "Design the authorisation path for a card transaction", "Design a credit limit service", "Approve a purchase in a few hundred milliseconds". It was Nubank's first product. Rehearse it once out loud.</p>
 
 <h3 id="auth-end">The end result</h3>
-<p class="thesis">The card network sends "Ana wants to spend R$80 at a petrol station". It expects approve or decline within a few hundred milliseconds, at midnight, even if the cloud link is down. The authoriser reads Ana's available limit, evaluates rules, writes a hold and the decision in one atomic step, and answers. The hold lowers her available limit but not her posted balance. Days later the merchant captures against the hold, and the ledger posts the real movement. The only thing that can go badly wrong is approving from a stale limit. That is how the same money gets spent twice.</p>
+<p class="thesis">The card network sends "Ana wants to spend R$80 at a petrol station". It expects approve or decline within a few hundred milliseconds, at midnight, even if the cloud link is down. The authoriser reads Ana's available limit, evaluates rules, writes a hold and the decision in one atomic step, and answers. The hold lowers her available limit but not her posted balance. Days later the merchant captures against the hold, and the ledger posts the real movement.</p>
+<p>The only thing that can go badly wrong is approving from a stale limit. That is how the same money gets spent twice.</p>
 
 <figure>
 <svg viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
@@ -366,9 +367,10 @@
 </figure>
 
 <h3 id="auth-req">Step 1 · Requirements: features, scale, qualities</h3>
-<p><strong>Features.</strong> The card network submits an authorisation and gets approve or decline with a reason code. A merchant captures against an approval, or the approval expires. A payment or a limit change moves the available limit. Risk sets the limit policy; the authoriser enforces it. <strong>Below the line:</strong> the posting itself (the ledger's job), fraud scoring beyond a yes/no signal, the limit-setting model, the card network's own systems.</p>
+<p><strong>Features.</strong> The card network submits an authorisation and gets approve or decline with a reason code. A merchant captures against an approval, or the approval expires. A payment or a limit change moves the available limit. Risk sets the limit policy. The authoriser enforces it. <strong>Below the line:</strong> the posting itself (the ledger's job), fraud scoring beyond a yes/no signal, the limit-setting model, the card network's own systems.</p>
 <p><strong>Scale, asked before the qualities.</strong> About two billion card transactions a month is roughly 770 a second on average and some 8,000 at peak. Each decision reads one account and writes one hold. The network's budget is a few hundred milliseconds end to end. A cross-region hop alone is 100 ms or more, so the decision has to be local to the data.</p>
-<p><strong>Qualities, in context.</strong> Correct: never approve from a stale available limit, because that is a double spend. Fast: the decision path is one read, one rule pass, one small commit. That is 5 to 10 ms, inside the budget with room for a 50 ms fraud call. Available: answers at midnight even when the cloud link is down, which is the quality that shapes the whole design. Auditable: every decision records its inputs and the rule and model versions. Reconcilable: every approval is matched to a capture, an expiry or a reversal by the network's reference.</p>
+<p><strong>Qualities, in context.</strong> Correct: never approve from a stale available limit, because that is a double spend. Fast: the decision path is one read, one rule pass, one small commit. That is 5 to 10 ms, inside the budget with room for a 50 ms fraud call.</p>
+<p>Available: answers at midnight even when the cloud link is down, which is the quality that shapes the whole design. Auditable: every decision records its inputs and the rule and model versions. Reconcilable: every approval is matched to a capture, an expiry or a reversal by the network's reference.</p>
 
 <h3 id="auth-nouns">Step 2 · Entities and API: the nouns and the two operations</h3>
 <div class="rows">
@@ -376,23 +378,26 @@
   <div><span>Hold</span><span>A reservation created by an approval: amount, merchant, network reference, expiry, status (OPEN, CAPTURED, EXPIRED, REVERSED). Lowers available, not posted.</span></div>
   <div><span>Capture</span><span>The merchant's request to settle against a hold. Cannot exceed the hold beyond the network's tolerance. This is when the ledger posts real entries.</span></div>
   <div><span>Decision</span><span>Approve or decline with a reason code, recorded with every input it used and the rule and model versions. Auditable forever.</span></div>
-  <div><span>Limit change event / Payment event</span><span>Things that move the available limit from outside the authorisation path. Replayed in order into the aggregate; late arrivals replayed, never patched.</span></div>
+  <div><span>Limit change event / Payment event</span><span>Things that move the available limit from outside the authorisation path. Replayed in order into the aggregate. Late arrivals replayed, never patched.</span></div>
 </div>
 
-<p><strong>The API.</strong> Two operations from outside, and they carry the network's reference as their key. <em>Authorise</em>: card, amount, merchant, network reference; returns approve or decline with a reason, the same answer on a replayed reference. <em>Capture, reverse or advice</em>: the network's reference and the amount; returns the hold's new state. Payments and limit changes arrive as events from the ledger and from Risk, not as calls to the authoriser.</p>
+<p><strong>The API.</strong> Two operations from outside, and they carry the network's reference as their key. <em>Authorise</em>: card, amount, merchant, network reference. It returns approve or decline with a reason, the same answer on a replayed reference. <em>Capture, reverse or advice</em>: the network's reference and the amount. It returns the hold's new state. Payments and limit changes arrive as events from the ledger and from Risk, not as calls to the authoriser.</p>
 
 <h3 id="auth-walk">Step 3 · High-level design: the first version, one purchase start to finish</h3>
-<p><strong>The rung you name and don't draw.</strong> Every authoriser instance keeps its own cached copy of the limit and decides from it. It is fast, and it is how the same money gets spent twice, so it fails the first quality. Say that and move on. <strong>The first version you draw</strong> is the one below. The account's available limit is read from one owner. The hold and the decision are written together in one atomic step, conditional on the account's version. Everything else is told afterwards. In the drawing the owner is the strongly consistent cloud store. That serves every feature and is obviously correct. Its cost is a network hop and the store's failover window on the critical path, and that is exactly the gap the first deep dive closes.</p>
+<p><strong>The rung you name and don't draw.</strong> Every authoriser instance keeps its own cached copy of the limit and decides from it. It is fast, and it is how the same money gets spent twice, so it fails the first quality. Say that and move on.</p>
+<p><strong>The first version you draw</strong> is the one below. The account's available limit is read from one owner. The hold and the decision are written together in one atomic step, conditional on the account's version. Everything else is told afterwards.</p>
+<p>In the drawing the owner is the strongly consistent cloud store. That serves every feature and is obviously correct. Its cost is a network hop and the store's failover window on the critical path, and that is exactly the gap the first deep dive closes.</p>
 <ol>
   <li><strong>Authorisation.</strong> The network sends the request with its reference N1. It reaches the authoriser instance that currently owns Ana's account. Ownership is exclusive and fenced: only one replica may decide for Ana at a time. It reads Ana's available limit from memory: limit 1,000, posted 700, open holds 200, so 100 available. R$80 fits. Rules run (velocity, merchant category, a yes/no fraud signal). It writes the hold and the decision in one atomic append to the log, conditional on Ana's version. It answers "approved" inside the budget.</li>
   <li><strong>After the decision.</strong> The decision event goes to the cloud. The ledger records the hold (no entries yet). The feed shows "R$80 pending at Petrol Station". Fraud consumes the signal. Ana's available limit is now 20 everywhere within milliseconds.</li>
   <li><strong>Capture, two days later.</strong> The merchant settles R$80 against N1. The ledger posts real entries: Ana's card account +80 owed, merchant payable −80. The hold moves to CAPTURED. Posted becomes 780, holds 120, available still 100 − 80 = 20. Nothing double-counts because posted and held move together.</li>
-  <li><strong>Expiry, alternative ending.</strong> No capture arrives within the network's window. The hold expires, available goes back up by 80, an event records it. No ledger entries were ever written; nothing to reverse.</li>
+  <li><strong>Expiry, alternative ending.</strong> No capture arrives within the network's window. The hold expires, available goes back up by 80, an event records it. No ledger entries were ever written. Nothing to reverse.</li>
   <li><strong>Payment.</strong> Ana pays her bill. A payment event arrives, posted drops, available rises. If it arrives late or out of order, it's replayed into the ordered sequence and available is recomputed, never edited.</li>
 </ol>
 
 <h3 id="auth-deep">Step 4 · Deep dive: availability at the edge versus truth of the balance</h3>
-<p>Quality served: available inside the budget, at midnight, without ever approving from a stale limit. The first version put the owner in the cloud; the network requires the authoriser to be up when the cloud isn't. So where does the balance live? Three options; say all three, choose, and name the cost. Option A is the first version; the dive is the climb from A to B.</p>
+<p>Quality served: available inside the budget, at midnight, without ever approving from a stale limit. The first version put the owner in the cloud. The network requires the authoriser to be up when the cloud isn't.</p>
+<p>So where does the balance live? Three options. Say all three, choose, and name the cost. Option A is the first version. The dive is the climb from A to B.</p>
 <table>
   <tr><th>Option</th><th>How</th><th>Good</th><th>Cost</th></tr>
   <tr><td>A. Central store</td><td>Every authorisation reads and writes the strongly consistent cloud database.</td><td>Simple, obviously correct.</td><td>A network hop and the database's failover time are on the critical path. During failover you decline everything.</td></tr>
@@ -400,7 +405,8 @@
   <tr><td>C. Stand-in</td><td>When you're down, the network approves on your behalf under tight limits you configure.</td><td>Customers aren't declined at midnight.</td><td>You're approving blind. It's a risk decision with a measurable cost, not an engineering one.</td></tr>
 </table>
 <p>Nubank chose B, with the cloud as truth and Kafka syncing open-to-buy to every replica. They drove stand-in from about 1% of transactions to below one basis point. Say why: correctness lives in one place, speed lives at the edge, and the link between them is measured. Say the cost: fencing and lag monitoring are now safety-critical code.</p>
-<p><strong>The latency budget, in numbers.</strong> The network expects an answer in a few hundred milliseconds. A cross-region hop is 100 ms or more, so the decision must be local. One indexed read plus one small commit is 5 to 10 ms, which fits with room to spare. A synchronous fraud model call has to fit in about 50 ms or be shed. That arithmetic is the whole argument for option B. Nubank's prep document expects you to say it, not assert it.</p>
+<p><strong>The latency budget, in numbers.</strong> The network expects an answer in a few hundred milliseconds. A cross-region hop is 100 ms or more, so the decision must be local. One indexed read plus one small commit is 5 to 10 ms, which fits with room to spare. A synchronous fraud model call has to fit in about 50 ms or be shed.</p>
+<p>That arithmetic is the whole argument for option B. Nubank's prep document expects you to say it, not assert it.</p>
 
 <h3 id="auth-fail">Step 4 · Deep dive: failures, six questions each</h3>
 <table>
@@ -415,7 +421,8 @@
 <p><strong>Metrics that page:</strong> decline-due-to-error rate, stand-in rate, replica lag by owner, oldest unreconciled authorisation, p99 of the decision path against the budget.</p>
 
 <h3>Step 4 · Deep dive: rollout and ownership</h3>
-<p>Test cards, then small cohorts, then everyone; that is how they did it. Authoriser team owns the decision path; ledger team owns posting; Risk owns limit policy; network team owns the adapter. Biggest trade-off: sub-second availability at the edge versus strong consistency of the balance. The question to hand back: is any stand-in approval acceptable, and up to what amount?</p>
+<p>Test cards, then small cohorts, then everyone. That is how they did it.</p>
+<p>Authoriser team owns the decision path. Ledger team owns posting. Risk owns limit policy. Network team owns the adapter. Biggest trade-off: sub-second availability at the edge versus strong consistency of the balance. The question to hand back: is any stand-in approval acceptable, and up to what amount?</p>
 
 <div class="recap"><p class="label">Say it in 60 seconds</p><p>We answer the network in a few hundred milliseconds with approve or decline; there is no "processing". The rule that matters is never approve from a stale available limit, because that's a double spend. An approval writes a hold and the decision atomically against the account's version; the hold lowers available, not posted. The ledger posts at capture. For availability, each account has exactly one owning replica with an in-memory copy fed from an ordered log; the cloud is the truth and pushes updates; the replica refuses to decide when its lag or ownership is unknown. Failures: the network not getting our answer means the hold exists and we reconcile by their reference; two authorisations race and the version check makes the loser re-evaluate; late payments replay, never edit.</p></div>
 
@@ -428,7 +435,8 @@
 <p class="question">"Design a real-time fraud detection pipeline for PIX, cards and transfers." Nubank's risk platform is built on the same stack as everything else: Clojure, Datomic, Kafka.</p>
 
 <h3>The end result</h3>
-<p class="thesis">A payment is about to happen. Inside the authorisation budget, a decision service computes features and scores the payment against a versioned model and a versioned rule set. It returns allow, block, or step-up. It does not move money. Everything it decided, and every input it used, is recorded so the decision can be explained later. Slower, richer analysis runs asynchronously on the event stream and feeds back as labels and new rules. When the model is unavailable, a deterministic fallback decides. Whether that fallback is "allow" or "block" is a risk decision with a measured cost, not an engineering default.</p>
+<p class="thesis">A payment is about to happen. Inside the authorisation budget, a decision service computes features and scores the payment against a versioned model and a versioned rule set. It returns allow, block, or step-up. It does not move money. Everything it decided, and every input it used, is recorded so the decision can be explained later.</p>
+<p>Slower, richer analysis runs asynchronously on the event stream and feeds back as labels and new rules. When the model is unavailable, a deterministic fallback decides. Whether that fallback is "allow" or "block" is a risk decision with a measured cost, not an engineering default.</p>
 
 <figure>
 <svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
@@ -458,7 +466,7 @@
 <rect x="40" y="274" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="281" dominant-baseline="central" font-size="12" fill="#3E4A63">Eventual: features and learning. Model down → deterministic fallback whose direction Risk chose.</text>
 <text x="40" y="304" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Feedback trap: blocked payments never produce a "was it fraud?" label; sample a capped share and review them.</text>
 </svg>
-<figcaption>Two lanes that never share a budget. The top lane must answer in tens of milliseconds and never moves money; its only strong write is the decision record. The bottom lane has all the time in the world. It feeds new versions back into the top lane through a shadowed, versioned rollout, which is the dashed line.</figcaption>
+<figcaption>Two lanes that never share a budget. The top lane must answer in tens of milliseconds and never moves money. Its only strong write is the decision record. The bottom lane has all the time in the world. It feeds new versions back into the top lane through a shadowed, versioned rollout, which is the dashed line.</figcaption>
 </figure>
 
 <h3>Step 1 · Requirements: features, scale, qualities</h3>
@@ -467,17 +475,19 @@
 <p><strong>Qualities, in context.</strong> Inside the budget, always: anything slower is shed, model before rules. Reproducible: the feature snapshot and both versions are recorded, so the same decision can be explained a year later. Idempotent: the same request key returns the same decision, never a second score. Degrades deterministically: when the model is down a fallback decides, and its direction is Risk's decision made in advance. Learns: blocked payments never label themselves, so the loop is designed, not assumed.</p>
 
 <h3>Step 2 · Interface, data flow and the nouns</h3>
-<p>This is the pipeline-shaped prompt, so the bridge is the interface and the flow, in the video's form. <strong>Inputs:</strong> decision requests from the payment path; the stream of payment events; labels arriving late. <strong>Outputs:</strong> decisions with reasons; review cases; new rule and model versions. <strong>Flow:</strong> request arrives with its key → features read from the hot store → rules, then the model → decision recorded, then returned → the payment event lands on the stream → async features and review routing → labels join by decision id → the next version is chosen against them. The walkthrough below is that flow drawn.</p>
+<p>This is the pipeline-shaped prompt, so the bridge is the interface and the flow, in the video's form. <strong>Inputs:</strong> decision requests from the payment path, the stream of payment events, and labels arriving late. <strong>Outputs:</strong> decisions with reasons, review cases, and new rule and model versions. <strong>Flow:</strong> request arrives with its key → features read from the hot store → rules, then the model → decision recorded, then returned → the payment event lands on the stream → async features and review routing → labels join by decision id → the next version is chosen against them. The walkthrough below is that flow drawn.</p>
 <div class="rows">
   <div><span>DecisionRequest</span><span>Who, how much, to whom, through which rail, plus the caller's idempotency key. The same request twice must return the same decision.</span></div>
-  <div><span>Feature snapshot</span><span>The exact feature values used, frozen at decision time. Recomputing them later gives different numbers; the snapshot is what makes the decision reproducible.</span></div>
+  <div><span>Feature snapshot</span><span>The exact feature values used, frozen at decision time. Recomputing them later gives different numbers. The snapshot is what makes the decision reproducible.</span></div>
   <div><span>RuleSet version / Model version</span><span>Both versioned, both recorded on every decision. Rolling out a new version is a business event with a shadow period, not a config reload.</span></div>
   <div><span>Decision</span><span>Allow, block, step-up (ask for a second factor), with reason codes. Recorded before it is returned.</span></div>
   <div><span>Outcome label</span><span>What turned out to be true, arriving days later from chargebacks, customer reports and review. Joined back to the decision by id.</span></div>
 </div>
 
 <h3>Step 3 · High-level design: the first version, one payment start to finish</h3>
-<p><strong>The rung you name and don't draw.</strong> One service that computes every feature it can think of and scores synchronously, with no budget. It gives the best decision and misses the authorisation window, so the payment is declined by timeout. It fails the first quality. <strong>The first version you draw</strong> is two lanes with a line between them. The decision lane uses only what the hot store can answer plus a model small enough to score in time. It records, and returns. The async lane on the event stream does everything else and feeds the next decision. Its cost: features are always slightly stale, and the record write is on the budget. Its gaps: where exactly the line goes, and the bad day; those are the dives.</p>
+<p><strong>The rung you name and don't draw.</strong> One service that computes every feature it can think of and scores synchronously, with no budget. It gives the best decision and misses the authorisation window, so the payment is declined by timeout. It fails the first quality.</p>
+<p><strong>The first version you draw</strong> is two lanes with a line between them. The decision lane uses only what the hot store can answer plus a model small enough to score in time. It records, and returns. The async lane on the event stream does everything else and feeds the next decision.</p>
+<p>Its cost: features are always slightly stale, and the record write is on the budget. Its gaps: where exactly the line goes, and the bad day. Those are the dives.</p>
 <ol>
   <li>The authoriser (or PIX orchestrator) calls the decision service with a request and its key. Budget: a slice of the authorisation budget, say 50 ms.</li>
   <li>Features come from a hot store that async jobs keep fresh (velocity counters, device history, counterparty risk). Anything not in the store within the budget is treated as missing, and missing is a known input, not an error.</li>
@@ -506,12 +516,13 @@
 <p class="question">"Design PIX processing at scale." Instant, 24/7, settles in seconds through the central bank's system.</p>
 
 <h3>The end result</h3>
-<p class="thesis">We orchestrate; we do not rebuild PIX. One command from the customer produces two things. One debit in our ledger, into a clearing account. One submission to the rail with a stable end-to-end id. The customer sees Processing until the rail confirms; then the clearing entry is settled. A timeout from the rail means unknown: query by the same id before doing anything else. Every day, reconcile our submissions against the rail's records.</p>
+<p class="thesis">We orchestrate. We do not rebuild PIX. One command from the customer produces two things. One debit in our ledger, into a clearing account. One submission to the rail with a stable end-to-end id.</p>
+<p>The customer sees Processing until the rail confirms. Then the clearing entry is settled. A timeout from the rail means unknown: query by the same id before doing anything else. Every day, reconcile our submissions against the rail's records.</p>
 
 <figure>
 <svg viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Sending a PIX payment: one debit into clearing, one submission, three outcomes</title>
-<desc>A command with key K produces one atomic ledger commit that debits the customer into a PIX clearing account and shows Processing. An outbox row drives a rail adapter that submits with a stable end-to-end id. If the rail confirms, clearing is settled and the payment is Completed. If the rail rejects, a linked reversal returns the money. If the rail is silent, the adapter queries by the same id and, after a bounded time, routes to Ops; it never submits twice.</desc>
+<desc>A command with key K produces one atomic ledger commit that debits the customer into a PIX clearing account and shows Processing. An outbox row drives a rail adapter that submits with a stable end-to-end id. If the rail confirms, clearing is settled and the payment is Completed. If the rail rejects, a linked reversal returns the money. If the rail is silent, the adapter queries by the same id and, after a bounded time, routes to Ops. It never submits twice.</desc>
 <defs><marker id="arrow-pv-pix" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
 <g><rect x="30" y="40" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Command</text><text x="105.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">key K, Ana → other bank</text></g>
 <line x1="180" y1="68" x2="198" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/>
@@ -531,26 +542,28 @@
 <rect x="30" y="338" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="345" dominant-baseline="central" font-size="12" fill="#3E4A63">Every money step is its own atomic posting with its own key; the original debit is never deleted</text>
 <rect x="30" y="362" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="52" y="369" dominant-baseline="central" font-size="12" fill="#3E4A63">The rail is an external call: unknown after a timeout means query before retry; reconcile daily</text>
 </svg>
-<figcaption>The ledger shape with an external leg. The first green commit is the customer's latency; everything after it is Processing. Each outcome is a new posting with its own key. The red box is the honest one. Silence means unknown. Unknown means query by the same id, never a second submission.</figcaption>
+<figcaption>The ledger shape with an external leg. The first green commit is the customer's latency. Everything after it is Processing. Each outcome is a new posting with its own key. The red box is the honest one. Silence means unknown. Unknown means query by the same id, never a second submission.</figcaption>
 </figure>
 
 <h3>Step 1 · Requirements: features, scale, qualities</h3>
 <p><strong>Features.</strong> A customer sends a PIX to another bank and sees it go from Processing to done or returned. A customer receives a PIX and sees the money at once. Operations reconciles against the central bank's records daily. <strong>Below the line:</strong> the rail itself, key lookup (the directory), fraud decisions, limits.</p>
 <p><strong>Scale, asked before the qualities.</strong> Payday at 18:00 is the peak. Assume a few thousand sends a second for an hour, against a rail that answers in seconds and is up 24/7. The hot account is PIX clearing, which every send touches.</p>
-<p><strong>Qualities, in context.</strong> One debit per intent, however many retries. An honest Processing state until the rail answers; never "sent" on a timeout. Unknown after a timeout means query by the same id, never a second submission. Reconcilable: every submission matched daily against the rail's own records. Available: the ledger commit is the customer's latency; the rail's time is Processing, not latency.</p>
+<p><strong>Qualities, in context.</strong> One debit per intent, however many retries. An honest Processing state until the rail answers. Never "sent" on a timeout. Unknown after a timeout means query by the same id, never a second submission.</p>
+<p>Reconcilable: every submission matched daily against the rail's own records. Available: the ledger commit is the customer's latency. The rail's time is Processing, not latency.</p>
 
 <h3>Step 2 · Entities and API: the nouns and the one operation</h3>
-<p><strong>The API.</strong> One command, <em>send</em>: destination key, amount, the customer's idempotency key; it returns the intent id and Processing, and the same intent on a replayed key. One read: the intent's state and history. Everything else is an event: the rail's confirmation, rejection or silence.</p>
-<p><strong>PaymentIntent</strong> (the customer's command, its key, its state), <strong>LedgerCommand</strong> (the debit into clearing, with its own key), <strong>RailSubmission</strong> (end-to-end id, attempts, the rail's response), <strong>ReconciliationItem</strong> (sent, not yet confirmed, aged). The end-to-end id is generated once per intent and reused on every attempt; the rail dedupes on it.</p>
+<p><strong>The API.</strong> One command, <em>send</em>: destination key, amount, the customer's idempotency key. It returns the intent id and Processing, and the same intent on a replayed key. One read: the intent's state and history. Everything else is an event: the rail's confirmation, rejection or silence.</p>
+<p><strong>PaymentIntent</strong> (the customer's command, its key, its state), <strong>LedgerCommand</strong> (the debit into clearing, with its own key), <strong>RailSubmission</strong> (end-to-end id, attempts, the rail's response), <strong>ReconciliationItem</strong> (sent, not yet confirmed, aged). The end-to-end id is generated once per intent and reused on every attempt. The rail dedupes on it.</p>
 
 <h3>Step 3 · High-level design: the first version</h3>
-<p><strong>The rung you name and don't draw.</strong> Call the rail from inside the ledger transaction and commit the debit only if it confirms. It holds a lock across a network call. It turns a rail timeout into a customer who can't tell whether they paid. It fails the Processing quality. <strong>The first version you draw</strong> is the diagram above. One commit debits the customer into clearing with the intent's key and writes the outbox row. An adapter submits with a stable end-to-end id after the commit. Each rail outcome is a new posting with its own key. Its cost: a clearing account that must be watched by amount and by age, and a Processing state the product has to show. Its gaps are the failures below and the hot clearing account on payday.</p>
+<p><strong>The rung you name and don't draw.</strong> Call the rail from inside the ledger transaction and commit the debit only if it confirms. It holds a lock across a network call. It turns a rail timeout into a customer who can't tell whether they paid. It fails the Processing quality.</p>
+<p><strong>The first version you draw</strong> is the diagram above. One commit debits the customer into clearing with the intent's key and writes the outbox row. An adapter submits with a stable end-to-end id after the commit. Each rail outcome is a new posting with its own key. Its cost: a clearing account that must be watched by amount and by age, and a Processing state the product has to show. Its gaps are the failures below and the hot clearing account on payday.</p>
 
 <h3>Step 4 · Deep dive: failures, six questions each</h3>
 <ul>
-  <li><strong>Rail timeout.</strong> Unknown. Query by E2E-1. If completed: settle clearing. If rejected: reverse. If unknown after the rail's own window: Ops. Never a fresh submission with a new id; that is how a customer pays rent twice.</li>
-  <li><strong>Our commit succeeded, adapter crashed before sending.</strong> The outbox row is there; the adapter retries with the same E2E-1. Customer still sees Processing; money is in clearing, fully accounted for.</li>
-  <li><strong>Rail confirms a payment we have no record of.</strong> Reconciliation exception; never invent an intent. Investigate.</li>
+  <li><strong>Rail timeout.</strong> Unknown. Query by E2E-1. If completed: settle clearing. If rejected: reverse. If unknown after the rail's own window: Ops. Never a fresh submission with a new id. That is how a customer pays rent twice.</li>
+  <li><strong>Our commit succeeded, adapter crashed before sending.</strong> The outbox row is there. The adapter retries with the same E2E-1. Customer still sees Processing. Money is in clearing, fully accounted for.</li>
+  <li><strong>Rail confirms a payment we have no record of.</strong> Reconciliation exception. Never invent an intent. Investigate.</li>
   <li><strong>10x on payday at 18:00.</strong> The ledger's hot account is PIX clearing: scope it per shard and per hour, roll up by projection. Adapters scale horizontally because every submission is keyed.</li>
 </ul>
 
@@ -571,16 +584,28 @@
 
 <!-- ============================================================ -->
 <h2 id="generic">6. If the prompt is generic: ride-hailing and ad clicks</h2>
-<p class="question">Nubank's own prep document uses a ride-hailing example and recommends an ad-click aggregator video. Two ten-minute sketches, enough to open confidently; the four steps carry the rest.</p>
+<p class="question">Nubank's own prep document uses a ride-hailing example and recommends an ad-click aggregator video. Two ten-minute sketches, enough to open confidently. The four steps carry the rest.</p>
 
 <h3 id="ride">Ride-hailing: match riders with nearby drivers</h3>
-<p><strong>Step 1, features.</strong> A rider requests a ride and is matched with one nearby driver. A driver reports location and receives at most one active match. Below the line: pricing, payments, routing. <strong>Then the scale question, then the qualities.</strong> Active riders and drivers at peak, in how many cities. Location freshness (every second? five?). "Nearby" as distance or as ETA. Can two riders get the same driver. Latency budget for a match. What happens when a driver stops reporting. What's out of scope: pricing, payments, routing.</p>
+<p><strong>Step 1, features.</strong> A rider requests a ride and is matched with one nearby driver. A driver reports location and receives at most one active match. Below the line: pricing, payments, routing.</p>
+<p><strong>Then the scale question, then the qualities.</strong> Ask about these:</p>
+<ul>
+  <li>Active riders and drivers at peak, in how many cities?</li>
+  <li>Location freshness: every second, or every five?</li>
+  <li>"Nearby" as distance or as ETA?</li>
+  <li>Can two riders get the same driver?</li>
+  <li>The latency budget for a match.</li>
+  <li>What happens when a driver stops reporting?</li>
+  <li>What is out of scope: pricing, payments, routing?</li>
+</ul>
 <pre><code>1M active drivers reporting every 3 s → ~330k location updates / s
 50 bytes each                        → 16 MB / s, ~1.4 TB / day
 Far past one host's memory           → partition location state by geographic cell</code></pre>
 <div class="say"><p class="label">Scope sentence</p><p>"I'll focus on location ingestion and matching, since that's the hard part at this scale; pricing and payments are out of scope."</p></div>
-<p><strong>Step 2, entities and API.</strong> Driver (location, staleness stamp, version, active match), Rider request (its key), Match. Two operations: report location (driver id, point, time) and request a ride (rider key, pickup point); the match is the claim on one driver.</p>
-<p><strong>Step 3, the rung you name and don't draw.</strong> Drivers post location to a key-value store keyed by driver; a rider request scans every driver in the city. It serves the feature for one city and fails the scale quality at the first number above. Say so in a sentence. <strong>The first version you draw.</strong> Index drivers by geo-cell (geohash or H3). A match queries the rider's cell and its neighbours. Location updates stream through Kafka partitioned by cell; matching services own cells. The invariant: one driver, one active match. It is enforced by a conditional claim on the driver record with a version, exactly like the case version, so two riders can't both win.</p>
+<p><strong>Step 2, entities and API.</strong> Driver (location, staleness stamp, version, active match), Rider request (its key), Match. Two operations: report location (driver id, point, time) and request a ride (rider key, pickup point). The match is the claim on one driver.</p>
+<p><strong>Step 3, the rung you name and don't draw.</strong> Drivers post location to a key-value store keyed by driver. A rider request scans every driver in the city. It serves the feature for one city and fails the scale quality at the first number above. Say so in a sentence.</p>
+<p><strong>The first version you draw.</strong> Index drivers by geo-cell (geohash or H3). A match queries the rider's cell and its neighbours. Location updates stream through Kafka partitioned by cell. Matching services own cells.</p>
+<p>The invariant: one driver, one active match. It is enforced by a conditional claim on the driver record with a version, exactly like the case version, so two riders can't both win.</p>
 <table>
   <tr><th>Failure</th><th>What you do</th></tr>
   <tr><td>Driver in a tunnel</td><td>Last-known location with a staleness stamp; excluded from matching after N seconds; never shown as available on stale data.</td></tr>
@@ -588,11 +613,11 @@ Far past one host's memory           → partition location state by geographic 
   <tr><td>Hot cell (a stadium empties)</td><td>Split the cell, or add read replicas for the driver map while the claim stays on one owner.</td></tr>
   <tr><td>Two riders, one driver</td><td>The conditional claim accepts one; the loser re-queries the cell. No double booking, no lock across cells.</td></tr>
 </table>
-<p><strong>Step 4, the dives.</strong> The failure table above is the first. The hot cell and the staleness rule are the ones to drive to the bottom. <strong>The consistency line.</strong> The claim is strong; the map of nearby cars is eventual, and you say so.</p>
+<p><strong>Step 4, the dives.</strong> The failure table above is the first. The hot cell and the staleness rule are the ones to drive to the bottom. <strong>The consistency line.</strong> The claim is strong. The map of nearby cars is eventual, and you say so.</p>
 <figure>
 <svg viewBox="0 0 680 400" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Ride-hailing v2: location by geo-cell, one claim per driver</title>
-<desc>Drivers report location to stateless ingest services, which stream updates through Kafka partitioned by geographic cell. Matchers own cells and keep an in-memory index of drivers per cell; a rider request queries the rider's cell and neighbours, then wins a driver through a conditional claim on the driver record's version. The map of nearby cars is an eventual projection.</desc>
+<desc>Drivers report location to stateless ingest services, which stream updates through Kafka partitioned by geographic cell. Matchers own cells and keep an in-memory index of drivers per cell. A rider request queries the rider's cell and neighbours, then wins a driver through a conditional claim on the driver record's version. The map of nearby cars is an eventual projection.</desc>
 <defs><marker id="arrow-ride" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
 <g><rect x="40" y="30" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="115.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Drivers</text><text x="115.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">location every 3 s</text></g>
 <line x1="190" y1="55" x2="238" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/>
@@ -616,11 +641,23 @@ Far past one host's memory           → partition location state by geographic 
 </figure>
 
 <h3 id="adclicks">Ad-click aggregator: count clicks per ad in near real time</h3>
-<p><strong>Step 1, features.</strong> Users click an ad and are redirected. Advertisers query clicks per ad over time, down to a minute. Below the line: targeting and serving, cross-device tracking, fraud beyond idempotency. <strong>Then the scale question, then the qualities.</strong> Clicks per second at peak. How fresh the counts must be (seconds? minutes?). How accurate: billing-grade or dashboard-grade. Query shapes: per ad per minute, top ads. Retention. Out of scope: fraud detection, attribution.</p>
+<p><strong>Step 1, features.</strong> Users click an ad and are redirected. Advertisers query clicks per ad over time, down to a minute. Below the line: targeting and serving, cross-device tracking, fraud beyond idempotency.</p>
+<p><strong>Then the scale question, then the qualities.</strong> Ask about these:</p>
+<ul>
+  <li>Clicks per second at peak.</li>
+  <li>How fresh the counts must be: seconds or minutes?</li>
+  <li>How accurate: billing-grade or dashboard-grade?</li>
+  <li>Query shapes: per ad per minute, top ads.</li>
+  <li>Retention.</li>
+  <li>Out of scope: fraud detection, attribution?</li>
+</ul>
 <pre><code>10k clicks / s average, 100k peak, 100 bytes each → 10 MB / s peak, ~100 GB / day raw
 Aggregated per ad per minute                       → tiny; the raw log is the storage problem</code></pre>
-<p><strong>Step 2, interface and data flow</strong>, because this one is pipeline-shaped. Inputs: clicks, advertiser queries. Outputs: a redirect, aggregated metrics. Flow: click arrives → user redirected → click validated against its impression id → raw click logged → aggregated per ad per minute → queried. Steps one, two and six are the features; three to five exist for the qualities.</p>
-<p><strong>Step 3, the rung you name and don't draw.</strong> Write every click to one database and run SUM queries. The video's interviewer says this "would not pass at any level". A hundred thousand inserts a second and a scan on every dashboard load fail the latency quality. Name it in a sentence. The batch rung works: events to a write-optimised store, a Spark job every five minutes into a read-optimised one. It is the honest alternative to say aloud, and its cost is a five-minute-old dashboard. <strong>The first version you draw</strong> is the stream. Clicks go to Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters in memory with checkpoints and flush to a store built for time-series reads. Raw clicks also land in cheap object storage for reconciliation and replay. The trade: the stream gives freshness; a batch over the raw log gives exactness. Run both and reconcile, or accept at-least-once with idempotent click ids and dedupe within a window for near-exact.</p>
+<p><strong>Step 2, interface and data flow</strong>, because this one is pipeline-shaped. Inputs: clicks, advertiser queries. Outputs: a redirect, aggregated metrics. Flow: click arrives → user redirected → click validated against its impression id → raw click logged → aggregated per ad per minute → queried. Steps one, two and six are the features. Three to five exist for the qualities.</p>
+<p><strong>Step 3, the rung you name and don't draw.</strong> Write every click to one database and run SUM queries. The video's interviewer says this "would not pass at any level". A hundred thousand inserts a second and a scan on every dashboard load fail the latency quality. Name it in a sentence.</p>
+<p>The batch rung works: events to a write-optimised store, a Spark job every five minutes into a read-optimised one. It is the honest alternative to say aloud, and its cost is a five-minute-old dashboard.</p>
+<p><strong>The first version you draw</strong> is the stream. Clicks go to Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters in memory with checkpoints and flush to a store built for time-series reads. Raw clicks also land in cheap object storage for reconciliation and replay.</p>
+<p>The trade: the stream gives freshness. A batch over the raw log gives exactness. Run both and reconcile, or accept at-least-once with idempotent click ids and dedupe within a window for near-exact.</p>
 <table>
   <tr><th>Failure</th><th>What you do</th></tr>
   <tr><td>Processor dies</td><td>Replay from the last checkpoint; duplicates deduped by click id within the window.</td></tr>
@@ -628,11 +665,12 @@ Aggregated per ad per minute                       → tiny; the raw log is the 
   <tr><td>Late clicks</td><td>Windows stay open for a grace period; after that, corrections are appended, never edited. Immutability again.</td></tr>
   <tr><td>Dashboard and invoice disagree</td><td>They're allowed to, briefly. The dashboard is eventual. The billing number comes from the batch reconciliation over the raw log.</td></tr>
 </table>
-<p><strong>Step 4, the dives.</strong> The failure table is the first. Drive two to the bottom. No lost clicks: retention and reconciliation, and the pushback against checkpointing a one-minute window. One click per impression: a signed impression id checked before the stream. <strong>The consistency line.</strong> The dashboard is eventual; the billing number is exact and comes later.</p>
+<p><strong>Step 4, the dives.</strong> The failure table is the first. Drive two to the bottom. No lost clicks: retention and reconciliation, and the pushback against checkpointing a one-minute window. One click per impression: a signed impression id checked before the stream.</p>
+<p><strong>The consistency line.</strong> The dashboard is eventual. The billing number is exact and comes later.</p>
 <figure>
 <svg viewBox="0 0 680 456" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Ad-click aggregator v2: a fresh stream and an exact batch</title>
-<desc>Clicks flow into Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters with checkpoints and flush to a time-series store that serves an eventual dashboard. Raw clicks also land in object storage; a batch job over the raw log produces the exact billing number and appends corrections for late clicks.</desc>
+<desc>Clicks flow into Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters with checkpoints and flush to a time-series store that serves an eventual dashboard. Raw clicks also land in object storage. A batch job over the raw log produces the exact billing number and appends corrections for late clicks.</desc>
 <defs><marker id="arrow-ads" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
 <g><rect x="40" y="30" width="140" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="110.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Clicks</text><text x="110.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">100k/s peak, click id</text></g>
 <line x1="180" y1="55" x2="218" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
@@ -656,7 +694,8 @@ Aggregated per ad per minute                       → tiny; the raw log is the 
 </svg>
 <figcaption>Two paths from one log. The purple path is fresh and approximate: counters in memory, checkpoints, a dashboard seconds behind. The green path is exact and late. The raw log sits in cheap storage. A batch closes windows after a grace period. An invoice's corrections are appended, never edited. The dashed line is the reconciliation between them.</figcaption>
 </figure>
-<p><strong>The habits from the video Nubank recommends.</strong> Their PDF points at Hello Interview's breakdown of this exact prompt, and the full method is now its own guide, <em>The Hello Interview method, applied to Nubank's hour</em>. The sketch above is already in its four steps. That guide adds three things. The full ladder from a single click database to batch to stream (section 4). The five deep dives with the sentence for each (section 5). The level bar: a senior candidate starts at the stream and spends the hour on the dives.</p>
+<p><strong>The habits from the video Nubank recommends.</strong> Their PDF points at Hello Interview's breakdown of this exact prompt, and the full method is now its own guide, <em>The Hello Interview method, applied to Nubank's hour</em>. The sketch above is already in its four steps.</p>
+<p>That guide adds three things. The full ladder from a single click database to batch to stream (section 4). The five deep dives with the sentence for each (section 5). The level bar: a senior candidate starts at the stream and spends the hour on the dives.</p>
 
 <div class="recap"><p class="label">Say the resemblance out loud</p><p>Notice how much is the same as the fintech designs. A stable key per unit of work. A conditional claim for the one thing that must be exclusive. Strong where you decide and eventual where you read. Replay from an immutable log. Corrections appended, never edited. Saying that resemblance is the "architecture fundamentals" signal in Nubank's rubric. Every "what" has a "why", and the why is a principle you've used before.</p></div>
 
@@ -701,10 +740,10 @@ Aggregated per ad per minute                       → tiny; the raw log is the 
   <li>Take two interruptions from section 7. (2 minutes)</li>
 </ol>
 <p>Then the two generic sketches in section 6, ten minutes each, whiteboard from memory. Features and below the line, the numbers, the qualities, the bridge, the rung you don't draw, the first version, two failures, the consistency line.</p>
-<p>Then go back to chargebacks and the ledger; that's where the hours should go. If a prompt arrives that isn't in this guide at all, the first sentence still works: decide the family, then the four steps.</p>
+<p>Then go back to chargebacks and the ledger. That's where the hours should go. If a prompt arrives that isn't in this guide at all, the first sentence still works: decide the family, then the four steps.</p>
 
 <footer>
-  Study notes compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built", the worked credit-limit prompt, and the swap table) and 2026 candidate reports. The Nubank authoriser facts (own Mastercard authoriser in data centres, in-memory state rebuilt from a Kafka log plus snapshots, cloud as source of truth, stand-in driven below one basis point) are from the guide's summary of Nubank's engineering talks; use them as evidence for the way of thinking, not as claims about current components. The latency budget and the generic sketches were added 29 September 2026 from Nubank's candidate PDF; see <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 into the four steps of the method Nubank's interviewers recommend; each sketch now carries features, scale and qualities, the bridge, a first version with its rung-below named, and the dives. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
+  Study notes compiled 6 September 2026 from the <em>Nubank Lead System Design Study Guide</em> ("What Nubank built", the worked credit-limit prompt, and the swap table) and 2026 candidate reports. The Nubank authoriser facts (own Mastercard authoriser in data centres, in-memory state rebuilt from a Kafka log plus snapshots, cloud as source of truth, stand-in driven below one basis point) are from the guide's summary of Nubank's engineering talks. Use them as evidence for the way of thinking, not as claims about current components. The latency budget and the generic sketches were added 29 September 2026 from Nubank's candidate PDF. See <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 into the four steps of the method Nubank's interviewers recommend. Each sketch now carries features, scale and qualities, the bridge, a first version with its rung-below named, and the dives. Prose shortened on 2 October 2026 toward Simplified Technical English (ASD-STE100 Issue 9), at about 80% strictness. Spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>

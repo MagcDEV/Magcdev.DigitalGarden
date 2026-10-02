@@ -298,12 +298,16 @@
 <header class="hero">
   <h1>Mock interview: the chargeback platform, minute by minute</h1>
   <p class="lede">A full simulated system design round for the Nubank Lead role. Every interviewer question, every candidate answer, and what goes on the whiteboard at each step. Interruptions arrive roughly every ten minutes, the way candidates report them.</p>
-  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer. 6 September 2026; the numbers, a pushback exchange and the bad-day questions were added 29 September 2026 from Nubank's own candidate PDF. Re-run 1 October 2026 in the four steps of the video Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>). The road map is said at minute two. The features and the qualities are written in its form. The one-table version is named and not drawn. The first version is on the board by minute 16, and the candidate chooses the deep dives.</p>
+  <p class="source">Companion to <em>The chargeback platform, end to end</em>. Read the answers once, then cover them and run it with a timer.</p>
+  <p class="source">6 September 2026. The numbers, a pushback exchange and the bad-day questions were added 29 September 2026 from Nubank's own candidate PDF.</p>
+  <p class="source">Re-run 1 October 2026 in the four steps of the video Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>). The road map is said at minute two. The features and the qualities are written in its form. The one-table version is named and not drawn. The first version is on the board by minute 16, and the candidate chooses the deep dives.</p>
 </header>
 
 <h2 id="setup">Before you start</h2>
-<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team; <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. They are drawn here in the same style as the guides' diagrams, with colour for the consistency line. On the real board you draw the same boxes and arrows in one pen and say the colours out loud. Timestamps are where you should be, not where you must be. If you're five minutes behind at the drawing, cut a dive to a sentence, never the failures.</p>
-<p>The round is run in the four steps of the video Nubank's interviewers recommend, and the candidate names each step as they enter it. Requirements: features, then the scale question, then the qualities. Entities and API. A high-level design that serves only the features. Deep dives one quality at a time. Two rules from that video shape the script. First, the high-level design starts at the rung a senior candidate starts at. The one-table version is named in a sentence and never drawn, because a design that cannot keep audit, retries or deadlines "would not pass at any level". Second, the drawing is on the board by about minute 16. So more than half the hour is deep dives, which is where a Lead is graded.</p>
+<p>Two speakers: <strong>I</strong> is the interviewer, an engineer from a core-banking team. <strong>C</strong> is you. The boxes marked <em>Whiteboard</em> show what should be on the shared board at that moment, drawn as you talk. They are drawn here in the same style as the guides' diagrams, with colour for the consistency line. On the real board you draw the same boxes and arrows in one pen and say the colours out loud.</p>
+<p>Timestamps are where you should be, not where you must be. If you're five minutes behind at the drawing, cut a dive to a sentence, never the failures.</p>
+<p>The round is run in the four steps of the video Nubank's interviewers recommend, and the candidate names each step as they enter it. Requirements: features, then the scale question, then the qualities. Entities and API. A high-level design that serves only the features. Deep dives one quality at a time.</p>
+<p>Two rules from that video shape the script. First, the high-level design starts at the rung a senior candidate starts at. The one-table version is named in a sentence and never drawn, because a design that cannot keep audit, retries or deadlines "would not pass at any level". Second, the drawing is on the board by about minute 16. So more than half the hour is deep dives, which is where a Lead is graded.</p>
 <p>The candidate's answers below are deliberately spoken, not written: short sentences, one idea each, said while drawing. That is the register to practise.</p>
 
 <!-- ============================================================ -->
@@ -364,7 +368,7 @@
 
 <!-- ============================================================ -->
 <p class="clock" id="m3">3:30</p>
-<p class="note">Features as expectations, then the "below the line" list, said to get a nod. The video Nubank recommends writes requirements this way; its point is agreement on a boundary, not completeness.</p>
+<p class="note">Features as expectations, then the "below the line" list, said to get a nod. The video Nubank recommends writes requirements this way. Its point is agreement on a boundary, not completeness.</p>
 <div class="turn c"><p class="who">Candidate</p>
 <p>Then the features, as what each user expects. One: a customer disputes a card transaction and can see where it stands. Two: an operator reviews evidence and decides, under the policy for that country and network. Three: the platform submits the dispute to the network and records the outcome. Four: the platform asks the ledger for provisional credit, and for its reversal or adjustment once the outcome is known.</p>
 <p>Below the line for today: fraud scoring, the acquirer and merchant side, the network's internals, and reporting dashboards, which I'd come back to if we have time. Does that boundary work for you?</p></div>
@@ -637,7 +641,7 @@
 </svg>
 </div>
 
-<p class="note">The interviewer makes a suggestion. The prep document says they welcome pushback; silence here reads as passivity.</p>
+<p class="note">The interviewer makes a suggestion. The prep document says they welcome pushback. Silence here reads as passivity.</p>
 <div class="turn i"><p class="who">Interviewer</p><p>I'd actually push you to cache the case. Ops reads are most of the traffic, and a cache in front of the case store is the standard move.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
@@ -648,7 +652,7 @@
 
 <!-- ============================================================ -->
 <p class="clock" id="m36">36:00</p>
-<p class="note">Deep dive two: failures as a quality, six questions per failure. The candidate named this dive at minute 18; the interviewer runs it.</p>
+<p class="note">Deep dive two: failures as a quality, six questions per failure. The candidate named this dive at minute 18. The interviewer runs it.</p>
 <div class="turn i"><p class="who">Interviewer</p><p>Let's break things. The card network times out on a submission.</p></div>
 
 <div class="turn c"><p class="who">Candidate</p>
@@ -832,13 +836,15 @@
 </ul>
 
 <h3 id="bar">The bar for a Lead, in the video's terms</h3>
-<p>The video grades three levels and says where each passes. Mid-level: breadth over depth, the batch solution, probing on the basics; the interviewer drives the second half. Senior: reaches the high-level design fast, contrasts the options and chooses, and goes deep on two or three of the dives with the trade-offs said. Drives, and anticipates problems. Staff: breezes through the basics and drives every chosen dive to the bottom. "The interviewer should intervene only to focus, not to steer", and ideally learns something. The Lead round sits between senior and staff, and the script above is written to that. Two dives to the bottom: provisional credit, failures. One dive in three minutes: rollout. The batch-file answer at 43 as the teach-the-interviewer moment. A pushback with a reason each time the interviewer suggests a component the numbers don't ask for. The sentence the video's interviewer uses for the last of those: "identifications that go against the grain are really effective ways to show seniority."</p>
+<p>The video grades three levels and says where each passes. Mid-level: breadth over depth, the batch solution, probing on the basics. The interviewer drives the second half.</p>
+<p>Senior: reaches the high-level design fast, contrasts the options and chooses, and goes deep on two or three of the dives with the trade-offs said. Drives, and anticipates problems. Staff: breezes through the basics and drives every chosen dive to the bottom. "The interviewer should intervene only to focus, not to steer", and ideally learns something.</p>
+<p>The Lead round sits between senior and staff, and the script above is written to that. Two dives to the bottom: provisional credit, failures. One dive in three minutes: rollout. The batch-file answer at 43 as the teach-the-interviewer moment. A pushback with a reason each time the interviewer suggests a component the numbers don't ask for. The sentence the video's interviewer uses for the last of those: "identifications that go against the grain are really effective ways to show seniority."</p>
 
 <h3>Run it yourself</h3>
-<p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time; the point is that the answer doesn't depend on when it's asked.</p>
+<p>Cover the candidate turns. Read each interviewer turn aloud, answer with a timer running, then uncover and compare. Do the interruptions in a different order each time. The point is that the answer doesn't depend on when it's asked.</p>
 
 <footer>
-  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports; nobody has published Nubank's actual questions. The whiteboards were redrawn as diagrams on 30 September 2026. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>. On 1 October 2026 the script was re-run in the four steps of the recommended video: road map at minute 0, features at 3:30, qualities at 5:30, the API at 8, the one-table version named and not drawn at 13, the first version on the board at 16 with its gaps as the deep-dive menu, and the level bar added at the end. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
+  Simulated interview built from <em>The chargeback platform, end to end</em> and the reported format of Nubank's system design round. The interviewer's questions are composites of the follow-ups in the study guide and 2026 candidate reports. Nobody has published Nubank's actual questions. The whiteboards were redrawn as diagrams on 30 September 2026. The numbers, v1, pushback and bad-day turns were added 29 September 2026 from Nubank's candidate PDF, decoded in <em>Nubank's prep document, decoded</em>. On 1 October 2026 the script was re-run in the four steps of the recommended video: road map at minute 0, features at 3:30, qualities at 5:30, the API at 8, the one-table version named and not drawn at 13, the first version on the board at 16 with its gaps as the deep-dive menu, and the level bar added at the end. Prose shortened on 2 October 2026 toward Simplified Technical English (ASD-STE100 Issue 9), at about 80% strictness. Spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>
