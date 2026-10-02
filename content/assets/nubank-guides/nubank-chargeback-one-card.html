@@ -260,7 +260,7 @@
     <li><a href="#case">6. One case, end to end, on the diagram</a></li>
     <li><a href="#money">7. The money story, three endings</a></li>
     <li><a href="#failures">8. When things break</a></li>
-    <li><a href="#tenfold">9. "Ten times the volume"</a></li>
+    <li><a href="#tenfold">9. Scale and performance</a></li>
     <li><a href="#rollout">10. Rollout, in three lines</a></li>
     <li><a href="#lead">11. Lead signals, in their words</a></li>
     <li><a href="#never">12. Never say</a></li>
@@ -501,7 +501,8 @@
 <p><strong>Degrades, never dies.</strong> Network down: cases still open, submissions queue. Ledger down: decisions continue, credits pend with their keys. Storage down: uploads refused, nothing else. Search down: Ops works from queues. Kafka down: commands fine, notifications late.</p>
 <div class="say"><p class="label">When they say "it's down, now what?"</p><p>"Nothing is ever half done, because every side effect is an outbox row written in the same commit. If the network times out, I don't resubmit. I query by the same reference first. If the ledger is down, operators keep deciding and credits pend with their keys. If the timer workers die, deadlines are rows, so the sweeper catches up and we alert before any breach. Each dependency takes down its own feature, never the case."</p></div>
 
-<h2 id="tenfold">9. "Ten times the volume"</h2>
+<h2 id="tenfold">9. Scale and performance</h2>
+<h3>"Ten times the volume": the five-step answer</h3>
 <ol>
   <li><strong>Ask what grew.</strong> Cases, documents, operators?</li>
   <li><strong>Do the maths.</strong> 700k cases a day is 8 writes a second, 80 at peak. The database is still fine. Evidence storage becomes a cost. Operations becomes 5,000 people.</li>
@@ -511,6 +512,42 @@
 </ol>
 <div class="say"><p class="label">When they suggest caching the case</p><p>"I'd push back. Ops reads a case to decide on it, and a cached case is a stale decision input: two operators both read it, both think it's undecided. If it's read latency, I'd serve the snapshot from a replica and cache the versioned policy instead, because a version is a safe cache key."</p></div>
 
+<h3>The follow-up questions, with short answers</h3>
+<p>A Lead candidate who failed in late 2025 reported mostly scale and performance questions. These are the ones to expect. Answer each with a number, then a decision.</p>
+<table>
+  <tr><th>They ask</th><th>Answer in one line</th></tr>
+  <tr><td>"Ten times the cases?"</td><td>700k a day: 8 writes / s, 80 at peak. The database is still fine. Evidence becomes a cost line; Ops becomes 5,000 people.</td></tr>
+  <tr><td>"Where's your bottleneck?"</td><td>Operations: people. After that, the rate limits of the network and the ledger, not my workers.</td></tr>
+  <tr><td>"What would you measure?"</td><td>p99 of the command path, queue age per dependency, oldest unprocessed deadline, outbox lag, index lag.</td></tr>
+  <tr><td>"How does the case store scale?"</td><td>By case id, because no transaction spans two cases. Key on case id from day one. Split for failover size, not for writes.</td></tr>
+  <tr><td>"One case with thousands of events?"</td><td>The one hot shape. Cap events per case with policy; the snapshot means reads never replay the history.</td></tr>
+  <tr><td>"The deadline sweeper is slow."</td><td>Index on (status, due_at), bounded batches, claims with SKIP LOCKED. The timer takes the normal path, so the sweeper sees only stragglers.</td></tr>
+  <tr><td>"The network or the ledger throttles you."</td><td>Concurrency caps and backpressure per dependency. Queue age per dependency on the dashboard.</td></tr>
+  <tr><td>"80 TB of evidence a month?"</td><td>Object storage doesn't run out. The limits are scan throughput and egress: scan on its own queue, short-lived URLs, never proxy bytes through the case service.</td></tr>
+  <tr><td>"Bigger batch files?"</td><td>Numbered parts under one run. Stream the build; parse inbound files by row range in parallel; the claim stays one transaction.</td></tr>
+  <tr><td>"Add a queue in front for spikes?"</td><td>No. At 8 writes / s it's a component with no job, and one more place to lose a command.</td></tr>
+  <tr><td>"Can you cache anything?"</td><td>The policy, because it's versioned: same inputs and version, same answer. Precompute eligibility at case open. Never the case.</td></tr>
+</table>
+
+<h3>"How would you improve performance?"</h3>
+<p>This question is about latency on the customer path, not about scale. Only three things on the command path must be synchronous: permission, the key and version check, and the one commit. The ledger, the network, search and notifications already run after the commit. So the customer waits for one indexed read and one commit. If p99 is bad, look in this order:</p>
+<ol>
+  <li>A hot partition.</li>
+  <li>A lock held across a slow call.</li>
+  <li>A synchronous call that shouldn't be on the path.</li>
+</ol>
+<div class="say"><p class="label">Say it</p><p>"Performance here means the command path, and that path is one indexed read plus one commit. Policy is precomputed at case open, and the ledger and network calls are already after the commit. If p99 is bad, I look for a hot partition, then a lock held across a slow call, then a synchronous call that shouldn't be there. I wouldn't cache the case; a cached case is how two operators decide it twice."</p></div>
+
+<h3>Reference numbers to have in your head</h3>
+<table>
+  <tr><th>Thing</th><th>Rough number</th></tr>
+  <tr><td>One Postgres primary</td><td>Thousands of simple writes a second, tens of thousands of indexed reads, a few TB</td></tr>
+  <tr><td>One Kafka partition</td><td>Tens of thousands of small messages a second</td></tr>
+  <tr><td>Network hop</td><td>About 1 ms in one region, 50–150 ms across regions</td></tr>
+  <tr><td>Disk commit</td><td>1–10 ms</td></tr>
+  <tr><td>Sizes</td><td>Small JSON event about 1 KB, photo about 1 MB, scanned PDF about 10 MB</td></tr>
+  <tr><td>One reviewer</td><td>30–60 cases a day</td></tr>
+</table>
 <h2 id="rollout">10. Rollout, in three lines</h2>
 <p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
 <p><strong>If the network is files:</strong> same case model. Add a BatchRun (one file, one upload, one status) and a reconciliation queue for rows not yet answered. Claim rows into a run in one transaction, build the file, upload under the run's name. A half-processed response file can be re-run safely because each row is keyed by file id plus row id. Upload timeout: check the remote directory before re-uploading the same file. Never rebuild with a new run id.</p>

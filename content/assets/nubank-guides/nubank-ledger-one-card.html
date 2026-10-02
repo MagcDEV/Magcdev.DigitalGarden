@@ -260,7 +260,7 @@
     <li><a href="#case">6. One transfer, end to end, on the diagram</a></li>
     <li><a href="#timeouts">7. The three timeouts, and the one rule</a></li>
     <li><a href="#failures">8. When things break</a></li>
-    <li><a href="#tenfold">9. "Ten times the volume"</a></li>
+    <li><a href="#tenfold">9. Scale and performance</a></li>
     <li><a href="#rollout">10. Rollout, in three lines</a></li>
     <li><a href="#lead">11. Lead signals, in their words</a></li>
     <li><a href="#never">12. Never say</a></li>
@@ -484,7 +484,8 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <div class="say"><p class="label">When they say "it's down, now what?"</p><p>"Money is real only when the posting commits in the atomic store, so I start every failure from that line. Two debits race: the version check lets one win, and the other re-validates and may be declined. Kafka is down: every transfer still posts, the list is late, and I alert on outbox age. The primary fails over: transfers get 'try again' for seconds, and history stays readable. A rail is down: the money waits in clearing, visible by amount and age. And nobody ever edits an entry."</p></div>
 <p><strong>Security in one breath.</strong> Only authenticated callers with a scoped command set: the dispute platform may issue a provisional credit, not an arbitrary transfer. Every posting records the caller and the business key. Nobody edits entries, engineers included. A correction is a new linked posting with an approval. Keys are scoped per caller so one can't replay another's.</p>
 
-<h2 id="tenfold">9. "Ten times the volume"</h2>
+<h2 id="tenfold">9. Scale and performance</h2>
+<h3>"Ten times the volume": the five-step answer</h3>
 <ol>
   <li><strong>Ask what grew.</strong> Transactions, accounts, entries per account, read traffic?</li>
   <li><strong>Do the maths.</strong> Ten times is 80,000 transfers a second and 300,000 writes. That is many primaries, so partition by customer. Tag every transaction with the customer id from day one, so the split is possible.</li>
@@ -495,6 +496,41 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <p><strong>Hot account</strong> (a merchant settlement account, fee income, clearing). Scope it per day, per shard, per rail and roll up by projection. Or serialise on it with a per-account queue. Never a global lock, never a cached balance.</p>
 <div class="say"><p class="label">Say it once, in their own words</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialised writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
 
+<h3>The follow-up questions, with short answers</h3>
+<p>A Lead candidate who failed in late 2025 reported mostly scale and performance questions. These are the ones to expect. Answer each with a number, then a decision.</p>
+<table>
+  <tr><th>They ask</th><th>Answer in one line</th></tr>
+  <tr><td>"When would you partition?"</td><td>When posting throughput or failover time crosses a threshold I set with load tests. Under a few thousand writes / s, one primary, and measure.</td></tr>
+  <tr><td>"Partition by what?"</td><td>By customer, because customer-to-customer interaction is low, so most transfers stay on one shard. Tag every transaction with the customer id from day one.</td></tr>
+  <tr><td>"What would you measure?"</td><td>Posting p99, version conflicts per account, oldest outbox row, replica lag, failover time, entries on the hottest account.</td></tr>
+  <tr><td>"One merchant account takes half the traffic."</td><td>Scope it per day, per shard, per rail, and roll up by projection. Or serialise on it with a per-account queue. Never a global lock, never a cached balance.</td></tr>
+  <tr><td>"Reads are ten times the writes."</td><td>The balance is one indexed read of the aggregate. Feed, statements, search and analytics come from projections on any store. Only the funds check reads the authority.</td></tr>
+  <tr><td>"The outbox falls behind."</td><td>One publisher per partition, batch publishes, more Kafka partitions by account id. Dead-letter a poison row and keep publishing. Alert on the oldest row, not the count.</td></tr>
+  <tr><td>"Accounts with years of entries?"</td><td>A checkpoint per account per period, so a rebuild replays from the last one. Archive cold entries to cheaper storage, still replayable.</td></tr>
+  <tr><td>"Reconciliation is too heavy."</td><td>Run it on a replica or projection with a known lag, then confirm mismatches against the authority. A continuous per-account check, not one nightly pass.</td></tr>
+  <tr><td>"Cross-shard transfers are slow."</td><td>Machines don't help: each is two legs through clearing. That's why I partition by customer. Watch the clearing balance and its oldest item.</td></tr>
+  <tr><td>"Balance as of three months ago?"</td><td>Sum the entries up to that time, or replay from the nearest checkpoint. History is append-only, so it's a query, not a project.</td></tr>
+</table>
+
+<h3>"How would you improve performance?"</h3>
+<p>This question is about latency on the posting path, not about scale. That path holds five steps: key lookup, account reads, funds check, conditional update and one commit. Publication, projections and notifications already run after the commit. The target is tens of milliseconds at p99. If p99 is bad, look in this order:</p>
+<ol>
+  <li>A hot account row: version conflicts and retries.</li>
+  <li>A lock held across something slow, such as a network call inside the transaction.</li>
+  <li>An unindexed key or account lookup.</li>
+  <li>Only then, the database itself.</li>
+</ol>
+<div class="say"><p class="label">Say it</p><p>"The posting path is key lookup, account read, funds check, conditional update and one commit, and that's my tens-of-milliseconds p99. If it's slow, I look at a hot account row first, then a lock held across a slow call, then a missing index, and only then the database. The biggest win in most real ledgers is taking a synchronous call out of the transaction, not tuning the database."</p></div>
+
+<h3>Reference numbers to have in your head</h3>
+<table>
+  <tr><th>Thing</th><th>Rough number</th></tr>
+  <tr><td>One Postgres primary</td><td>Thousands of simple writes a second, tens of thousands of indexed reads, a few TB</td></tr>
+  <tr><td>One Kafka partition</td><td>Tens of thousands of small messages a second</td></tr>
+  <tr><td>Network hop</td><td>About 1 ms in one region, 50–150 ms across regions</td></tr>
+  <tr><td>Disk commit</td><td>1–10 ms</td></tr>
+  <tr><td>Sizes</td><td>Small JSON event about 1 KB, photo about 1 MB, scanned PDF about 10 MB</td></tr>
+</table>
 <h2 id="rollout">10. Rollout, in three lines</h2>
 <p>One transfer type, one country. Shadow the old ledger: post to both, compare totals, nobody reads the new one. Then a small cohort behind a kill switch. Partition only when a measurement says so, never pre-emptively.</p>
 <p><strong>Schema changes after launch:</strong> add fields, never repurpose. Expand, migrate, contract. Events carry a schema version, and consumers accept N and N+1 during a rollout. Never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache. Never the thing that decides, which is the available balance.</p>
