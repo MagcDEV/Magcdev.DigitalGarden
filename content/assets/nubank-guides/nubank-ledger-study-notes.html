@@ -376,7 +376,7 @@
 <main>
 <header class="hero">
   <h1>The ledger, end to end</h1>
-  <p class="lede">How every piece of Nubank's authoritative-ledger design fits together, written to be understood first and then practised in the four steps of the method Nubank's interviewers recommend: requirements, entities and API, a high-level design that serves the features, and deep dives one quality at a time.</p>
+  <p class="lede">How every piece of Nubank's authoritative-ledger design fits together. Written to be understood first, then practised in the four steps of the method Nubank's interviewers recommend: requirements, entities and API, a high-level design that serves the features, and deep dives one quality at a time.</p>
   <p class="source">Compiled from a study session on 4 September 2026, working from the <em>Nubank Lead System Design Study Guide</em> (Mock A: authoritative ledger and transfers). Each section is one question that was asked; the diagram nodes in section 1 correspond to sections 3 and 5 through 10. Numbers, the single point of failure, the degradation matrix, schema evolution and caching were added 29 September 2026 from Nubank's own candidate PDF (see <em>Nubank's prep document, decoded</em>). Restructured 1 October 2026 around the four steps of the Hello Interview method (see <em>The Hello Interview method, applied to Nubank's hour</em>): section 2 holds the requirements, section 4 starts the design at the rung a Lead draws.</p>
 </header>
 
@@ -384,7 +384,7 @@
 <h2 id="end-result">1. The end result</h2>
 <p class="question">Explain in simple terms the design of the ledger: how all the pieces work together, so I can work from the beginning and practise mock interviews.</p>
 
-<p class="thesis">The ledger is a notebook where every money movement is written as a pair of balancing lines, saved in one single database commit, and only after that commit does the rest of the world get told about it.</p>
+<p class="thesis">The ledger is a notebook where every money movement is written as a pair of balancing lines, saved in one single database commit. Only after that commit does the rest of the world get told about it.</p>
 
 <p>Everything else in the design follows from that sentence. Here is the complete system you would arrive at by the end of the interview:</p>
 
@@ -420,7 +420,7 @@
   <div><span>Account</span><span>A bucket of value in one currency, with a version number: a counter that goes up on every change.</span></div>
   <div><span>Transaction</span><span>The business event: "Ana sent Bruno R$10", stamped with the client's idempotency key. Nubank calls it a <em>movement</em>; either word is fine.</span></div>
   <div><span>Entry</span><span>One signed line against one account. The R$10 transfer is two entries: Ana −10, Bruno +10. They always sum to zero. Entries are never edited; a mistake is fixed with a new, opposite entry that points at the wrong one.</span></div>
-  <div><span>Account aggregate</span><span>The cheat-sheet summary so you don't re-add years of entries every time Ana pays: posted balance, held amount, available balance, version. It must always be rebuildable from the entries.</span></div>
+  <div><span>Account aggregate</span><span>The cheat-sheet summary, so you don't re-add years of entries every time Ana pays. It holds posted balance, held amount, available balance and version. It must always be rebuildable from the entries.</span></div>
   <div><span>Hold</span><span>A reservation (card authorization) that lowers <em>available</em> without touching <em>posted</em>.</span></div>
   <div><span>Outbox row</span><span>A note saying "publish this event later."</span></div>
 </div>
@@ -429,8 +429,8 @@
 <ol>
   <li>Ana's app sends the command with key <code>K1</code>. The network can deliver it twice; the key is what makes "twice" harmless.</li>
   <li>The ledger looks up <code>K1</code>. Already seen with the same payload: return the original result and stop. Same key, different payload: deterministic error, never processed.</li>
-  <li>It checks that both accounts exist, the currency matches, Ana has R$10 <em>available</em> (not just posted), and her account version is the one it read. Two concurrent debits can't both win; one sees a stale version and retries.</li>
-  <li>In <strong>one database transaction</strong> it writes the transaction, both entries, the updated aggregates for Ana and Bruno, the idempotency record, and the outbox row. All or nothing. This is the whole trick: save the key and the money in separate steps, and a crash between them lets money move twice.</li>
+  <li>It checks four things: both accounts exist, the currency matches, Ana has R$10 <em>available</em> (not just posted), and her account version is the one it read. Two concurrent debits can't both win; one sees a stale version and retries.</li>
+  <li>In <strong>one database transaction</strong> it writes the transaction, both entries, the updated aggregates for Ana and Bruno, the idempotency record, and the outbox row. All or nothing. This is the whole trick. Save the key and the money in separate steps, and a crash between them lets money move twice.</li>
   <li>Commit succeeds, so Ana gets "done". Not because Kafka got a message. Because the database committed.</li>
   <li>Afterwards, a worker reads the outbox and publishes to Kafka. Consumers build the transaction feed, send the push notification, feed fraud models. If Kafka is down for six hours, money is still right; the outbox catches up later. Consumers deduplicate because they may see a message twice.</li>
 </ol>
@@ -441,7 +441,7 @@
   <li>Timeout <em>after</em> commit: the retry with <code>K1</code> returns the same answer. You never infer the outcome from a timeout, and you never send a fresh key.</li>
   <li>After commit but event lost: the outbox republishes.</li>
 </ul>
-<p>And the one rule that protects everything: if the ledger can't verify available funds (shard down, failover in progress), it <strong>refuses the debit</strong> rather than approving from a cache. A few seconds of "try again" beats a loss you can't recover.</p>
+<p>And the one rule that protects everything. If the ledger can't verify available funds (shard down, failover in progress), it <strong>refuses the debit</strong> instead of approving from a cache. A few seconds of "try again" beats a loss you can't recover.</p>
 
 <h3 id="clearing">The one extension: when payer and payee live in different databases</h3>
 <p>You can't update two databases in one commit, so you add a <strong>clearing account</strong> as a waiting room.</p>
@@ -469,7 +469,7 @@
 <p>Each leg has its own stable key, and a durable progress record says which leg is done. Between legs the customer sees <em>Processing</em> and the money is fully accounted for: it's in clearing. If leg B can never complete, policy decides whether to reverse leg A with a new linked entry. Monitor clearing by amount <em>and</em> by age of the oldest item.</p>
 
 <h3 id="stages">How this maps to the four steps, and to the seven stages</h3>
-<p>The end picture above is what step 3 draws. The video Nubank's interviewers recommend runs a round in four steps: requirements, a bridge of entities and API, a high-level design that serves only the features, deep dives one quality at a time. This guide is ordered in those steps; the seven stages of the earlier mocks are what each step contains.</p>
+<p>The end picture above is what step 3 draws. The video Nubank's interviewers recommend runs a round in four steps: requirements, a bridge of entities and API, a high-level design that serves only the features, deep dives one quality at a time. This guide is ordered in those steps. The seven stages of the earlier mocks are what each step contains.</p>
 <table>
   <tr><th>Step</th><th>Sections</th><th>Stages it holds</th><th>What you do</th></tr>
   <tr><td>1 Requirements</td><td>2</td><td>1 Clarify, 2 Invariants</td><td>Decide you <em>are</em> the ledger (not a wallet on top of one, not a PIX adapter). Features as "users can…" lines; the scale question, then the arithmetic that says this design does outgrow one primary; the qualities with a number each, said as invariants: balanced entries, effectively-once, immutable history, no debit from stale funds, every external movement reconcilable.</td></tr>
@@ -477,7 +477,7 @@
   <tr><td>3 High-level design</td><td>4–7</td><td>4 Architecture</td><td>The rung you name and don't draw (a balance column updated in place). Then the diagram above as your v1: validate with the account version, one atomic commit, success from the commit. Say what it costs and the gaps the dives will close.</td></tr>
   <tr><td>4 Deep dives</td><td>8–11</td><td>5 Deep dive, 6 Failures, 7 Roadmap</td><td>One quality at a time: no fact goes untold (8, the outbox and Kafka down), the decision is strong and descriptions of it eventual (9), reads scale and drift is detectable (10), ten times the volume, the single point of failure and degradation (11, with the clearing account as the dive to teach from). Choose two to drive to the bottom and say you are choosing.</td></tr>
 </table>
-<p>For each failure the rhythm stays six questions: what committed, what retries with which key, what can duplicate, what the customer sees, which metric pages someone, what the safe operator action is. Section 7 of <em>The Hello Interview method, applied to Nubank's hour</em> puts minute marks on this run and names the planted pushback for the prompt: Kafka is not the source of truth, and the projection builder needs no checkpoint because it rebuilds from the log.</p>
+<p>For each failure the rhythm stays six questions: what committed, what retries with which key, what can duplicate, what the customer sees, which metric pages someone, what the safe operator action is. Section 7 of <em>The Hello Interview method, applied to Nubank's hour</em> puts minute marks on this run. It also names the planted pushback for the prompt: Kafka is not the source of truth, and the projection builder needs no checkpoint because it rebuilds from the log.</p>
 
 <div class="say"><p class="label">The one sentence that ties it together</p><p>"Money becomes durable in the atomic store; events describe that fact afterwards."</p></div>
 <p>If you can say that, and defend why the idempotency key lives inside the same commit, most of the follow-ups fall out naturally.</p>
@@ -488,7 +488,7 @@
 <p class="question">Minutes 3 to 12 of the round, before any box: what the ledger must do, at what volume, and what must never break.</p>
 
 <h3>Features, written as expectations</h3>
-<p>Write the functional requirements the way the video does: what each kind of caller expects of the system, one line each, then a short list labelled "below the line (out of scope)" that you get the interviewer to nod at.</p>
+<p>Write the functional requirements the way the video does. One line for what each kind of caller expects of the system. Then a short list labelled "below the line (out of scope)" that you get the interviewer to nod at.</p>
 <ol>
   <li>A client (the app, or an internal service such as the dispute platform) submits a transfer with an idempotency key and gets a definite answer: done, rejected, or the same answer it already got.</li>
   <li>Anyone authorised reads an account's balance now, and its statement over a period, including "as of" a past date.</li>
@@ -504,7 +504,7 @@
 2 entries per transaction + 1 aggregate update + 1 outbox row ≈ 4 writes  → ~30k writes / s peak
 Entries 200 bytes × 4B / month ≈ 0.8 TB / month on the hot path
 Read: balance checks ≈ same as transactions; feed reads 10× that, served from projections</code></pre>
-<p><strong>The decision.</strong> Thirty thousand writes per second at peak is beyond one comfortable Postgres primary (thousands of simple writes per second, tens of thousands of indexed reads, comfortable up to a few TB), so partitioning by customer is on the roadmap from day one, and the failover time of each partition is the availability ceiling. Cross-customer transfers then need the clearing account. Nearly a terabyte a month of entries means checkpoints and cold archiving are not optional. Analytics never touches the transactional store. Say the number that would change your mind: "if peak were under a few thousand writes a second I'd stay on one primary and measure."</p>
+<p><strong>The decision.</strong> Thirty thousand writes per second at peak is beyond one comfortable Postgres primary. A primary is comfortable at thousands of simple writes per second, tens of thousands of indexed reads, and up to a few TB. So partitioning by customer is on the roadmap from day one. The failover time of each partition is the availability ceiling. Cross-customer transfers then need the clearing account. Nearly a terabyte a month of entries means checkpoints and cold archiving are not optional. Analytics never touches the transactional store. Say the number that would change your mind: "if peak were under a few thousand writes a second I'd stay on one primary and measure."</p>
 
 
 <h3>The qualities, in context and quantified</h3>
@@ -513,10 +513,10 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <tr><th>Quality</th><th>In this system, with a number</th></tr>
   <tr><td>Correct about money</td><td>No double debit, ever; entries balance to zero per transaction; the funds check reads the authority, never a cache or a replica.</td></tr>
   <tr><td>Definite answers</td><td>Same key, same answer, for a retention window that outlasts any retry (24–72 hours for customer commands).</td></tr>
-  <tr><td>Latency</td><td>The commit is the customer's latency: tens of milliseconds p99 on the posting path, which holds one indexed read and one commit and nothing external.</td></tr>
-  <tr><td>Scale</td><td>8,000 transfers a second at peak, about 30,000 writes: past one primary, so partition by customer is the roadmap's first line, with clearing for cross-partition transfers.</td></tr>
+  <tr><td>Latency</td><td>The commit is the customer's latency: tens of milliseconds p99 on the posting path. That path holds one indexed read, one commit, and nothing external.</td></tr>
+  <tr><td>Scale</td><td>8,000 transfers a second at peak, about 30,000 writes. That is past one primary, so partition by customer is the roadmap's first line, with clearing for cross-partition transfers.</td></tr>
   <tr><td>Durable, auditable history</td><td>Entries append-only, 0.8 TB a month; "as of" any date is a query; checkpoints per account so rebuilds replay from the last one.</td></tr>
-  <tr><td>Available</td><td>Synchronous replica per partition; during a failover of seconds, new debits are rejected rather than approved from a stale balance, and reads keep working from projections.</td></tr>
+  <tr><td>Available</td><td>Synchronous replica per partition. During a failover of seconds, new debits are rejected instead of approved from a stale balance. Reads keep working from projections.</td></tr>
   <tr><td>No fact goes untold</td><td>An event exists if and only if the money moved; Kafka down for six hours delays the feed and loses nothing.</td></tr>
 </table>
 
@@ -531,7 +531,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <p>The entities are the six nouns of section 1: Account, Transaction, Entry, Account aggregate, Hold, Outbox row. The API is three operations; everything else is a projection read. The caller's identity comes from the token, never the body.</p>
 <table>
   <tr><th>Operation</th><th>Carries</th><th>Returns</th></tr>
-  <tr><td><code>POST /transfers</code></td><td>The command below: client-generated idempotency key, source and destination accounts, amount in minor units, currency, type, reference.</td><td>The transaction id and the resulting state; on a replayed key the same transaction; on a reused key with a different payload a deterministic conflict.</td></tr>
+  <tr><td><code>POST /transfers</code></td><td>The command below: client-generated idempotency key, source and destination accounts, amount in minor units, currency, type, reference.</td><td>The transaction id and the resulting state. On a replayed key, the same transaction. On a reused key with a different payload, a deterministic conflict.</td></tr>
   <tr><td><code>GET /accounts/{id}/balance</code></td><td>The account id; optionally an "as of" timestamp.</td><td>Posted, held and available balance with the account version; the "as of" form sums entries or replays from a checkpoint.</td></tr>
   <tr><td><code>GET /accounts/{id}/entries</code></td><td>A period, a cursor.</td><td>The statement, from a projection, with its lag stated.</td></tr>
 </table>
@@ -548,26 +548,26 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   "reference": "Rent split",
   "requested_at": "2026-09-04T14:02:11Z"
 }</code></pre>
-<p>Plus, from the transport layer rather than the body: the authenticated caller (which app, which customer, which service), and optionally the account version the client expects, if you want clients to take part in concurrency control.</p>
+<p>Two more fields come from the transport layer, not the body. The authenticated caller: which app, which customer, which service. And optionally the account version the client expects, if you want clients to take part in concurrency control.</p>
 <ul>
   <li><strong>Amount is an integer in minor units</strong> (1000 = R$10.00), never a float. Floats round; money doesn't.</li>
   <li><strong>Currency is explicit</strong> even for a single-currency product. The ledger balances within a currency, and the day you add a second one you don't want to migrate every command.</li>
-  <li><strong>Type</strong> decides which posting rule applies: an internal transfer is two entries; a PIX-out is three (customer, clearing, and later the rail's settlement account); a purchase may carry a fee leg.</li>
+  <li><strong>Type</strong> decides which posting rule applies. An internal transfer is two entries. A PIX-out is three: customer, clearing, and later the rail's settlement account. A purchase may carry a fee leg.</li>
   <li><strong>No balances, no entries, no transaction id.</strong> The client says what it <em>wants</em>; the ledger decides what gets <em>written</em>. The transaction id is minted by the ledger on commit and returned in the response.</li>
 </ul>
 
 <h3>Why the client generates the key</h3>
 <p>Because the client is the only party that knows whether it is retrying.</p>
 <p>Play out the alternative, where the ledger mints the key on arrival. Ana taps "send". The request reaches the ledger, it commits, and the response is lost in the network. Her app sees a timeout and retries. The ledger sees what looks like a brand-new request, mints a new key, and moves R$10 again. The server had no way to know the two arrivals were one intent.</p>
-<p>Now the client generates it. Ana taps "send"; the app generates <code>K1</code> <em>once</em>, stores it locally, and sends it on every retry of that tap. The first arrival commits and stores <code>K1</code> with the result. The second arrival finds <code>K1</code> and returns the original transaction. If the app crashes mid-retry, it still has <code>K1</code> on disk and can ask "what happened to K1?", and the ledger answers with certainty.</p>
-<p>The general principle: <strong>the identity of a business intention is born where the intention is born.</strong> For the mobile app, that's the tap. For an internal service calling the ledger, it's derived from <em>that service's</em> durable state: a chargeback platform uses <code>case_id:PROVISIONAL_CREDIT:v1</code>, a transfer saga uses <code>transfer_id:LEG_B</code>. Never <code>uuid()</code> on each retry.</p>
+<p>Now the client generates it. Ana taps "send"; the app generates <code>K1</code> <em>once</em>, stores it locally, and sends it on every retry of that tap. The first arrival commits and stores <code>K1</code> with the result. The second arrival finds <code>K1</code> and returns the original transaction. If the app crashes mid-retry, it still has <code>K1</code> on disk. It can ask "what happened to K1?", and the ledger answers with certainty.</p>
+<p>The general principle: <strong>the identity of a business intention is born where the intention is born.</strong> For the mobile app, that's the tap. For an internal service calling the ledger, it's derived from <em>that service's</em> durable state. A chargeback platform uses <code>case_id:PROVISIONAL_CREDIT:v1</code>. A transfer saga uses <code>transfer_id:LEG_B</code>. Never <code>uuid()</code> on each retry.</p>
 
 <h3>What the ledger does with it</h3>
 <p>The key is scoped: unique on <code>(caller, idempotency_key)</code>, so two different apps can both use "K1" without colliding. Stored alongside it: a hash of the payload and the resulting transaction id. On arrival:</p>
 <ul>
   <li>Key not found → process normally, store the key in the same commit.</li>
   <li>Key found, payload hash matches → return the stored transaction, don't touch money.</li>
-  <li>Key found, payload hash differs → return a deterministic conflict error. The caller reused one identity for two different intentions. That's a client bug, and the safe move is to process neither: don't apply the new payload, don't overwrite the old result.</li>
+  <li>Key found, payload hash differs → return a deterministic conflict error. The caller reused one identity for two different intentions. That's a client bug. The safe move is to process neither: don't apply the new payload, don't overwrite the old result.</li>
 </ul>
 <p>Keys need a retention window so the table doesn't grow forever: say 24–72 hours for customer commands, longer for service commands. The window must outlast any plausible retry.</p>
 
@@ -580,8 +580,8 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <!-- ============================================================ -->
 <h2 id="hld">4. Step 3 · High-level design: begin at the good rung, the v1 you draw</h2>
 <p class="question">The design that serves the features, drawn by about minute 15, starting from the rung a Lead starts at. Sections 5 to 7 open its three boxes.</p>
-<p>Nubank's prep document wants a first idea, its flaws found by you, and the fixes in order. The video Nubank recommends adds the floor: a high-level design that cannot serve the features "would not pass at any level", and a senior or staff candidate "won't start with the crappy solution; you'll start a little further on". So: name the rung below the floor in one sentence, draw the rung that works, and spend the saved minutes on the deep dives.</p>
-<p><strong>The rung you name and don't draw.</strong> One service reads a balance column, subtracts, writes it back, and publishes an event from memory. One table, one query, obviously fast, and four flaws you would meet in the first week: no entries behind the balance, so no audit and no "as of"; a race between two readers of the same number, so a double spend; a retry with no identity, so a double debit; an event that lives only in memory until Kafka takes it, so a posting nobody hears about.</p>
+<p>Nubank's prep document wants a first idea, its flaws found by you, and the fixes in order. The video Nubank recommends adds the floor. A high-level design that cannot serve the features "would not pass at any level". A senior or staff candidate "won't start with the crappy solution; you'll start a little further on". So name the rung below the floor in one sentence. Draw the rung that works. Spend the saved minutes on the deep dives.</p>
+<p><strong>The rung you name and don't draw.</strong> One service reads a balance column, subtracts, writes it back, and publishes an event from memory. One table, one query, obviously fast. And four flaws you would meet in the first week. No entries behind the balance, so no audit and no "as of". A race between two readers of the same number, so a double spend. A retry with no identity, so a double debit. An event that lives only in memory until Kafka takes it, so a posting nobody hears about.</p>
 <figure>
 <svg viewBox="0 0 680 420" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Ledger v1: a balance column updated in place</title>
@@ -614,7 +614,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 </svg>
 <figcaption>The rung below the floor, kept so you can name its four flaws in one sentence. Every box is neutral because nothing here has a consistency story. Don't draw it; a ledger that can double-debit is not a high-level design a Lead shows.</figcaption>
 </figure>
-<p><strong>The v1 you draw.</strong> It is the section 1 diagram, and each piece exists to remove one of those flaws: entries explain the balance and make "as of a date" a query (flaw 1); the account version turns the funds check into a conditional write (flaw 2); a client-generated key stored in the same commit makes a retry return the same transaction (flaw 3); an outbox row in that commit means an event exists if and only if the money moved, and success never waits on Kafka (flaw 4). Say what it costs as you draw it: four or five rows per transfer instead of one, a worker, and consumers that must dedupe. This is the "good" rung: it serves every feature, it is the ledger you would ship for one country on one primary, and nothing in it is so weak that the dives have to begin by replacing it.</p>
+<p><strong>The v1 you draw.</strong> It is the section 1 diagram, and each piece exists to remove one of those flaws. Entries explain the balance and make "as of a date" a query (flaw 1). The account version turns the funds check into a conditional write (flaw 2). A client-generated key stored in the same commit makes a retry return the same transaction (flaw 3). An outbox row in that commit means an event exists if and only if the money moved, and success never waits on Kafka (flaw 4). Say what it costs as you draw it: four or five rows per transfer instead of one, a worker, and consumers that must dedupe. This is the "good" rung. It serves every feature. It is the ledger you would ship for one country on one primary. Nothing in it is so weak that the dives have to begin by replacing it.</p>
 <figure>
 <svg viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Ledger v2: entries, a versioned aggregate, the key and the outbox in one commit</title>
@@ -642,7 +642,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <rect x="180" y="516" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="202" y="523" dominant-baseline="central" font-size="12" fill="#3E4A63">Strongly consistent: the decision and the money</text>
 <rect x="180" y="540" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="202" y="547" dominant-baseline="central" font-size="12" fill="#3E4A63">Asynchronous: descriptions of the fact, rebuildable</text>
 </svg>
-<figcaption>The section 1 diagram as your v1, with a green badge on each piece naming the flaw of the undrawn rung it removes. The whole left column is one strongly consistent decision; everything on the right describes that decision afterwards and can be rebuilt from it.</figcaption>
+<figcaption>The section 1 diagram as your v1, with a green badge on each piece naming the flaw of the undrawn rung it removes. The whole left column is one strongly consistent decision. Everything on the right describes that decision afterwards and can be rebuilt from it.</figcaption>
 </figure>
 <p><strong>What v1 does not yet handle, and which dive closes each gap.</strong> Say the list right after the drawing; it is your deep-dive menu, and choosing from it is the staff signal.</p>
 <table>
@@ -653,7 +653,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <tr><td>One primary for the whole bank; one hot account</td><td>Ten times the volume</td><td>Section 11: partition by customer, the clearing account for cross-shard transfers, hot-account scoping.</td></tr>
   <tr><td>The primary fails over</td><td>Available, never wrong</td><td>Section 11: the single point of failure, the degradation matrix, security in one breath.</td></tr>
 </table>
-<p><strong>v3: scale and operate</strong>, only when the numbers say so, and for the ledger they do. Partition by customer because customer-to-customer interaction is low, tag every transaction with the customer id from day one, and route cross-shard transfers through clearing as two legs. Move every non-authorising read to projections and analytics to its own environment. Checkpoint entries per account so a rebuild replays from the last checkpoint.</p>
+<p><strong>v3: scale and operate</strong>, only when the numbers say so, and for the ledger they do. Partition by customer, because customer-to-customer interaction is low. Tag every transaction with the customer id from day one. Route cross-shard transfers through clearing as two legs. Move every non-authorising read to projections and analytics to its own environment. Checkpoint entries per account so a rebuild replays from the last checkpoint.</p>
 <figure>
 <svg viewBox="0 0 680 520" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
 <title>Ledger v3: partition by customer, clear across partitions</title>
@@ -685,7 +685,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <rect x="60" y="472" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="82" y="479" dominant-baseline="central" font-size="12" fill="#3E4A63">Clearing: the only path between shards; monitored by amount and age</text>
 <text x="60" y="500" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Tag every transaction with the customer id from day one, so the split is possible later.</text>
 </svg>
-<figcaption>The write path multiplies rather than changes. Each shard is the whole v1 picture for its customers, with its own replica and its own outbox publisher. The amber box is the only path between shards, and it is a real account with real entries, so the books balance at every instant. Analytics never touches the shards.</figcaption>
+<figcaption>The write path multiplies rather than changes. Each shard is the whole v1 picture for its customers, with its own replica and its own outbox publisher. The amber box is the only path between shards. It is a real account with real entries, so the books balance at every instant. Analytics never touches the shards.</figcaption>
 </figure>
 <div class="say"><p class="label">The words that make this a collaboration signal</p><p>"The simplest ledger is a balance column updated in place; it can double-spend and has no history, so I won't draw it. My first version writes the transaction, its entries, both aggregates with a version check, the key and an outbox row in one commit, and tells the world afterwards. It costs four rows and a worker. It doesn't yet handle a long Kafka outage, read scale, or a second primary, and those are my deep dives."</p></div>
 
@@ -730,7 +730,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <rect x="30" y="270" width="14" height="14" rx="3" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="52" y="277" dominant-baseline="central" font-size="12" fill="#3E4A63">The loser: zero rows matched, nothing committed, cheap retry</text>
 <text x="30" y="302" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">No long-held locks, no deadlocks between shards; wall-clock time is metadata, the version is the order.</text>
 </svg>
-<figcaption>Both requests are correct on their own; the version is what makes them correct together. The first conditional update matches and commits; the second matches zero rows, so nothing it did survives, and the retry sees the real balance.</figcaption>
+<figcaption>Both requests are correct on their own; the version is what makes them correct together. The first conditional update matches and commits. The second matches zero rows, so nothing it did survives, and the retry sees the real balance.</figcaption>
 </figure>
 <h3>Two things interviewers push on</h3>
 <ul>
@@ -739,12 +739,12 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 </ul>
 
 <h3>What the version is <em>not</em></h3>
-<p>Not a global sequence number, and not a timestamp. It is per account, which is exactly why it scales: Ana's version and Bruno's never contend, and a busy merchant account can't slow down a quiet one. When a transaction touches two accounts, check both versions in the same commit and take them in a fixed order (by account id) so opposite-direction transfers can't deadlock.</p>
+<p>Not a global sequence number, and not a timestamp. It is per account, which is exactly why it scales. Ana's version and Bruno's never contend, and a busy merchant account can't slow down a quiet one. When a transaction touches two accounts, check both versions in the same commit. Take them in a fixed order, by account id, so opposite-direction transfers can't deadlock.</p>
 
 <div class="recap">
   <p class="label">60-second recap, as you'd say it in the room</p>
-  <p>Inside the same transaction it checks the idempotency key, that both accounts exist and may take this entry type, that currency and book match, and that available funds (posted minus holds) cover the amount.</p>
-  <p>Two R$80 debits race against Ana's R$100. Both read available = 100, both pass the check. Without a version, both commit and Ana is at −60. With a version, each write is <code>WHERE version = 418</code>; the first wins and bumps to 419, the second matches zero rows, rolls back, re-reads available = 20, and fails cleanly. The version converts "read then write" into "write only if nothing changed since I read."</p>
+  <p>Inside the same transaction it checks four things. The idempotency key. That both accounts exist and may take this entry type. That currency and book match. That available funds (posted minus holds) cover the amount.</p>
+  <p>Two R$80 debits race against Ana's R$100. Both read available = 100, both pass the check. Without a version, both commit and Ana is at −60. With a version, each write is <code>WHERE version = 418</code>. The first wins and bumps to 419. The second matches zero rows, rolls back, re-reads available = 20, and fails cleanly. The version converts "read then write" into "write only if nothing changed since I read."</p>
 </div>
 
 <div class="say"><p class="label">Interview sentence</p><p>"The hold check, funds check and aggregate update are atomic with the account version, so two concurrent debits can both read the same balance but only one can commit against it."</p></div>
@@ -805,7 +805,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <li><strong>Balance integrity</strong>: entries and aggregate can never disagree at rest.</li>
   <li><strong>Guaranteed publication</strong>: an event exists if and only if the money moved.</li>
 </ul>
-<p>Try to get those from three separate systems (a key-value store for keys, a database for balances, Kafka for events) and you are writing a distributed transaction or a saga to glue them together, for a problem one Postgres transaction already solves.</p>
+<p>Try to get those from three separate systems: a key-value store for keys, a database for balances, Kafka for events. Now you are writing a distributed transaction or a saga to glue them together, for a problem one Postgres transaction already solves.</p>
 
 <h3>When it stops being one transaction</h3>
 <p>The moment Ana and Bruno live in different databases. You can't get both aggregate updates into one commit, so you introduce the clearing account. Leg A (Ana → clearing) is one atomic commit in Ana's shard with all its own rows. Leg B (clearing → Bruno) is another in Bruno's. Each leg is atomic on its own; the transfer as a whole is a saga with a durable progress record. The invariant "every leg is one atomic commit" never changes. Only the number of legs does.</p>
@@ -830,10 +830,10 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 </ul>
 
 <h3>What goes wrong if you return success <em>before</em> the commit</h3>
-<p>The mirror mistake: acknowledge the request, drop it on a queue, process later. Now "Sent" means "we'll try". If the consumer later finds insufficient funds, you have to walk back a confirmation you already gave. For money that is only acceptable when the product has explicitly designed a <em>Processing</em> state, which is exactly what you do for <em>external</em> rails, where you genuinely don't control the outcome.</p>
+<p>The mirror mistake: acknowledge the request, drop it on a queue, process later. Now "Sent" means "we'll try". If the consumer later finds insufficient funds, you have to walk back a confirmation you already gave. For money that is only acceptable when the product has explicitly designed a <em>Processing</em> state. That is exactly what you do for <em>external</em> rails, where you genuinely don't control the outcome.</p>
 
 <h3>The rule this protects</h3>
-<p>Success is a business state, not an HTTP 200. Define it as "the local financial commitment required by the product promise is durable." For an internal transfer that's debit and credit committed. For a PIX-out it's the debit plus a durable <em>Processing</em> record: you return "accepted", not "completed", because the external leg isn't yours to promise.</p>
+<p>Success is a business state, not an HTTP 200. Define it as "the local financial commitment required by the product promise is durable." For an internal transfer that's debit and credit committed. For a PIX-out it's the debit plus a durable <em>Processing</em> record. You return "accepted", not "completed", because the external leg isn't yours to promise.</p>
 <p>In the diagram: commit → return success → outbox worker publishes → Kafka → projections. The customer's response leaves at step two. Everything after is asynchronous and can be late without ever making step two false.</p>
 
 <div class="say"><p class="label">Interview sentence</p><p>"Money becomes durable at the commit; that is the only moment where 'success' is true and irreversible. Events describe that fact afterwards, so tying the customer's answer to Kafka would couple availability to messaging and risk telling the customer 'failed' after money already moved."</p></div>
@@ -866,14 +866,14 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <li>The transaction feed in the app is stale: Bruno doesn't see the incoming R$10 in his history yet (his <em>balance</em> is right, because that's read from the ledger).</li>
   <li>Push notifications don't go out.</li>
   <li>Fraud scoring, analytics and any integrations see nothing.</li>
-  <li>The outbox table grows for six hours. At a few hundred TPS that is millions of rows: fine for a database, but watch disk, and plan backpressure if it goes on for days.</li>
+  <li>The outbox table grows for six hours. At a few hundred TPS that is millions of rows. Fine for a database, but watch disk, and plan backpressure if it goes on for days.</li>
 </ul>
 <p>When Kafka returns, the worker drains the backlog oldest-first. Ordering is preserved per partition key, consumers dedupe, and the feed catches up. Nobody edits anything by hand.</p>
 
 <h3>What pages on-call</h3>
 <p>Not "Kafka is down"; the Kafka team already knows. The ledger team alerts on the <strong>age of the oldest unpublished outbox row</strong>. That one number catches a Kafka outage, a stuck worker, a bad batch that keeps failing, everything. Pair it with backlog count for the trend.</p>
 
-<div class="trap"><p class="label">The trap the interviewer is setting</p><p>They want to see if you'll say "roll back the transfer because the event didn't go out." Never. Committed money is a fact; the event is a description of the fact, and descriptions can be late. The reverse trap is making the customer's success depend on Kafka being up, which turns a messaging outage into a banking outage.</p></div>
+<div class="trap"><p class="label">The trap the interviewer is setting</p><p>They want to see if you'll say "roll back the transfer because the event didn't go out." Never. Committed money is a fact; the event is a description of the fact, and descriptions can be late. The reverse trap is making the customer's success depend on Kafka being up. That turns a messaging outage into a banking outage.</p></div>
 
 <div class="say"><p class="label">Interview sentence</p><p>"Money remains correct; feeds and notifications go stale. The outbox backlog grows, publication resumes in order when Kafka returns, and consumers deduplicate. I alert on outbox age, not on Kafka health."</p></div>
 
@@ -884,7 +884,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <p>Because Kafka can't give you the one thing a ledger needs: a single atomic decision that covers the balance check, the entries, the idempotency record and the new balance together.</p>
 
 <h3>What "source of truth" has to do</h3>
-<p>When Ana sends R$10, someone has to decide, in one indivisible step: <em>does she have it, has this command already been processed, and if both are fine, write the two entries and the new balances.</em> Split any part of that from the rest and a crash in the gap creates money that moved twice, or a balance that doesn't match its history.</p>
+<p>When Ana sends R$10, someone has to decide, in one indivisible step: <em>does she have it, has this command already been processed, and if both are fine, write the two entries and the new balances.</em> Split any part of that from the rest, and a crash in the gap creates money that moved twice, or a balance that doesn't match its history.</p>
 <p>A relational database does this natively. That is what a transaction with a unique constraint and a conditional update <em>is</em>.</p>
 <p>Kafka is an append-only log of messages. It is excellent at durably recording "this happened" and fanning it out in order. It has no concept of "check Ana's balance and reject if insufficient", no unique constraint on an idempotency key, no conditional write against a version. To get those you would build a consumer that reads the log, keeps state and enforces the rules. At that point <em>the consumer's store</em> is the source of truth, and Kafka is just the pipe into it.</p>
 
@@ -896,7 +896,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 </ol>
 
 <h3>The honest version of event sourcing</h3>
-<p>An interviewer may push: "Nubank is event-driven, so isn't event sourcing the truth?" Fair. An event-sourced ledger is possible. But the events still need per-account ordering, a uniqueness check on command identity, snapshots and controlled replay, and the component that enforces those is a database with an atomic write boundary, not the bus. Nubank's own description matches: the Datomic transaction function is where check-and-write is one ACID operation; Kafka carries messages between services, and every consumer dedupes on a correlation id.</p>
+<p>An interviewer may push: "Nubank is event-driven, so isn't event sourcing the truth?" Fair. An event-sourced ledger is possible. But the events still need per-account ordering, a uniqueness check on command identity, snapshots and controlled replay. The component that enforces those is a database with an atomic write boundary, not the bus. Nubank's own description matches. The Datomic transaction function is where check-and-write is one ACID operation. Kafka carries messages between services, and every consumer dedupes on a correlation id.</p>
 
 <h3>The division of labor</h3>
 <div class="rows">
@@ -958,7 +958,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <li><strong>Ask what grew.</strong> Transactions per second, accounts, entries per account, countries, or read traffic? "Tenfold" with no noun is a trap; supply the noun if they don't.</li>
   <li><strong>Name the bottleneck with a number you'd measure.</strong> Posting p99, account-version conflict rate, oldest outbox row, replica lag, failover time, entries per account for the hottest account.</li>
   <li><strong>Scale what scales.</strong> Everything idempotent and stateless: outbox publishers, projection builders, reconciliation jobs, read serving from projections.</li>
-  <li><strong>Say what doesn't, and why.</strong> One write authority per account (that's the invariant, not a limitation to apologise for), hot accounts, and the failover time of the authoritative store, which is your availability ceiling.</li>
+  <li><strong>Say what doesn't, and why.</strong> One write authority per account: that's the invariant, not a limitation to apologise for. Hot accounts. The failover time of the authoritative store, which is your availability ceiling.</li>
   <li><strong>Protect the invariants while you scale.</strong> Balanced entries, effectively-once, immutable history, never debit from a stale balance. Any "optimisation" that bends one of those is a bug with better latency.</li>
 </ol>
 
@@ -975,13 +975,13 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 </table>
 
 <h3>"How would you improve performance?"</h3>
-<p>Usually means latency on the posting path. What is on that path: key lookup, account reads, funds check, conditional update, one commit. That's it. Publication, projections and notifications already happen after commit. If p99 is bad, look in this order: a hot account row (version conflicts and retries), a lock held across something slow (a network call inside the transaction is the classic), an unindexed key or account lookup, and only then the database itself. The biggest latency win in most real ledgers is taking a synchronous call out of the transaction, not tuning the database.</p>
+<p>Usually means latency on the posting path. What is on that path: key lookup, account reads, funds check, conditional update, one commit. That's it. Publication, projections and notifications already happen after commit. If p99 is bad, look in this order. A hot account row: version conflicts and retries. A lock held across something slow: a network call inside the transaction is the classic. An unindexed key or account lookup. Only then the database itself. The biggest latency win in most real ledgers is taking a synchronous call out of the transaction, not tuning the database.</p>
 
 <h3>The three "improvements" that are actually bugs</h3>
 <ul>
   <li><strong>"Cache the available balance."</strong> A cached balance is a stale balance, and authorising from it is exactly how money is spent twice. Cache display balances all you like; the funds check reads the authority.</li>
   <li><strong>"Authorise from a read replica."</strong> Same failure with a different name. Replica lag is a stale balance.</li>
-  <li><strong>"Post asynchronously and confirm later."</strong> That turns "Sent" into "we'll try", which the product may accept for external rails with a Processing state, but never for an internal transfer.</li>
+  <li><strong>"Post asynchronously and confirm later."</strong> That turns "Sent" into "we'll try". The product may accept that for external rails with a Processing state, but never for an internal transfer.</li>
 </ul>
 
 <h3>The Nubank-flavoured interruptions and their one-line answers</h3>
@@ -998,11 +998,11 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 
 <div class="trap"><p class="label">Avoid saying</p><p>"Add more instances" without naming instances of what. "Cache the balance." "Read replicas for authorisation." "Shard everything" without a key. "Move to NoSQL" as if the store were the problem. Each answers a generic question the interviewer didn't ask.</p></div>
 
-<p>Their own database makes the same trade explicit. The Datomic overview states two properties side by side: trivial read scaling, because immutable databases can be copied to any number of readers, and no per-database write scaling, because transactions are totally serialised. That is why Nubank shards by customer, and why cross-shard movement is the part to spend care on. Section 11 of <em>Nubank's prep document, decoded</em> has the source and the two posts behind it.</p>
+<p>Their own database makes the same trade explicit. The Datomic overview states two properties side by side. Trivial read scaling, because immutable databases can be copied to any number of readers. No per-database write scaling, because transactions are totally serialised. That is why Nubank shards by customer, and why cross-shard movement is the part to spend care on. Section 11 of <em>Nubank's prep document, decoded</em> has the source and the two posts behind it.</p>
 <div class="say"><p class="label">Say it once, in their own words</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialized writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
 
 <h3 id="ledger-spof">Your single point of failure, and the degradation matrix</h3>
-<p>Point at the diagram before they ask. The single point of failure is the write authority's primary, one per partition. Synchronous replica in another zone so failover loses no committed money; automated promotion in seconds to a minute; during that window new debits are rejected rather than approved from a replica, because a replica is a stale balance. Reads of the display balance and the feed keep working from projections. Failover time is the availability ceiling, and you say so.</p>
+<p>Point at the diagram before they ask. The single point of failure is the write authority's primary, one per partition. A synchronous replica in another zone, so failover loses no committed money. Automated promotion in seconds to a minute. During that window new debits are rejected, not approved from a replica, because a replica is a stale balance. Reads of the display balance and the feed keep working from projections. Failover time is the availability ceiling, and you say so.</p>
 <table>
   <tr><th>Down</th><th>Still works</th><th>Degrades to</th><th>Customer sees</th></tr>
   <tr><td>Primary (failover window)</td><td>Feed, statements, display balance from projections</td><td>New postings rejected for seconds; external work queued</td><td>"Try again in a moment" on a transfer</td></tr>
@@ -1012,7 +1012,7 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
   <tr><td>Fraud or limit service</td><td>Nothing on the posting path depends on it synchronously</td><td>Deterministic fallback whose direction Risk chose in advance</td><td>Nothing, or a decline under the conservative rule</td></tr>
   <tr><td>One partition</td><td>Every other partition's customers</td><td>Cross-partition transfers to it wait in clearing</td><td>Processing for transfers to affected customers</td></tr>
 </table>
-<p><strong>Security and abuse, in one breath.</strong> The ledger accepts postings only from authenticated callers with a scoped command set and limits per caller, so a dispute platform can issue a provisional credit but not an arbitrary transfer. Every posting records the caller and the business key. Nobody edits entries, engineers included; a correction is a new linked posting with an approval. Idempotency keys are scoped per caller so one caller cannot replay another's, and a replayed request returns the original transaction, never a second effect. Rate limits live at the edge, not in the ledger.</p>
+<p><strong>Security and abuse, in one breath.</strong> The ledger accepts postings only from authenticated callers with a scoped command set and limits per caller. So a dispute platform can issue a provisional credit but not an arbitrary transfer. Every posting records the caller and the business key. Nobody edits entries, engineers included; a correction is a new linked posting with an approval. Idempotency keys are scoped per caller, so one caller cannot replay another's. A replayed request returns the original transaction, never a second effect. Rate limits live at the edge, not in the ledger.</p>
 <div class="say"><p class="label">Monitoring and debugging in one breath</p><p>"One correlation id per command, on every log line, event and posting. I measure posting p99, version-conflict rate per account, oldest outbox row, replica lag, clearing balance and the age of its oldest item, and reconciliation mismatches. I alert on customer and money impact, not on raw errors. For one transfer, I read its entries and events; for many, I read the dependency dashboards."</p></div>
 
 <!-- ============================================================ -->
@@ -1048,27 +1048,27 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 
 <h3>Row lock versus version</h3>
 <p><strong>Short answer.</strong> Both serialise concurrent writes to one account; they differ in when they pay for it. A row lock (<code>SELECT ... FOR UPDATE</code>) pays up front: the second transaction waits for the first to commit, then sees the new balance. A version pays on conflict: both read freely, the second one's conditional update matches zero rows, rolls back, and retries. I default to the version because ledger contention is low and I never want a long-held lock spanning anything slow. I'd switch to locking for a hot account, where retry storms cost more than waiting.</p>
-<p><strong>Why.</strong> Under optimistic concurrency a lost race costs one wasted read-validate cycle. Under pessimistic locking every race costs the loser waiting time and costs the database a lock to manage, and if any code path holds that lock across a network call the whole account stalls. Locks also allow deadlocks between transactions that touch two accounts; versions can't. The version is also a free correctness check on the aggregate: any write that bypasses the versioned update path stands out.</p>
-<p><strong>Alternative.</strong> A per-account command queue (one consumer per account key) gives ordering without either mechanism; it's what you reach for when contention is high and you already have partitioned messaging.</p>
+<p><strong>Why.</strong> Under optimistic concurrency a lost race costs one wasted read-validate cycle. Under pessimistic locking every race costs the loser waiting time and costs the database a lock to manage. If any code path holds that lock across a network call, the whole account stalls. Locks also allow deadlocks between transactions that touch two accounts; versions can't. The version is also a free correctness check on the aggregate: any write that bypasses the versioned update path stands out.</p>
+<p><strong>Alternative.</strong> A per-account command queue (one consumer per account key) gives ordering without either mechanism. It's what you reach for when contention is high and you already have partitioned messaging.</p>
 
 <h3>Why not timestamps</h3>
 <p><strong>Short answer.</strong> A timestamp says when a machine thought something happened. It cannot say whether two writes conflicted. Two servers can stamp two debits with times microseconds apart in either direction, and neither stamp stops both from committing. The version is a per-account counter that advances only on commit, so it is the authoritative order of that account's history. Wall-clock time is metadata: useful for reporting, not for correctness.</p>
-<p><strong>Why.</strong> Clocks drift, jump backwards after NTP corrections, and differ across regions. A balance is a cumulative sum over ordered entries, so a wrong order is a wrong balance. Versions also handle late-arriving events cleanly: an event that shows up out of order is replayed into the sequence, not patched into place by its timestamp.</p>
+<p><strong>Why.</strong> Clocks drift, jump backwards after NTP corrections, and differ across regions. A balance is a cumulative sum over ordered entries, so a wrong order is a wrong balance. Versions also handle late-arriving events cleanly. An event that shows up out of order is replayed into the sequence, not patched into place by its timestamp.</p>
 
 <h3>Deterministic lock ordering for multi-account transactions</h3>
 <p><strong>Short answer.</strong> When one transaction touches two accounts, always acquire them in the same order, for example by ascending account id. Then Ana→Bruno and Bruno→Ana both lock Ana's row first, one waits for the other, and neither can deadlock.</p>
-<p><strong>Why.</strong> A deadlock needs a cycle: transaction 1 holds A and wants B while transaction 2 holds B and wants A. If every transaction acquires resources in one global order, no cycle can form. With versions instead of locks, the equivalent rule is to check both versions in the same commit. There is nothing to deadlock on, but you still read both accounts before writing either, so the conditional updates see a consistent pair.</p>
+<p><strong>Why.</strong> A deadlock needs a cycle: transaction 1 holds A and wants B while transaction 2 holds B and wants A. If every transaction acquires resources in one global order, no cycle can form. With versions instead of locks, the equivalent rule is to check both versions in the same commit. There is nothing to deadlock on. But you still read both accounts before writing either, so the conditional updates see a consistent pair.</p>
 <p><strong>Interview follow-up.</strong> "What about a transaction with five legs, fees and tax?" Same rule: sort all account ids, lock in that order, write all entries, check they sum to zero, commit.</p>
 
 <h3>What a conflicting payload on a reused key returns</h3>
-<p><strong>Short answer.</strong> A deterministic conflict error, typically HTTP 409 or an explicit <code>IDEMPOTENCY_KEY_CONFLICT</code>, that says "this key was already used with a different request" and includes the original transaction id for reference. The new payload is not processed, and the stored result is not overwritten.</p>
-<p><strong>Why.</strong> The key is the client's promise that "same key" means "same intention". If the payload differs, the client broke the promise, and the ledger has no safe way to know which intention is real. Processing the new one could move money the client never meant to move again. Overwriting the old result would lie about what already happened. Rejecting both is the only outcome that can't cause financial harm, and it surfaces the client bug immediately instead of hiding it.</p>
-<p><strong>How.</strong> Store a hash of the canonicalised payload alongside the key. On arrival with a known key, compare hashes: equal, return the stored transaction; different, conflict. The comparison happens inside the same transaction as the lookup, so two concurrent arrivals with the same new key resolve through the unique constraint, not through a race.</p>
+<p><strong>Short answer.</strong> A deterministic conflict error, typically HTTP 409 or an explicit <code>IDEMPOTENCY_KEY_CONFLICT</code>. It says "this key was already used with a different request" and includes the original transaction id for reference. The new payload is not processed, and the stored result is not overwritten.</p>
+<p><strong>Why.</strong> The key is the client's promise that "same key" means "same intention". If the payload differs, the client broke the promise, and the ledger has no safe way to know which intention is real. Processing the new one could move money the client never meant to move again. Overwriting the old result would lie about what already happened. Rejecting both is the only outcome that can't cause financial harm. It also surfaces the client bug immediately instead of hiding it.</p>
+<p><strong>How.</strong> Store a hash of the canonicalised payload alongside the key. On arrival with a known key, compare hashes: equal, return the stored transaction; different, conflict. The comparison happens inside the same transaction as the lookup. So two concurrent arrivals with the same new key resolve through the unique constraint, not through a race.</p>
 
 <h3>Why the aggregate is not a projection</h3>
-<p><strong>Short answer.</strong> Because it authorizes spending. A projection is a read model that may lag and can be rebuilt; the account aggregate (posted, held, available, version) is written in the same commit as the entries and is read to decide whether a debit is allowed. Conceptually it's a sum over entries; operationally it's part of the authoritative write state.</p>
+<p><strong>Short answer.</strong> Because it authorizes spending. A projection is a read model that may lag and can be rebuilt. The account aggregate (posted, held, available, version) is written in the same commit as the entries. It is read to decide whether a debit is allowed. Conceptually it's a sum over entries; operationally it's part of the authoritative write state.</p>
 <p><strong>Why.</strong> "Never debit from stale funds" only holds if the number you check is the number the commit is about to change. If the aggregate were an eventually consistent projection, two debits could both read an old balance and both be approved before it caught up. Keeping it in the write boundary is what turns the funds check into a conditional write. The cost: every posting updates the aggregate row, so a busy account contends on itself. The version handles that.</p>
-<p><strong>The tell.</strong> A rebuildable thing is a projection. The aggregate <em>can</em> be rebuilt from entries, but if you ever have to, that's an incident with isolate, recompute, audited repair, reconcile, not a routine replay.</p>
+<p><strong>The tell.</strong> A rebuildable thing is a projection. The aggregate <em>can</em> be rebuilt from entries. But if you ever have to, that's an incident: isolate, recompute, audited repair, reconcile. Not a routine replay.</p>
 
 <h3>What the outbox alert is</h3>
 <p><strong>Short answer.</strong> Age of the oldest unpublished outbox row, paired with backlog count for trend. Page when age crosses the threshold that would make projections unacceptably stale for the product, not on Kafka health.</p>
@@ -1076,9 +1076,9 @@ Read: balance checks ≈ same as transactions; feed reads 10× that, served from
 <p><strong>The rest of the on-call board.</strong> Stuck transfer age, clearing imbalance and age of the oldest clearing item, posting error rate, account-version conflict rate, reconciliation mismatch count, replica and failover health.</p>
 
 <h3>Why 2PC is an option to evaluate rather than a taboo</h3>
-<p><strong>Short answer.</strong> Two-phase commit does deliver what the clearing account can't: an all-or-nothing result across two databases with no visible intermediate state. I'd evaluate it when the platform supports it reliably and the product genuinely cannot accept a Processing state. I'd avoid it as the default across independent partitions because it blocks participants while they wait for the coordinator, has painful recovery when the coordinator dies mid-protocol, and is weakly supported across heterogeneous services. Clearing is my default because its in-between state is explicit, observable and operable.</p>
-<p><strong>Why the interviewer asks.</strong> They're checking whether you reason from criteria or from slogans. "2PC is bad" is a slogan. The criteria are: correctness (both give it), latency (2PC adds a round trip and a prepare phase), blocking (2PC holds locks on both sides while it coordinates), operability (a stuck 2PC transaction needs manual resolution of in-doubt state; a stuck clearing item is a visible row with an age), and customer experience (2PC has no Processing state; clearing does). The one factor that can flip the decision is whether Product can accept Processing.</p>
-<p><strong>Same reasoning, different context.</strong> If they ask why a real-time payment rail doesn't use 2PC: payer and payee are in different write authorities, so each leg is made locally atomic and idempotent, progress is kept durable, and a later leg that can't finish is compensated with a new posting.</p>
+<p><strong>Short answer.</strong> Two-phase commit does deliver what the clearing account can't: an all-or-nothing result across two databases with no visible intermediate state. I'd evaluate it when the platform supports it reliably and the product genuinely cannot accept a Processing state. I'd avoid it as the default across independent partitions, for three reasons. It blocks participants while they wait for the coordinator. Recovery is painful when the coordinator dies mid-protocol. And it is weakly supported across heterogeneous services. Clearing is my default because its in-between state is explicit, observable and operable.</p>
+<p><strong>Why the interviewer asks.</strong> They're checking whether you reason from criteria or from slogans. "2PC is bad" is a slogan. The criteria are five. Correctness: both give it. Latency: 2PC adds a round trip and a prepare phase. Blocking: 2PC holds locks on both sides while it coordinates. Operability: a stuck 2PC transaction needs manual resolution of in-doubt state, while a stuck clearing item is a visible row with an age. Customer experience: 2PC has no Processing state; clearing does. The one factor that can flip the decision is whether Product can accept Processing.</p>
+<p><strong>Same reasoning, different context.</strong> If they ask why a real-time payment rail doesn't use 2PC: payer and payee are in different write authorities. So each leg is made locally atomic and idempotent, and progress is kept durable. A later leg that can't finish is compensated with a new posting.</p>
 
 <h3>How the clearing account keeps a cross-shard transfer accounted for between legs</h3>
 <p><strong>Short answer.</strong> At every moment, every unit of money has exactly one owner. Before leg A, Ana owns R$10. After leg A commits, the clearing account owns R$10 and Ana's entries and aggregate say so. After leg B commits, Bruno owns it. There is never a moment where the R$10 has left Ana and not yet arrived anywhere; it is sitting, visibly, in clearing.</p>
@@ -1091,22 +1091,22 @@ Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← C
   <li><strong>Per-leg keys</strong>: <code>transferId:legA</code> and <code>transferId:legB</code>, enforced uniquely on the shard that owns the leg. A worker retrying leg B after a timeout gets the prior posting back, never a second credit.</li>
   <li><strong>A durable transfer record</strong> says which leg is done. The transfer state advances only after the destination shard acknowledges the durable commit of leg B.</li>
   <li><strong>The customer sees the truth</strong>: the payer sees the debit with the transfer marked Processing; the receiver does not see funds yet. Neither side sees Completed before leg B is durable. Define a processing SLA and an escalation path for it.</li>
-  <li><strong>If leg B can never complete</strong>, after bounded retries and dependency recovery, policy decides: keep pending, route to manual repair, or reverse leg A with a new linked posting that moves the R$10 from clearing back to Ana. The committed debit is never deleted, and you never compensate automatically while the external outcome is still unknown.</li>
-  <li><strong>Clearing is monitored like a customer account</strong>: scoped by currency, rail and possibly partition so no single row becomes globally hot; every item aged; reconciled gross and net; alerts on both total amount and age of the oldest item. Every clearing entry maps back to a transfer id, so the balance is always explainable.</li>
+  <li><strong>If leg B can never complete</strong>, after bounded retries and dependency recovery, policy decides. Keep pending, route to manual repair, or reverse leg A with a new linked posting that moves the R$10 from clearing back to Ana. The committed debit is never deleted, and you never compensate automatically while the external outcome is still unknown.</li>
+  <li><strong>Clearing is monitored like a customer account</strong>. It is scoped by currency, rail and possibly partition, so no single row becomes globally hot. Every item is aged. It is reconciled gross and net. Alerts fire on both total amount and age of the oldest item. Every clearing entry maps back to a transfer id, so the balance is always explainable.</li>
 </ul>
 <p><strong>The interview sentence.</strong> "Between legs the money is in clearing, which is a real account with real entries, so the books balance at every instant. The customer sees Processing rather than a lie, and if leg B fails we compensate with a new posting, never by deleting the debit."</p>
 
 <h3>How the schema evolves after launch without downtime</h3>
-<p><strong>Short answer.</strong> Add fields, never repurpose them. New fields are optional with a default. Deploy the schema change before the code that needs it, then the code that reads both shapes, then migrate, then remove the old path: expand, migrate, contract. Events carry a schema version; consumers accept N and N+1 during a rollout. Entries are never rewritten to fit a new shape; if the aggregate's shape changes, it is rebuilt from the entries. Code rolls back; data doesn't.</p>
-<p><strong>Why the interviewer asks.</strong> Nubank's prep document lists schema evolution under data and storage, and it separates people who have run a system from people who have drawn one. The trap is "we'd migrate the table", which on a ledger means a lock on the hot path or a rewrite of history.</p>
+<p><strong>Short answer.</strong> Add fields, never repurpose them. New fields are optional with a default. Deploy the schema change before the code that needs it. Then the code that reads both shapes. Then migrate. Then remove the old path. Expand, migrate, contract. Events carry a schema version; consumers accept N and N+1 during a rollout. Entries are never rewritten to fit a new shape; if the aggregate's shape changes, it is rebuilt from the entries. Code rolls back; data doesn't.</p>
+<p><strong>Why the interviewer asks.</strong> Nubank's prep document lists schema evolution under data and storage. It separates people who have run a system from people who have drawn one. The trap is "we'd migrate the table". On a ledger that means a lock on the hot path or a rewrite of history.</p>
 
 <h3>What you cache, and what you never cache</h3>
-<p><strong>Short answer.</strong> Cache what is read far more than written and tolerant of being slightly stale: versioned reference data, the customer's rendered feed, fee tables under a version key. Never cache the available balance for a funds check, and never authorise from a read replica; both are a stale balance with a different name. Invalidate by version where you can (a new fee table is a new key), by event where you must, and by TTL only for display data. Saying what you won't cache is the strong part of the answer.</p>
+<p><strong>Short answer.</strong> Cache what is read far more than written and tolerant of being slightly stale. Versioned reference data, the customer's rendered feed, fee tables under a version key. Never cache the available balance for a funds check, and never authorise from a read replica. Both are a stale balance with a different name. Invalidate by version where you can: a new fee table is a new key. By event where you must. By TTL only for display data. Saying what you won't cache is the strong part of the answer.</p>
 
 <!-- ============================================================ -->
 <h2 id="practice">14. Practice next</h2>
 <p class="question">Where this session left off.</p>
-<p>Every node in the diagram has been opened and explained. Now run the ledger mock the other way round: start at step 1 cold, name each step as you enter it, answer it in 30–60 seconds out loud, and take the follow-ups without looking. For the failure dives, the rhythm is six questions per failure:</p>
+<p>Every node in the diagram has been opened and explained. Now run the ledger mock the other way round. Start at step 1 cold. Name each step as you enter it. Answer it in 30–60 seconds out loud. Take the follow-ups without looking. For the failure dives, the rhythm is six questions per failure:</p>
 <ol>
   <li>What committed?</li>
   <li>What retries, using which identity?</li>
@@ -1116,10 +1116,10 @@ Leg B:    Ana  90          Clearing   0          Bruno 60      total 150   ← C
   <li>What is the safe operator action?</li>
 </ol>
 <p>Follow-ups you should be able to take on this material without notes: row lock versus version; why not timestamps; deterministic lock ordering for multi-account transactions; what a conflicting payload on a reused key returns; why the aggregate is not a projection; what the outbox alert is; why 2PC is an option to evaluate rather than a taboo; and how the clearing account keeps a cross-shard transfer accounted for between legs. Model answers for all eight are in <a href="#followups">section 13</a>; try answering out loud before you read them.</p>
-<p>Nubank's own prep document, decoded in its own guide, wants numbers and a first idea before the finished design; the video they recommend adds that the first idea cannot be one that fails the features. For the ledger: say the section 2 arithmetic aloud before drawing, name the balance-column rung in one sentence and don't draw it, then draw the section 1 diagram as your v1 and say what it costs and what it doesn't yet handle (section 4). v3 partitions by customer when the peak numbers demand it, with clearing for cross-partition transfers. Then take the two newest follow-ups in section 13, schema evolution and caching, without notes.</p>
+<p>Nubank's own prep document, decoded in its own guide, wants numbers and a first idea before the finished design. The video they recommend adds that the first idea cannot be one that fails the features. For the ledger: say the section 2 arithmetic aloud before drawing. Name the balance-column rung in one sentence and don't draw it. Then draw the section 1 diagram as your v1, and say what it costs and what it doesn't yet handle (section 4). v3 partitions by customer when the peak numbers demand it, with clearing for cross-partition transfers. Then take the two newest follow-ups in section 13, schema evolution and caching, without notes.</p>
 
 <footer>
-  Study notes compiled from a conversation on 4 September 2026. Source material: <em>Nubank Lead System Design Study Guide</em>, Mock A. The Nubank architecture details referenced come from the guide's summary of a 2017 QCon talk and Nubank's engineering blog; use them as evidence for the way of thinking, not as claims about current components. Numbers, single point of failure, degradation, schema evolution and caching added 29 September 2026 from Nubank's candidate PDF, and the prose tightened for clarity the same day; every interview sentence and recap is unchanged. See <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 around the four steps of the method Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>): section 2 gathers the features, numbers and qualities; section 4 starts the design at the rung a Lead draws; the old section numbers shifted accordingly.
+  Study notes compiled from a conversation on 4 September 2026. Source material: <em>Nubank Lead System Design Study Guide</em>, Mock A. The Nubank architecture details referenced come from the guide's summary of a 2017 QCon talk and Nubank's engineering blog; use them as evidence for the way of thinking, not as claims about current components. Numbers, single point of failure, degradation, schema evolution and caching added 29 September 2026 from Nubank's candidate PDF, and the prose tightened for clarity the same day; every interview sentence and recap is unchanged. See <em>Nubank's prep document, decoded</em>. Restructured 1 October 2026 around the four steps of the method Nubank's interviewers recommend (see <em>The Hello Interview method, applied to Nubank's hour</em>): section 2 gathers the features, numbers and qualities; section 4 starts the design at the rung a Lead draws; the old section numbers shifted accordingly. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>

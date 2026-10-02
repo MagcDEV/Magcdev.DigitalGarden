@@ -1,73 +1,39 @@
-# CLAUDE.md — LLM Operating Instructions for This Digital Garden
+# CLAUDE.md — Operating Instructions for This Notebook
 
-This file tells you (the LLM) how to operate on this repository. Read it every time you work on this project.
+Read this every time you work on this project.
 
 ## What This Is
 
-An LLM-curated digital garden / second brain focused on software engineering interview preparation. The owner (Manuel) is studying **DSA, LeetCode, System Design, and Go**. The site is rendered with **Quartz** (Obsidian-flavored markdown → static site) and viewable in **Obsidian** locally.
+Manuel's study notebook for his software engineering career, rendered with **Quartz** (Obsidian-flavored markdown → static site) and readable in **Obsidian** locally. Any topic that helps the career belongs here: system design, Go and other languages, DSA and LeetCode, tools, architecture, a specific company's interview, career topics. Manuel decides what goes in; the LLM writes it up clearly and links it. There is no fixed syllabus and no required pipeline.
 
-## Architecture
+The `digital-garden` skill in `.claude/skills/` carries the operations (add, study, capture, review, build a guide, condense, quiz, enhance, what next) and the writing rules. This file holds the layout and conventions.
+
+## Layout
 
 ```
 content/
-├── sources/          ← RAW DATA (human writes, LLM reads)
-│   ├── leetcode/     ← Problem solutions, submissions
-│   ├── books/        ← Chapter notes, highlights
-│   ├── articles/     ← Blog posts, papers
-│   ├── videos/       ← YouTube transcripts, talks
-│   └── courses/      ← Course notes, assignments
-│
-├── wiki/             ← COMPILED KNOWLEDGE (LLM writes, human reads)
+├── wiki/             ← THE NOTES (LLM writes, Manuel reads)
 │   ├── dsa/          ← Data structures & algorithms
-│   ├── patterns/     ← LeetCode patterns (17 core patterns)
-│   ├── system-design/← System design concepts & interview problems
-│   ├── go/           ← Go language deep-dives
-│   └── concepts/     ← Cross-cutting SWE concepts
+│   ├── patterns/     ← LeetCode patterns
+│   ├── system-design/← System design concepts, problems, company-specific prep
+│   ├── go/           ← Go language
+│   ├── concepts/     ← Cross-cutting SWE concepts
+│   └── <new area>/   ← add a folder when a topic needs one
 │
-├── posts/            ← MANUEL'S OWN WRITING (human-authored blog)
-│                       Essays and articles written by Manuel himself.
-│                       LLM should NEVER rewrite the prose here. Only touch
-│                       these files when explicitly asked (typo fixes,
-│                       formatting, adding frontmatter). Treat the voice as
-│                       Manuel's own; do not LLM-ify it.
+├── sources/          ← OPTIONAL INBOX for raw material (Manuel writes, LLM reads)
+│   ├── leetcode/  books/  articles/  videos/  courses/
 │
-├── assets/           ← Images and static files
-└── index.md          ← Garden homepage
+├── posts/            ← MANUEL'S OWN WRITING
+│                       Never rewrite the prose. Touch only when asked
+│                       (typo fixes, formatting, frontmatter).
+│
+├── assets/           ← Images, and standalone HTML study guides in a folder per subject
+└── index.md          ← Homepage
 ```
 
-## Your Roles
+**Standalone HTML guides.** Long, designed material (diagrams, mock interviews, one-card summaries) lives as a self-contained HTML page under `content/assets/<subject>/`, embedded from a wiki page that sets `cssclasses: [<subject>]`. `content/wiki/system-design/nubank-study-notes.md` is the model. Everything else is markdown.
 
-### 1. Source Processor
-When Manuel drops raw notes into `sources/`, you should:
-- Read all files where `processed: false` in frontmatter
-- Extract key concepts, patterns, and knowledge
-- Create or update the relevant `wiki/` pages
-- Set `processed: true` on the source file
-- Add a `compiled_to` field listing which wiki pages were created/updated
-
-### 2. Wiki Compiler
-When creating or updating wiki pages:
-- Use Obsidian-flavored markdown (wikilinks `[[page]]`, callouts `> [!tip]`, etc.)
-- Always include YAML frontmatter with `title`, `tags`, `date_created`, `date_modified`, `sources`
-- Cross-link aggressively — every concept should link to related concepts
-- Include Go code examples (not Python, not Java — Go is the primary language)
-- For DSA pages: include time/space complexity, Go implementation, and common variations
-- For pattern pages: include template code, recognition signals, and graded problem lists
-- For system design pages: include diagrams (Mermaid), trade-offs, and real-world examples
-
-### 3. Incremental Enhancer
-On each session, you can proactively:
-- Check for broken wikilinks and fix them
-- Identify thin wiki pages and flesh them out
-- Add cross-references between related topics
-- Update the progress tracker on the patterns index
-- Suggest sources to study next based on gaps in the wiki
-
-### 4. Q&A Responder
-When Manuel asks questions:
-- Search the wiki first — answer from existing knowledge
-- If the wiki doesn't cover it, create the wiki page as you answer
-- Always cite which wiki pages are relevant
+**Sources are optional.** A note may be written directly with no source file behind it. When a source file exists it carries `processed` and `compiled_to` so the inbox can be swept.
 
 ## Frontmatter Conventions
 
@@ -96,7 +62,7 @@ tags:
   - patterns
 date_created: 2026-04-03
 date_modified: 2026-04-03
-sources:
+sources:   # optional
   - "[[sources/leetcode/2026-04-03-two-sum]]"
 ---
 ```
@@ -124,22 +90,13 @@ description: "One-line summary used in listings and OG cards."
 - Tags go in frontmatter YAML arrays, not inline `#tags`
 - Code syntax highlighting: use ` ```go ` for Go code blocks
 
-## Commands You Should Understand
+## Writing Standards
 
-When Manuel says:
-- **"process sources"** → Scan `sources/` for unprocessed files, compile into wiki
-- **"enhance wiki"** → Review existing wiki pages, fill gaps, add cross-links
-- **"study X"** → Create or expand wiki page on topic X, suggest practice problems
-- **"quiz me on X"** → Ask questions from wiki content on topic X
-- **"what should I study next?"** → Analyze wiki coverage gaps vs. interview readiness
-- **"add source: [url/text]"** → Create a source file from the provided content
-- **"review my solution"** → Critique a LeetCode solution, compare to optimal, update wiki
-
-## Quality Standards
-
-- Every wiki page should be **self-contained** — readable without context
-- Prefer **depth over breadth** — a thorough page on one topic > shallow pages on five
-- All code must be **working Go** — test it mentally for correctness
-- System design pages need **trade-off analysis**, not just descriptions
-- Pattern pages need **recognition heuristics** — "use this when you see..."
-- Always maintain the **graph structure** — the garden's value is in the connections
+- **Self-contained notes.** Readable without any other page open; links let the reader go deeper.
+- **Plain, tight prose.** One idea per sentence, 20 words or fewer for instructions and 25 for explanation, active voice, present tense. One term per concept; use the term the existing notes use.
+- **Spoken lines stay spoken.** Scripts, "say it" boxes and "never say" lists keep their rhythm.
+- **Code that runs.** Go by default; the topic's own language when the topic is another language or tool.
+- **Depth over breadth.** One thorough note beats five shallow ones.
+- **Trade-offs on design topics.** Compare alternatives and say what each costs.
+- **Recognition signals on pattern notes.** "Use this when you see…", a Go template, a graded problem list.
+- **Links everywhere.** The notebook's value is the graph.

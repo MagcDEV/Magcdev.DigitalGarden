@@ -268,12 +268,12 @@
 <main>
 <header class="hero">
   <h1>The ledger on one card</h1>
-  <p class="lede">The ledger guide is 14 sections. This is the part worth memorising, in plain words, in the order you will say it, with the drawing, Ana's transfer told step by step on it, and the table schema. If you can say everything on this page without looking, you can pass the round.</p>
+  <p class="lede">The ledger guide is 14 sections. This is the part worth memorising, in plain words, in the order you will say it. It has the drawing, Ana's transfer told step by step on it, and the table schema. If you can say everything on this page without looking, you can pass the round.</p>
   <p class="source">Condensed 1 October 2026 from <em>The ledger, end to end</em>. Short on purpose: when something here feels thin, that is the section of the big guide to open.</p>
 </header>
 
 <h2 id="one">1. The one sentence</h2>
-<p class="thesis">A ledger is a notebook where every money movement is written as a <strong>pair of balancing lines</strong>, saved in <strong>one database commit</strong>, and only after that commit does the rest of the world get told about it.</p>
+<p class="thesis">A ledger is a notebook where every money movement is written as a <strong>pair of balancing lines</strong>, saved in <strong>one database commit</strong>. Only after that commit does the rest of the world get told about it.</p>
 <p>What it must never do: move money twice for one intention, approve a debit from a balance it cannot verify, edit history, or say "done" before the commit.</p>
 <div class="say"><p class="label">The sentence that ties everything together</p><p>"Money becomes durable in the atomic store; events describe that fact afterwards. The idempotency key lives in the same commit as the money, so the same key always returns the same transaction."</p></div>
 
@@ -324,7 +324,7 @@ Balance reads ≈ transactions; feed reads 10× that, served from projections</c
   <div><span>Outbox row</span><span>A note saying "publish this event later", written in the same commit.</span></div>
 </div>
 <p><strong>Three operations.</strong> <code>POST /transfers</code> with the client's key, accounts, amount in minor units, currency, type. <code>GET /accounts/{id}/balance</code>, optionally as of a date. <code>GET /accounts/{id}/entries</code> for a period, from a projection. Holds and reversals are transfer <em>types</em>, not new endpoints. The caller comes from the token, never the body.</p>
-<p><strong>Why the client makes the key.</strong> Only the client knows a retry is a retry. If the ledger minted the key on arrival, a lost response plus a retry would move money twice. The app makes K1 once at the tap, saves it, and sends it on every retry; a service caller derives it from its own durable state, like <code>case_id:PROVISIONAL_CREDIT:v1</code>. Never <code>uuid()</code> per attempt.</p>
+<p><strong>Why the client makes the key.</strong> Only the client knows a retry is a retry. If the ledger minted the key on arrival, a lost response plus a retry would move money twice. The app makes K1 once at the tap, saves it, and sends it on every retry. A service caller derives it from its own durable state, like <code>case_id:PROVISIONAL_CREDIT:v1</code>. Never <code>uuid()</code> per attempt.</p>
 
 <h3>The schema: the five rows written together</h3>
 <pre><code>accounts          id, currency, posted, held, available, version
@@ -387,15 +387,15 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 </figure>
 <ol>
   <li><strong>Ana taps "send".</strong> Her app creates key K1 once for this tap, saves it, and sends the transfer: source Ana, destination Bruno, 1000 (minor units), BRL, type internal transfer. If the network is slow and the app retries, it sends the same K1.</li>
-  <li><strong>The ledger looks up (caller, K1).</strong> Not seen, so it continues. Then it validates: both accounts exist, currency BRL, Ana's <em>available</em> balance covers 10 (posted minus holds), and Ana's account version is 41, the number it just read. If Ana's card is being authorised at the same second, one of the two sees a stale version and re-validates; they never both win.</li>
-  <li><strong>One commit writes five rows.</strong> Transaction T1 with key K1. Entry Ana −10, entry Bruno +10, summing to zero. Ana's aggregate: posted and available down by 10, version 41 → 42, as a conditional update. Bruno's aggregate: up by 10, version 17 → 18. The key record K1 → T1 with the payload hash. One outbox row: "T1 posted". All or nothing: saving the key and the money in separate steps is how a crash between them moves money twice.</li>
+  <li><strong>The ledger looks up (caller, K1).</strong> Not seen, so it continues. Then it validates four things. Both accounts exist. Currency BRL. Ana's <em>available</em> balance covers 10 (posted minus holds). Ana's account version is 41, the number it just read. If Ana's card is being authorised at the same second, one of the two sees a stale version and re-validates. They never both win.</li>
+  <li><strong>One commit writes five rows.</strong> Transaction T1 with key K1. Entry Ana −10, entry Bruno +10, summing to zero. Ana's aggregate: posted and available down by 10, version 41 → 42, as a conditional update. Bruno's aggregate: up by 10, version 17 → 18. The key record K1 → T1 with the payload hash. One outbox row: "T1 posted". All or nothing. Saving the key and the money in separate steps is how a crash between them moves money twice.</li>
   <li><strong>"Done" goes back to Ana</strong>, because the database committed. If the response is lost and the app retries K1, the ledger returns T1 again. Nothing else moves.</li>
   <li><strong>The outbox worker</strong> reads unpublished rows in order, publishes T1's event, and marks the row only after Kafka acks. If the worker dies between publish and mark, it publishes again on restart; that is why consumers dedupe.</li>
-  <li><strong>Kafka carries the fact</strong>, partitioned by account key so Ana's events stay in order. It is not the truth; it is the truth being told. If Kafka is down for six hours, money is still right, the outbox backlog grows, and the alert is on the age of the oldest unpublished row.</li>
+  <li><strong>Kafka carries the fact</strong>, partitioned by account key so Ana's events stay in order. It is not the truth; it is the truth being told. If Kafka is down for six hours, money is still right. The outbox backlog grows, and the alert is on the age of the oldest unpublished row.</li>
   <li><strong>Projection builders consume</strong> T1: a feed item "sent R$10 to Bruno", a statement row for each, the search index. Every projection is rebuildable from the journal. If one drifts, replay it; never touch an entry.</li>
-  <li><strong>Bruno's phone buzzes.</strong> A notification consumer sends "R$10 received". His feed shows it from the projection. His <em>balance</em> is one indexed read of the aggregate row, the authority, never the projection, because that number is what the next debit will be authorised against.</li>
+  <li><strong>Bruno's phone buzzes.</strong> A notification consumer sends "R$10 received". His feed shows it from the projection. His <em>balance</em> is one indexed read of the aggregate row: the authority, never the projection. That number is what the next debit will be authorised against.</li>
   <li><strong>Reconciliation runs continuously.</strong> The sum of Ana's entries equals her aggregate; the journal sums to zero; external movements match the counterparty's records. A mismatch in a projection is a rebuild; a mismatch in an aggregate is an incident, because it authorises spending.</li>
-  <li><strong>If Bruno lived on another shard</strong>, you cannot update two databases in one commit, so the transfer becomes two legs joined by the clearing account. Leg A, in Ana's shard: Ana −10, clearing +10, key <code>K1:LEG_A</code>, and a transfer record saying "leg A done". Leg B, in Bruno's shard: clearing −10, Bruno +10, key <code>K1:LEG_B</code>. Between the legs the money is in clearing, fully accounted for, and Ana sees Processing. A crashed worker reads the transfer record to know which leg is still owed. Monitor clearing by amount and by the age of its oldest item.</li>
+  <li><strong>If Bruno lived on another shard</strong>, you cannot update two databases in one commit. So the transfer becomes two legs joined by the clearing account. Leg A, in Ana's shard: Ana −10, clearing +10, key <code>K1:LEG_A</code>, and a transfer record saying "leg A done". Leg B, in Bruno's shard: clearing −10, Bruno +10, key <code>K1:LEG_B</code>. Between the legs the money is in clearing, fully accounted for, and Ana sees Processing. A crashed worker reads the transfer record to know which leg is still owed. Monitor clearing by amount and by the age of its oldest item.</li>
 </ol>
 <div class="say"><p class="label">The transfer in one breath</p><p>"Ana's app makes the key once. The ledger checks the key, validates available funds against the account version, and in one commit writes the transaction, two balancing entries, both aggregates, the key record and an outbox row. Done comes from the commit. A worker then tells Kafka, consumers build the feed and dedupe, and Bruno's balance is read from the aggregate, never the feed. If they're on different shards, two legs through clearing, each with its own key, Processing in between."</p></div>
 
@@ -411,7 +411,7 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <p>For any failure, answer these six: What committed? What retries, with which key? What can duplicate? What does the customer see? Which metric alerts? What does an operator safely do?</p>
 <table>
   <tr><th>Failure</th><th>Answer in one line</th></tr>
-  <tr><td>Two debits on Ana at once</td><td>Both read version 41; one commits to 42; the other's conditional update matches zero rows, reloads, re-validates, and may now be declined. Never both.</td></tr>
+  <tr><td>Two debits on Ana at once</td><td>Both read version 41. One commits to 42. The other's conditional update matches zero rows, reloads, re-validates, and may now be declined. Never both.</td></tr>
   <tr><td>Same key, different payload</td><td>Deterministic conflict. Process neither; the caller reused one identity for two intentions.</td></tr>
   <tr><td>Kafka down for six hours</td><td>Every posting still works. Outbox backlog grows; feeds and notifications go stale; it drains in order when Kafka returns. Alert on outbox age, not on Kafka health.</td></tr>
   <tr><td>A projection drifts</td><td>Rebuild it from the journal alongside the old one, switch atomically. Never touch entries.</td></tr>
@@ -425,17 +425,17 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <h2 id="tenfold">9. "Ten times the volume"</h2>
 <ol>
   <li><strong>Ask what grew.</strong> Transactions, accounts, entries per account, read traffic?</li>
-  <li><strong>Do the maths.</strong> Ten times is 80,000 transfers a second and 300,000 writes: that is many primaries, so partition by customer, and tag every transaction with the customer id from day one so the split is possible.</li>
+  <li><strong>Do the maths.</strong> Ten times is 80,000 transfers a second and 300,000 writes. That is many primaries, so partition by customer. Tag every transaction with the customer id from day one, so the split is possible.</li>
   <li><strong>Scale what scales:</strong> outbox publishers, projection builders, reconciliation, every read that isn't the funds check.</li>
   <li><strong>Say what doesn't:</strong> one write authority per account (that's the invariant, not an apology), hot accounts, and the failover time of the authority.</li>
   <li><strong>Protect the rules</strong> while scaling. The three "improvements" that are bugs: cache the available balance; authorise from a read replica; post asynchronously and confirm later for an internal transfer.</li>
 </ol>
-<p><strong>Hot account</strong> (a merchant settlement account, fee income, clearing): scope it per day, per shard, per rail and roll up by projection, or serialise on it with a per-account queue. Never a global lock, never a cached balance.</p>
+<p><strong>Hot account</strong> (a merchant settlement account, fee income, clearing). Scope it per day, per shard, per rail and roll up by projection. Or serialise on it with a per-account queue. Never a global lock, never a cached balance.</p>
 <div class="say"><p class="label">Say it once, in their own words</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialised writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
 
 <h2 id="rollout">10. Rollout, in three lines</h2>
 <p>One transfer type, one country. Shadow the old ledger: post to both, compare totals, nobody reads the new one. Then a small cohort behind a kill switch. Partition only when a measurement says so, never pre-emptively.</p>
-<p><strong>Schema changes after launch:</strong> add fields, never repurpose; expand, migrate, contract; events carry a schema version and consumers accept N and N+1 during a rollout; never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache; never the thing that decides, which is the available balance.</p>
+<p><strong>Schema changes after launch:</strong> add fields, never repurpose. Expand, migrate, contract. Events carry a schema version, and consumers accept N and N+1 during a rollout. Never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache. Never the thing that decides, which is the available balance.</p>
 
 <h2 id="never">11. Never say</h2>
 <ul>
@@ -449,7 +449,7 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 </ul>
 
 <footer>
-  Condensed on 1 October 2026 from <em>The ledger, end to end</em>. Every number, key and row here matches that guide; when a line feels thin, the section with the same name there is the place to read. Companion to <em>Chargebacks on one card</em>: the dispute platform is the system that sends this ledger its money commands.
+  Condensed on 1 October 2026 from <em>The ledger, end to end</em>. Every number, key and row here matches that guide. When a line feels thin, the section with the same name there is the place to read. Companion to <em>Chargebacks on one card</em>: the dispute platform is the system that sends this ledger its money commands. Prose shortened on 2 October 2026 toward Simplified Technical English: one idea per sentence, active voice, one term per concept; spoken lines, interview sentences and diagrams are unchanged.
 </footer>
 </main>
 </div>

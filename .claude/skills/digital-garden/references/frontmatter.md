@@ -93,13 +93,39 @@ compiled_to: []
 title: "Page Title"
 tags:
   - wiki
-  - area (dsa | patterns | system-design | go | concepts)
+  - area (the folder name: dsa | patterns | system-design | go | concepts | a new area)
   - specific-topic-tags
 date_created: YYYY-MM-DD
 date_modified: YYYY-MM-DD
-sources:
+sources:            # optional; omit when the note has no source file behind it
   - "[[sources/type/YYYY-MM-DD-slug]]"
 ---
+```
+
+## Wiki Pages That Embed Standalone HTML Guides
+
+```yaml
+---
+title: "Subject Study Notes"
+tags:
+  - wiki
+  - area
+  - subject
+date_created: YYYY-MM-DD
+date_modified: YYYY-MM-DD
+cssclasses:
+  - subject        # matches the folder content/assets/<subject>/ and the selector in quartz/styles/custom.scss
+---
+```
+
+Each guide section in the page has an "Open full page" form and an embed:
+
+```html
+<form class="guide-open" action="../../assets/<subject>/<guide>.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/<subject>/<guide>.html" type="text/html" title="Guide title">
 ```
 
 ## Conventions
@@ -108,4 +134,4 @@ sources:
 - **File naming:** `YYYY-MM-DD-descriptive-slug.md` for sources, `descriptive-slug.md` for wiki
 - **Tags:** Always include `source` or `wiki` as the first tag to identify the layer
 - **compiled_to:** List of wikilinks to wiki pages that were created/updated from this source
-- **sources:** List of wikilinks to source files that contributed to this wiki page
+- **sources:** List of wikilinks to source files that contributed to this wiki page; a note written directly has none
