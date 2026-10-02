@@ -432,6 +432,7 @@
   <tr><td>Single point of failure?</td><td>The case database's primary. Synchronous replica, automated failover in seconds; during it, commands get "try again", reads keep working.</td></tr>
 </table>
 <p><strong>Degrades, never dies.</strong> Network down: cases still open, submissions queue. Ledger down: decisions continue, credits pend with their keys. Storage down: uploads refused, nothing else. Search down: Ops works from queues. Kafka down: commands fine, notifications late.</p>
+<div class="say"><p class="label">When they say "it's down, now what?"</p><p>"Nothing is ever half done, because every side effect is an outbox row written in the same commit. If the network times out, I don't resubmit. I query by the same reference first. If the ledger is down, operators keep deciding and credits pend with their keys. If the timer workers die, deadlines are rows, so the sweeper catches up and we alert before any breach. Each dependency takes down its own feature, never the case."</p></div>
 
 <h2 id="tenfold">9. "Ten times the volume"</h2>
 <ol>
