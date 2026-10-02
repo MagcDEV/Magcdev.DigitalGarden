@@ -5,7 +5,7 @@ tags:
   - system-design
   - nubank
 date_created: 2026-09-06
-date_modified: 2026-10-01
+date_modified: 2026-10-02
 cssclasses:
   - nubank-guides
 ---
@@ -26,6 +26,16 @@ The chargeback material condensed to what is worth memorising, in plain words an
 </form>
 
 <embed class="guide-frame" src="../../assets/nubank-guides/nubank-chargeback-one-card.html" type="text/html" title="Chargebacks on one card">
+
+## The chargeback workflow, animated
+
+Ana's R$300 dispute from section 6 of the card, played step by step on the same diagram. A dot travels each wire with the key it carries, and side panels show the case state, the money, the outbox rows, the deadline rows and the event history after every step. Pick the ending (Ana wins, loses, or wins R$200 of 300) and turn on retries to watch a lost answer and a ledger timeout resolve with the same key. Play it once before reading the card, then step through it with the arrow keys while saying each step aloud.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-chargeback-animated.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-chargeback-animated.html" type="text/html" title="The chargeback workflow, animated">
 
 ## The ledger on one card
 
