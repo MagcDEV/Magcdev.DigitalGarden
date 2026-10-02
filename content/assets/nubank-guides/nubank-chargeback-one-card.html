@@ -347,6 +347,73 @@
 <p><strong>After the commit,</strong> workers read the outbox and call the network, the ledger, storage, notifications. Whatever they see comes back into the case as a new event: "network acked", "ledger posted tx 9182". So the case's own history says what happened outside it.</p>
 <p><strong>Two more boxes.</strong> A <strong>timer</strong> wakes workers near a due time. A <strong>sweeper</strong> reads the deadline rows every few minutes and catches what the timer missed. A <strong>search index</strong> built from events, for Ops to find cases. It may lag, so Ops opens the real case by id before acting.</p>
 <p><strong>The key on every arrow.</strong> App → platform: the request key. Platform → ledger: the action key. Platform → network: the submission reference. File row: file id plus row id.</p>
+<p><strong>The board.</strong> This is the whole drawing, about nine boxes. Draw it in the order of the square numbers. Section 6 walks one case through it.</p>
+<figure>
+<svg viewBox="0 0 760 424" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>The chargeback design, as you draw it on the whiteboard</title>
+<desc>Draw order: 1 the customer app sends a command with a request key to 2 the case service, which checks and validates it. 3 The case database writes one commit: event and snapshot with version, deadline rows, the idempotency record and outbox rows. 4 After the commit, outbox workers read the rows and call 5 the ledger with an action key, the card network with a submission reference, and notifications with an event id. 6 What they saw comes back to the case service as new events. 7 A timer and a sweeper read the deadline rows. 8 A search index built from events serves the Ops console, which opens the real case by id. 9 Evidence files go to object storage, and a command links them.</desc>
+<defs><marker id="arrow-card-board" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="140" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="90.0" y="51.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Customer app</text><text x="90.0" y="71.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">opens, adds evidence</text></g>
+<path d="M160 60 L218 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="189" y="48" text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic" fill="#BA7517">request key</text>
+<g><rect x="220" y="30" width="190" height="60" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="42.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case service</text><text x="315.0" y="62.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">check key, version, role;</text><text x="315.0" y="80.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">validate vs policy</text></g>
+<path d="M315 90 L315 128" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="220" y="130" width="190" height="130" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="150.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case database</text><text x="315.0" y="170.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">one commit writes:</text><text x="315.0" y="188.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">event + snapshot, version</text><text x="315.0" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">deadline rows</text><text x="315.0" y="224.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">idempotency record</text><text x="315.0" y="242.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">outbox rows</text></g>
+<path d="M410 195 L448 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="429" y="183" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">after</text>
+<g><rect x="450" y="160" width="120" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="510.0" y="177.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox workers</text><text x="510.0" y="197.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">read rows,</text><text x="510.0" y="215.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">call out</text></g>
+<path d="M570 195 L600 195 L600 135 L628 135" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<path d="M600 195 L628 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<path d="M600 195 L600 255 L628 255" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="630" y="110" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="126.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="687.5" y="146.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: action key</text></g>
+<g><rect x="630" y="170" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="186.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network</text><text x="687.5" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: submission ref</text></g>
+<g><rect x="630" y="230" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="246.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Notifications</text><text x="687.5" y="266.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: event id</text></g>
+<path d="M510 160 L510 60 L412 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="420" y="48" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">what they saw comes back as new events</text>
+<path d="M260 260 L260 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-board)"/>
+<text x="268" y="290" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">due rows</text>
+<g><rect x="220" y="320" width="190" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="315.0" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Timer + sweeper</text><text x="315.0" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">timer wakes; sweeper</text><text x="315.0" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">catches what it missed</text></g>
+<path d="M510 230 L510 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-board)"/>
+<text x="518" y="290" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">from events</text>
+<g><rect x="450" y="320" width="120" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="510.0" y="341.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Search index</text><text x="510.0" y="361.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">may lag</text></g>
+<path d="M570 350 L628 350" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="630" y="320" width="115" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ops console</text><text x="687.5" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">search, then open</text><text x="687.5" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">the case by id</text></g>
+<path d="M90 90 L90 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="98" y="200" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">upload bytes,</text>
+<text x="98" y="214" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">then a command</text>
+<text x="98" y="228" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">links them</text>
+<g><rect x="20" y="320" width="140" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="90.0" y="341.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Object storage</text><text x="90.0" y="361.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">evidence files</text></g>
+<rect x="10" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">1</text>
+<rect x="210" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">2</text>
+<rect x="210" y="120" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">3</text>
+<rect x="440" y="150" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="160.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">4</text>
+<rect x="620" y="100" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="630" y="110.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">5</text>
+<rect x="500" y="90" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="510" y="100.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">6</text>
+<rect x="210" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">7</text>
+<rect x="440" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">8</text>
+<rect x="10" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">9</text>
+<rect x="20" y="400" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+<text x="42" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Decided: one commit.</text>
+<rect x="180" y="400" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/>
+<text x="202" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">After the commit.</text>
+<rect x="340" y="400" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/>
+<text x="362" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Outside the platform.</text>
+<text x="520" y="407" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key:</text>
+<text x="550" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">the key on that arrow.</text>
+</svg>
+<figcaption>The chargeback design as you draw it on the whiteboard. The square numbers are the order you draw it. Green is the one place anything is decided. Purple happens after the commit. Grey is outside the platform. Italic text after "key:" names the key on that arrow.</figcaption>
+</figure>
+<ol>
+  <li><strong>Customer app.</strong> Every command it sends carries a request key.</li>
+  <li><strong>Case service.</strong> It checks the key, the case version and the role. Then it validates against the policy version.</li>
+  <li><strong>Case database.</strong> One commit writes the event, the snapshot, deadline rows, the idempotency record and outbox rows.</li>
+  <li><strong>Outbox workers.</strong> They start after the commit and read the outbox rows.</li>
+  <li><strong>Ledger, card network, notifications.</strong> Write the key on each arrow before you move on.</li>
+  <li><strong>The arrow back.</strong> What the workers see returns to the case as a new event.</li>
+  <li><strong>Timer and sweeper.</strong> The timer wakes workers near a due time. The sweeper catches what the timer missed.</li>
+  <li><strong>Search index and Ops console.</strong> Search may lag, so Ops opens the real case by id.</li>
+  <li><strong>Object storage.</strong> The app uploads the bytes. Then a command links them to the case.</li>
+</ol>
 <div class="recap"><p class="label">Say its cost, then its gaps</p><p>"It costs two writes per command instead of one, a worker fleet, and in-flight states the product has to show. It doesn't yet handle: deadlines beyond the timer, more than one money step per case, evidence trust, a file-shaped network, and the bad day. Those are my deep dives. I'd go deepest on provisional credit and failures."</p></div>
 <p><strong>The consistency line, said once:</strong> strong where I decide (transitions, deadlines, money intent); eventual where I only read (search, notifications, dashboards); explicitly <em>unknown</em> where the world hasn't answered yet.</p>
 
