@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The ledger on one card — what to memorise</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --dia-line: #5F5E5A;
+    --dia-line-soft: #888780;
+    --dia-fill: #F1EFE8;
+    --dia-text: #2C2C2A;
+    color-scheme: light;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* Dark mode. The palette follows the garden's saved "theme" preference
+     (shared with the Quartz toggle) and, when none is saved, the system
+     setting. Content and layout are unchanged; only the colours swap. */
+  :root[data-theme="dark"] {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+    }
+  }
+
+  /* Diagrams carry their colours as fill/stroke attributes from the light
+     palette. These rules map each attribute value onto a theme variable so
+     the SVGs follow the theme without touching their markup. */
+  svg [fill="#0F6E56" i] { fill: var(--strong); }
+  svg [stroke="#0F6E56" i] { stroke: var(--strong); }
+  svg [fill="#E1F5EE" i] { fill: var(--strong-bg); }
+  svg [stroke="#E1F5EE" i] { stroke: var(--strong-bg); }
+  svg [fill="#085041" i] { fill: var(--strong-ink); }
+  svg [stroke="#085041" i] { stroke: var(--strong-ink); }
+  svg [fill="#534AB7" i] { fill: var(--eventual); }
+  svg [stroke="#534AB7" i] { stroke: var(--eventual); }
+  svg [fill="#EEEDFE" i] { fill: var(--eventual-bg); }
+  svg [stroke="#EEEDFE" i] { stroke: var(--eventual-bg); }
+  svg [fill="#3C3489" i] { fill: var(--eventual-ink); }
+  svg [stroke="#3C3489" i] { stroke: var(--eventual-ink); }
+  svg [fill="#BA7517" i] { fill: var(--money); }
+  svg [stroke="#BA7517" i] { stroke: var(--money); }
+  svg [fill="#FAEEDA" i] { fill: var(--money-bg); }
+  svg [stroke="#FAEEDA" i] { stroke: var(--money-bg); }
+  svg [fill="#633806" i] { fill: var(--money-ink); }
+  svg [stroke="#633806" i] { stroke: var(--money-ink); }
+  svg [fill="#A32D2D" i] { fill: var(--warn); }
+  svg [stroke="#A32D2D" i] { stroke: var(--warn); }
+  svg [fill="#FCEBEB" i] { fill: var(--warn-bg); }
+  svg [stroke="#FCEBEB" i] { stroke: var(--warn-bg); }
+  svg [fill="#791F1F" i] { fill: var(--warn-ink); }
+  svg [stroke="#791F1F" i] { stroke: var(--warn-ink); }
+  svg [fill="#3E4A63" i] { fill: var(--ink-soft); }
+  svg [stroke="#3E4A63" i] { stroke: var(--ink-soft); }
+  svg [fill="#5F5E5A" i] { fill: var(--dia-line); }
+  svg [stroke="#5F5E5A" i] { stroke: var(--dia-line); }
+  svg [fill="#888780" i] { fill: var(--dia-line-soft); }
+  svg [stroke="#888780" i] { stroke: var(--dia-line-soft); }
+  svg [fill="#F1EFE8" i] { fill: var(--dia-fill); }
+  svg [stroke="#F1EFE8" i] { stroke: var(--dia-fill); }
+  svg [fill="#2C2C2A" i] { fill: var(--dia-text); }
+  svg [stroke="#2C2C2A" i] { stroke: var(--dia-text); }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-tint); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--strong); color: var(--strong); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+</button>
+<div class="page">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#one">1. The one sentence</a></li>
+    <li><a href="#hour">2. The hour, in four steps</a></li>
+    <li><a href="#step1">3. Step 1: questions, numbers, rules</a></li>
+    <li><a href="#step2">4. Step 2: six nouns, three operations, the schema</a></li>
+    <li><a href="#step3">5. Step 3: the drawing</a></li>
+    <li><a href="#case">6. One transfer, end to end, on the diagram</a></li>
+    <li><a href="#timeouts">7. The three timeouts, and the one rule</a></li>
+    <li><a href="#failures">8. When things break</a></li>
+    <li><a href="#tenfold">9. "Ten times the volume"</a></li>
+    <li><a href="#rollout">10. Rollout, in three lines</a></li>
+    <li><a href="#never">11. Never say</a></li>
+  </ol>
+</nav>
+<main>
+<header class="hero">
+  <h1>The ledger on one card</h1>
+  <p class="lede">The ledger guide is 14 sections. This is the part worth memorising, in plain words, in the order you will say it, with the drawing, Ana's transfer told step by step on it, and the table schema. If you can say everything on this page without looking, you can pass the round.</p>
+  <p class="source">Condensed 1 October 2026 from <em>The ledger, end to end</em>. Short on purpose: when something here feels thin, that is the section of the big guide to open.</p>
+</header>
+
+<h2 id="one">1. The one sentence</h2>
+<p class="thesis">A ledger is a notebook where every money movement is written as a <strong>pair of balancing lines</strong>, saved in <strong>one database commit</strong>, and only after that commit does the rest of the world get told about it.</p>
+<p>What it must never do: move money twice for one intention, approve a debit from a balance it cannot verify, edit history, or say "done" before the commit.</p>
+<div class="say"><p class="label">The sentence that ties everything together</p><p>"Money becomes durable in the atomic store; events describe that fact afterwards. The idempotency key lives in the same commit as the money, so the same key always returns the same transaction."</p></div>
+
+<h2 id="hour">2. The hour, in four steps</h2>
+<table>
+  <tr><th>Minutes</th><th>Step</th><th>You say</th></tr>
+  <tr><td>0–3</td><td>Listen</td><td>"Here's how I'll use the time: requirements, then the nouns and operations, then a simple design that serves the features, then the qualities one by one."</td></tr>
+  <tr><td>3–12</td><td>1 Requirements</td><td>The boundary question, the features, the numbers (this one outgrows one primary), the qualities, the scope sentence.</td></tr>
+  <tr><td>12–15</td><td>2 Entities and API</td><td>Six nouns, the transfer command, why the client makes the key.</td></tr>
+  <tr><td>15–27</td><td>3 Design</td><td>Name the balance-column version in one sentence, don't draw it. Draw the real one: validate, one commit, return, outbox. Say what it costs and what it doesn't handle yet.</td></tr>
+  <tr><td>27–53</td><td>4 Deep dives</td><td>Kafka down for hours. The cross-shard transfer with clearing (teach this one). Failures to the bottom. Scaling with the numbers.</td></tr>
+  <tr><td>53–60</td><td>Close</td><td>The one sentence. Then two questions for them.</td></tr>
+</table>
+<p>When they interrupt: answer, then say "let me go back to the step I was on" and name it.</p>
+
+<h2 id="step1">3. Step 1: questions, numbers, rules</h2>
+<h3>The question that decides everything</h3>
+<p>"Are we <strong>the ledger</strong>, a wallet on top of an existing ledger, or orchestration around payment rails?" Assume the authoritative ledger. Then: "Is a Processing state allowed?" Yes for money that leaves the bank; never for an internal transfer.</p>
+
+<h3>The features (what callers can do)</h3>
+<p>A client (the app, or a service like the dispute platform) submits a transfer with a key and gets a definite answer: done, rejected, or the same answer it already got. Anyone authorised reads a balance now, and a statement, including "as of" a past date. Other systems learn about every posting afterwards. A correction is a new posting linked to the old one, never an edit. <strong>Below the line:</strong> card authorisation, FX, the PIX rail itself, fraud, reporting.</p>
+
+<h3>The numbers (ask first, then do the maths)</h3>
+<pre><code>2B transactions a month ≈ 770 / s average, ~8,000 / s peak (payday, Black Friday)
+Each transfer = 2 entries + 2 aggregate updates + 1 outbox row ≈ 4–5 writes → ~30k writes / s peak
+Entries 200 bytes × 4B / month ≈ 0.8 TB / month on the hot path
+Balance reads ≈ transactions; feed reads 10× that, served from projections</code></pre>
+<div class="say"><p class="label">The decision the numbers force</p><p>"Thirty thousand writes a second at peak is past one comfortable Postgres primary. So partitioning by customer is on the roadmap from day one, and cross-customer transfers become the explicit hard problem. If peak were under a few thousand writes a second I'd stay on one primary and measure."</p></div>
+
+<h3>The six rules (the qualities, as rules)</h3>
+<ol>
+  <li><strong>Entries balance.</strong> Every transaction's entries sum to zero.</li>
+  <li><strong>Effectively once.</strong> Same key, same transaction, for a window that outlasts any retry.</li>
+  <li><strong>History is immutable.</strong> A mistake is a new, opposite entry that points at the wrong one.</li>
+  <li><strong>Never debit from stale funds.</strong> The funds check reads the authority, not a cache, not a replica.</li>
+  <li><strong>Authorise, post, clear and settle are different states.</strong> A hold lowers available, not posted.</li>
+  <li><strong>Every external movement is reconcilable</strong> against the counterparty's records.</li>
+</ol>
+<div class="say"><p class="label">The scope sentence, at minute twelve</p><p>"I'm designing the authoritative ledger: one strongly consistent decision per transfer, history that is never edited, everything else told afterwards. I'll design the single-shard version first and show where it splits. The two things I won't compromise: the funds check reads the authority, and the key lives in the same commit as the money."</p></div>
+
+<h2 id="step2">4. Step 2: six nouns, three operations, the schema</h2>
+<div class="rows">
+  <div><span>Account</span><span>A bucket of value in one currency, with a <strong>version</strong> that goes up on every change.</span></div>
+  <div><span>Transaction</span><span>The business event: "Ana sent Bruno R$10", stamped with the client's key. Nubank calls it a movement.</span></div>
+  <div><span>Entry</span><span>One signed line against one account. Ana −10, Bruno +10. Never edited.</span></div>
+  <div><span>Account aggregate</span><span>The cheat sheet so you don't re-add years of entries: posted, held, available, version. Always rebuildable from the entries.</span></div>
+  <div><span>Hold</span><span>A reservation (card authorisation) that lowers available without touching posted.</span></div>
+  <div><span>Outbox row</span><span>A note saying "publish this event later", written in the same commit.</span></div>
+</div>
+<p><strong>Three operations.</strong> <code>POST /transfers</code> with the client's key, accounts, amount in minor units, currency, type. <code>GET /accounts/{id}/balance</code>, optionally as of a date. <code>GET /accounts/{id}/entries</code> for a period, from a projection. Holds and reversals are transfer <em>types</em>, not new endpoints. The caller comes from the token, never the body.</p>
+<p><strong>Why the client makes the key.</strong> Only the client knows a retry is a retry. If the ledger minted the key on arrival, a lost response plus a retry would move money twice. The app makes K1 once at the tap, saves it, and sends it on every retry; a service caller derives it from its own durable state, like <code>case_id:PROVISIONAL_CREDIT:v1</code>. Never <code>uuid()</code> per attempt.</p>
+
+<h3>The schema: the five rows written together</h3>
+<pre><code>accounts          id, currency, posted, held, available, version
+transactions      id (T1), caller, idempotency_key (K1), type, amount, currency, created_at
+entries           id, transaction_id, account_id, amount (signed, minor units), created_at   -- append-only
+idempotency_keys  (caller, key) → transaction_id, payload_hash, expires_at
+outbox            id, transaction_id, event (json), published_at (null until Kafka acks)
+
+Rules the schema enforces: SUM(entries.amount) per transaction = 0;  available = posted − held;
+UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means someone else got there first)</code></pre>
+
+<h2 id="step3">5. Step 3: the drawing</h2>
+<p><strong>The version you name and don't draw:</strong> "One accounts table with a balance column: read it, subtract, write it back, publish an event from memory. It can double-spend, has no history, and loses the event if the process dies. So I won't draw it."</p>
+<p><strong>The version you draw.</strong> A transfer comes in. Four things happen in order:</p>
+<ol>
+  <li><strong>Look up the key.</strong> Not seen: continue. Seen with the same payload: return the stored transaction, touch nothing. Seen with a different payload: deterministic conflict, process neither.</li>
+  <li><strong>Validate.</strong> Both accounts exist, currency matches, Ana has the amount <em>available</em>, and her account version is the one just read.</li>
+  <li><strong>One commit</strong> writes the transaction, both entries, both aggregates with the version check, the key record, and the outbox row. All or nothing.</li>
+  <li><strong>Return "done"</strong>, because the commit succeeded. Not because Kafka got anything.</li>
+</ol>
+<p><strong>After the commit,</strong> an outbox worker publishes the event to Kafka in order and marks the row after the ack. Consumers build the feed and statements, send notifications, feed fraud. They may see a message twice and dedupe.</p>
+<p><strong>The key on every arrow.</strong> App → ledger: the client's key K1. Ledger → Kafka: the transaction id. Shard → shard: <code>K1:LEG_A</code>, <code>K1:LEG_B</code>. Ledger → rail: a stable end-to-end id.</p>
+<div class="recap"><p class="label">Say its cost, then its gaps</p><p>"It costs four or five rows per transfer instead of one, a worker, and consumers that must dedupe. It doesn't yet handle: Kafka down for hours, read scale, a second primary, a hot account, and the failover window. Those are my deep dives; I'd go deepest on the cross-shard transfer and on failures."</p></div>
+<p><strong>The consistency line, said once:</strong> strong where I decide (the funds check, the commit, the aggregate); eventual where I only read (feed, statements, search); explicitly <em>Processing</em> where an external rail hasn't answered yet.</p>
+
+<h2 id="case">6. One transfer, end to end, on the diagram</h2>
+<p>Ana sends R$10 to Bruno, both Nubank customers. Follow the numbers.</p>
+<figure>
+<svg viewBox="0 0 760 410" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ana's transfer to Bruno, numbered on the ledger design</title>
+<desc>Ana's app sends a transfer with key K1. The ledger looks up the key and validates funds and the account version, writes one atomic commit of five rows, and returns done. An outbox worker publishes the fact to Kafka; projections build the feed; Bruno's app reads the feed from projections and the balance: authority. Reconciliation compares entries with aggregates. A clearing account is the only path between shards. The numbered circles are the steps of the story below.</desc>
+<defs><marker id="arrow-ledger-walk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ana's app</text><text x="95.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">R$10 to Bruno, key K1</text></g>
+<line x1="170" y1="58" x2="198" y2="58" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="200" y="30" width="170" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="285.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Key lookup, validate</text><text x="285.0" y="68" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">K1 seen? funds; version 41</text></g>
+<line x1="285" y1="86" x2="285" y2="118" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="200" y="120" width="170" height="90" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="285.0" y="138" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">One atomic commit</text><text x="285.0" y="158" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">tx, 2 entries, 2 aggregates,</text><text x="285.0" y="176" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key record, outbox row</text></g>
+<path d="M200 165 L95 165 L95 88" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<text x="103" y="180" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">returns "done"</text>
+<line x1="370" y1="165" x2="418" y2="165" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="420" y="130" width="160" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="500.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox worker</text><text x="500.0" y="168" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">publish in order,</text><text x="500.0" y="186" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">retry until acked</text></g>
+<line x1="580" y1="165" x2="618" y2="165" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="620" y="130" width="120" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="680.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Kafka</text><text x="680.0" y="168" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">the fact, told;</text><text x="680.0" y="186" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">ordered per account</text></g>
+<path d="M680 200 L680 250 L500 250 L500 298" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<text x="590" y="238" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">consumers dedupe by event id</text>
+<g><rect x="420" y="300" width="160" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="500.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Projections</text><text x="500.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">feed, statements, search;</text><text x="500.0" y="356" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">rebuilt from the journal</text></g>
+<line x1="580" y1="328" x2="618" y2="328" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="620" y="300" width="120" height="70" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="680.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Bruno's app</text><text x="680.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">feed from here;</text><text x="680.0" y="356" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">balance: authority</text></g>
+<line x1="320" y1="210" x2="320" y2="298" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ledger-walk)"/>
+<g><rect x="200" y="300" width="170" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="285.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Reconciliation</text><text x="285.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">entries vs aggregates;</text><text x="285.0" y="356" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">journal sums to zero</text></g>
+<path d="M200 195 L120 195 L120 298" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ledger-walk)"/>
+<text x="128" y="250" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">only if Bruno is on another shard</text>
+<g><rect x="20" y="300" width="150" height="70" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="95.0" y="318" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Clearing account</text><text x="95.0" y="338" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">the waiting room</text><text x="95.0" y="356" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">between two shards</text></g>
+<circle cx="20" cy="30" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="20" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">1</text><circle cx="200" cy="30" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">2</text><circle cx="200" cy="120" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="120.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">3</text><circle cx="148" cy="165" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="148" y="165.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">4</text><circle cx="420" cy="130" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="420" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">5</text><circle cx="620" cy="130" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="620" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">6</text><circle cx="420" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="420" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">7</text><circle cx="620" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="620" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">8</text><circle cx="200" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="200" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">9</text><circle cx="20" cy="300" r="10" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="20" y="300.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="600" fill="#085041">10</text>
+<rect x="20" y="386" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="42" y="393" dominant-baseline="central" font-size="12" fill="#3E4A63">Decision: one commit, strongly consistent.</text>
+<rect x="320" y="386" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="342" y="393" dominant-baseline="central" font-size="12" fill="#3E4A63">After: descriptions, rebuildable.</text>
+<rect x="570" y="386" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="592" y="393" dominant-baseline="central" font-size="12" fill="#3E4A63">One path between shards.</text>
+</svg>
+<figcaption>The design with Ana's transfer numbered on it. Green is the only place money is decided; purple describes that decision afterwards and can be rebuilt from it; amber is the clearing account, a real account with real entries, used only when payer and payee live in different databases. The numbers are the steps of the story below.</figcaption>
+</figure>
+<ol>
+  <li><strong>Ana taps "send".</strong> Her app creates key K1 once for this tap, saves it, and sends the transfer: source Ana, destination Bruno, 1000 (minor units), BRL, type internal transfer. If the network is slow and the app retries, it sends the same K1.</li>
+  <li><strong>The ledger looks up (caller, K1).</strong> Not seen, so it continues. Then it validates: both accounts exist, currency BRL, Ana's <em>available</em> balance covers 10 (posted minus holds), and Ana's account version is 41, the number it just read. If Ana's card is being authorised at the same second, one of the two sees a stale version and re-validates; they never both win.</li>
+  <li><strong>One commit writes five rows.</strong> Transaction T1 with key K1. Entry Ana −10, entry Bruno +10, summing to zero. Ana's aggregate: posted and available down by 10, version 41 → 42, as a conditional update. Bruno's aggregate: up by 10, version 17 → 18. The key record K1 → T1 with the payload hash. One outbox row: "T1 posted". All or nothing: saving the key and the money in separate steps is how a crash between them moves money twice.</li>
+  <li><strong>"Done" goes back to Ana</strong>, because the database committed. If the response is lost and the app retries K1, the ledger returns T1 again. Nothing else moves.</li>
+  <li><strong>The outbox worker</strong> reads unpublished rows in order, publishes T1's event, and marks the row only after Kafka acks. If the worker dies between publish and mark, it publishes again on restart; that is why consumers dedupe.</li>
+  <li><strong>Kafka carries the fact</strong>, partitioned by account key so Ana's events stay in order. It is not the truth; it is the truth being told. If Kafka is down for six hours, money is still right, the outbox backlog grows, and the alert is on the age of the oldest unpublished row.</li>
+  <li><strong>Projection builders consume</strong> T1: a feed item "sent R$10 to Bruno", a statement row for each, the search index. Every projection is rebuildable from the journal. If one drifts, replay it; never touch an entry.</li>
+  <li><strong>Bruno's phone buzzes.</strong> A notification consumer sends "R$10 received". His feed shows it from the projection. His <em>balance</em> is one indexed read of the aggregate row, the authority, never the projection, because that number is what the next debit will be authorised against.</li>
+  <li><strong>Reconciliation runs continuously.</strong> The sum of Ana's entries equals her aggregate; the journal sums to zero; external movements match the counterparty's records. A mismatch in a projection is a rebuild; a mismatch in an aggregate is an incident, because it authorises spending.</li>
+  <li><strong>If Bruno lived on another shard</strong>, you cannot update two databases in one commit, so the transfer becomes two legs joined by the clearing account. Leg A, in Ana's shard: Ana −10, clearing +10, key <code>K1:LEG_A</code>, and a transfer record saying "leg A done". Leg B, in Bruno's shard: clearing −10, Bruno +10, key <code>K1:LEG_B</code>. Between the legs the money is in clearing, fully accounted for, and Ana sees Processing. A crashed worker reads the transfer record to know which leg is still owed. Monitor clearing by amount and by the age of its oldest item.</li>
+</ol>
+<div class="say"><p class="label">The transfer in one breath</p><p>"Ana's app makes the key once. The ledger checks the key, validates available funds against the account version, and in one commit writes the transaction, two balancing entries, both aggregates, the key record and an outbox row. Done comes from the commit. A worker then tells Kafka, consumers build the feed and dedupe, and Bruno's balance is read from the aggregate, never the feed. If they're on different shards, two legs through clearing, each with its own key, Processing in between."</p></div>
+
+<h2 id="timeouts">7. The three timeouts, and the one rule</h2>
+<ul>
+  <li><strong>Timeout before the commit.</strong> Nothing moved. A retry with K1 is just a first attempt.</li>
+  <li><strong>Timeout after the commit.</strong> The retry with K1 returns the same T1. You never infer the outcome from a timeout, and you never send a fresh key.</li>
+  <li><strong>Committed, but the event was lost.</strong> The outbox republishes. The event exists if and only if the money moved.</li>
+</ul>
+<div class="say"><p class="label">The one rule that protects everything</p><p>"If the ledger can't verify available funds, because a shard is down or a failover is in progress, it refuses the debit rather than approving from a cache or a replica. A few seconds of 'try again' beats a loss you can't recover."</p></div>
+
+<h2 id="failures">8. When things break</h2>
+<p>For any failure, answer these six: What committed? What retries, with which key? What can duplicate? What does the customer see? Which metric alerts? What does an operator safely do?</p>
+<table>
+  <tr><th>Failure</th><th>Answer in one line</th></tr>
+  <tr><td>Two debits on Ana at once</td><td>Both read version 41; one commits to 42; the other's conditional update matches zero rows, reloads, re-validates, and may now be declined. Never both.</td></tr>
+  <tr><td>Same key, different payload</td><td>Deterministic conflict. Process neither; the caller reused one identity for two intentions.</td></tr>
+  <tr><td>Kafka down for six hours</td><td>Every posting still works. Outbox backlog grows; feeds and notifications go stale; it drains in order when Kafka returns. Alert on outbox age, not on Kafka health.</td></tr>
+  <tr><td>A projection drifts</td><td>Rebuild it from the journal alongside the old one, switch atomically. Never touch entries.</td></tr>
+  <tr><td>Someone says "rebuild balances from Kafka"</td><td>No: that authorises debits from an eventually consistent source. Kafka distributes facts; it can't be the atomic boundary that ties the funds check, the entries and the key together.</td></tr>
+  <tr><td>Leg B can never complete</td><td>Money sits in clearing, visible by amount and age. Policy decides whether to reverse leg A with a new linked entry. Never delete leg A.</td></tr>
+  <tr><td>Single point of failure?</td><td>The write authority's primary, one per partition. Synchronous replica in another zone, automated promotion in seconds; during it, new debits are rejected, reads keep working from projections. Failover time is my availability ceiling.</td></tr>
+</table>
+<p><strong>Degrades, never dies.</strong> Primary failing over: "try again in a moment" on a transfer, history still readable. Kafka down: transfers done but late in the list. Projection store down: "your history is delayed". External rail down: money in clearing, Processing. One partition down: only its customers wait, and transfers to them sit in clearing.</p>
+<p><strong>Security in one breath.</strong> Only authenticated callers with a scoped command set: the dispute platform may issue a provisional credit, not an arbitrary transfer. Every posting records the caller and the business key. Nobody edits entries, engineers included; a correction is a new linked posting with an approval. Keys are scoped per caller so one can't replay another's.</p>
+
+<h2 id="tenfold">9. "Ten times the volume"</h2>
+<ol>
+  <li><strong>Ask what grew.</strong> Transactions, accounts, entries per account, read traffic?</li>
+  <li><strong>Do the maths.</strong> Ten times is 80,000 transfers a second and 300,000 writes: that is many primaries, so partition by customer, and tag every transaction with the customer id from day one so the split is possible.</li>
+  <li><strong>Scale what scales:</strong> outbox publishers, projection builders, reconciliation, every read that isn't the funds check.</li>
+  <li><strong>Say what doesn't:</strong> one write authority per account (that's the invariant, not an apology), hot accounts, and the failover time of the authority.</li>
+  <li><strong>Protect the rules</strong> while scaling. The three "improvements" that are bugs: cache the available balance; authorise from a read replica; post asynchronously and confirm later for an internal transfer.</li>
+</ol>
+<p><strong>Hot account</strong> (a merchant settlement account, fee income, clearing): scope it per day, per shard, per rail and roll up by projection, or serialise on it with a per-account queue. Never a global lock, never a cached balance.</p>
+<div class="say"><p class="label">Say it once, in their own words</p><p>"Your own database makes this trade explicit: Datomic gives you immutability and free read scaling in exchange for serialised writes per database, which is exactly why you shard by customer, and exactly why cross-shard movement is the part I'd spend the most care on."</p></div>
+
+<h2 id="rollout">10. Rollout, in three lines</h2>
+<p>One transfer type, one country. Shadow the old ledger: post to both, compare totals, nobody reads the new one. Then a small cohort behind a kill switch. Partition only when a measurement says so, never pre-emptively.</p>
+<p><strong>Schema changes after launch:</strong> add fields, never repurpose; expand, migrate, contract; events carry a schema version and consumers accept N and N+1 during a rollout; never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache; never the thing that decides, which is the available balance.</p>
+
+<h2 id="never">11. Never say</h2>
+<ul>
+  <li>"Kafka gives us exactly-once." (Your ledger makes the effect happen once; the network can't.)</li>
+  <li>"Roll back the transfer because the event didn't go out." (Committed money is a fact; the outbox republishes.)</li>
+  <li>"Rebuild the balance from Kafka." (That authorises debits from an eventually consistent source.)</li>
+  <li>"Cache the balance" or "authorise from a replica." (A stale balance is a double spend.)</li>
+  <li>"Use a float for the amount." (Integers in minor units; floats round, money doesn't.)</li>
+  <li>"It'll be a lot of data." (Say the number and what it decides: this one does outgrow one primary.)</li>
+  <li>"Edit the wrong entry." (A new, opposite entry that points at it.)</li>
+</ul>
+
+<footer>
+  Condensed on 1 October 2026 from <em>The ledger, end to end</em>. Every number, key and row here matches that guide; when a line feels thin, the section with the same name there is the place to read. Companion to <em>Chargebacks on one card</em>: the dispute platform is the system that sends this ledger its money commands.
+</footer>
+</main>
+</div>
+</body>
+</html>

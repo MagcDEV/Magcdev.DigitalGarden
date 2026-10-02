@@ -27,6 +27,16 @@ The chargeback material condensed to what is worth memorising, in plain words an
 
 <embed class="guide-frame" src="../../assets/nubank-guides/nubank-chargeback-one-card.html" type="text/html" title="Chargebacks on one card">
 
+## The ledger on one card
+
+The ledger guide condensed to what is worth memorising, in the same shape as the chargeback card: the one sentence, the hour in four steps, the boundary question, features, numbers and six rules, the six nouns, three operations and the table schema of the five rows written in one commit, the drawing, Ana's R$10 transfer to Bruno narrated end to end on a numbered diagram (including the cross-shard legs through clearing), the three timeouts and the one rule, the failure table, the tenfold answer, rollout, and the things never to say.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-ledger-one-card.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-ledger-one-card.html" type="text/html" title="The ledger on one card">
+
 ## Nubank's prep document, decoded
 
 They sent the rubric. This guide explains every concept the candidate PDF names in plain terms, shows how each one already lives in the chargeback and ledger designs, and adds the two things those designs didn't stress: rough numbers, and a v1-then-iterate storyline. Includes the seven evaluation signals, the ten keys with a sentence for each, the arithmetic table to memorise, a graceful degradation matrix, a security and abuse table, two generic-prompt sketches, a six-day plan, the questions to ask at the end, and, in sections 11 and 12, a reading list in Nubank's own words (four engineering posts with a citation sentence each, the Datomic trade-off, the video they recommend) plus six small edges for the last days.
