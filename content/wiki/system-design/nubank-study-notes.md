@@ -24,7 +24,7 @@ Each guide also has an **Open full page** button. That loads the original HTML a
 
 ## Chargebacks on one card
 
-The chargeback material condensed to what is worth memorising, in plain words and in the order you say it: the one sentence, the hour in four steps, the five questions, the numbers, the seven rules, the six nouns and three operations, the drawing with the key on every arrow, Ana's case narrated end to end on a numbered diagram, the three money endings, the failure table, the scale and performance questions, the file-over-FTP version of the network, rollout, the four Lead signals with a sentence for each (trade-offs, failure domains, observability, disaster recovery), and the things never to say. About seven pages. Read this before the big guide, and go to the big guide only where a line here feels thin.
+The chargeback material condensed to what is worth memorising, in plain words and in the order you say it: the one sentence, the hour in four steps, the five questions, the numbers, the seven rules, the six nouns and three operations, the drawing with the key on every arrow, Ana's case narrated end to end on a numbered diagram, the three money endings, the failure table, the scale and performance questions, the file-over-FTP version of the network, the idempotency question with its answer, the technologies and why, rollout, the four Lead signals with a sentence for each (trade-offs, failure domains, observability, disaster recovery), and the things never to say. About eight pages. Read this before the big guide, and go to the big guide only where a line here feels thin.
 
 <form class="guide-open" action="../../assets/nubank-guides/nubank-chargeback-one-card.html" method="get" target="_blank">
 <button type="submit">Open full page</button>

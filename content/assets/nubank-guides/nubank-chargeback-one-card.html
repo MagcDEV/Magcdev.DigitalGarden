@@ -56,6 +56,7 @@
   h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
   h4 { font-size: 17px; font-weight: 600; margin: 40px 0 6px; line-height: 1.35; }
   h4 .when { font-weight: 400; color: var(--ink-soft); }
+  td code { overflow-wrap: anywhere; }
   p { margin: 0 0 16px; }
   ul, ol { margin: 0 0 18px; padding-left: 26px; }
   li { margin-bottom: 8px; }
@@ -264,9 +265,11 @@
     <li><a href="#failures">8. When things break</a></li>
     <li><a href="#tenfold">9. Scale and performance</a></li>
     <li><a href="#files">10. If the network is a file over FTP</a></li>
-    <li><a href="#rollout">11. Rollout, in three lines</a></li>
-    <li><a href="#lead">12. Lead signals, in their words</a></li>
-    <li><a href="#never">13. Never say</a></li>
+    <li><a href="#idempotency">11. Idempotency: the question, and the answer</a></li>
+    <li><a href="#tech">12. The technologies, and why</a></li>
+    <li><a href="#rollout">13. Rollout, in three lines</a></li>
+    <li><a href="#lead">14. Lead signals, in their words</a></li>
+    <li><a href="#never">15. Never say</a></li>
   </ol>
 </nav>
 <main>
@@ -603,7 +606,7 @@
 <figcaption>The design with Ana's case numbered on it. Green is the one place anything is decided. Purple happens after the commit and can be replayed. Grey is outside the platform. The numbers are the steps of the story below. Several steps go through boxes 2, 3 and 5 more than once, because every change to the case is a command through the same door.</figcaption>
 </figure>
 <ol>
-  <li><strong>Ana taps "I don't recognise this purchase".</strong> Her app creates an idempotency key, K1, once for this tap, and sends an OpenDispute command with it. If the network is slow and the app retries, it sends the same K1.</li>
+  <li><strong>Ana taps "I don't recognise this purchase".</strong> Her app creates a request key, K1, once for this tap, and sends an OpenDispute command with it. If the network is slow and the app retries, it sends the same K1.</li>
   <li><strong>The case service checks, then validates.</strong> Is this really Ana? Has K1 been seen before (if yes, return the same case and stop)? What case version does the command expect (none, it's new)? Then, under policy version 12 for Brazil and Visa: Ana owns the card, there is no open case for this transaction, and the purchase is inside the dispute window.</li>
   <li><strong>One commit writes five things together.</strong> A CaseEvent OPENED (actor Ana, time, policy v12). The DisputeCase snapshot (state OPENED, version 1). A Deadline row: Ana must supply evidence within 10 days. The record of K1. And outbox rows: notify Ana, and evaluate provisional credit. All or nothing.</li>
   <li><strong>The service answers "case CB-812 opened".</strong> Ana's app shows "under review". Nothing outside the platform has been called yet. That is on purpose. The promise to call them is already saved, in the outbox rows.</li>
@@ -855,10 +858,87 @@
 
 <div class="say"><p class="label">Say it in 30 to 60 seconds</p><p>"Four times a day I claim every case that is ready, in one transaction, into a batch run with an id made from the date and the slot. I build a CSV deterministically from the claimed rows, each row carrying the case's stable submission reference, upload it under a name derived from the run id, and mark the run uploaded. Every row is now 'awaiting answer' and sits in a reconciliation queue. When a response file arrives, I dedupe it by file id, parse it row by row, quarantine bad rows without dropping the file, and turn each good row into a case command keyed by file id plus row id. Anything sent and unanswered ages; the age of the oldest item is what pages someone. A timeout on upload is unknown, not failed: I check the remote directory before I re-upload the same file, and I never rebuild with a new run id."</p></div>
 
-<h2 id="rollout">11. Rollout, in three lines</h2>
+<h2 id="idempotency">11. Idempotency: the question, and the answer</h2>
+<p class="question">Interviewers ask about idempotency in almost every report. Waiting to be asked is a negative signal, so name the key on every arrow before they ask.</p>
+
+<h3>How they ask it</h3>
+<ul data-ste="spoken">
+  <li>"What happens if Ana taps 'dispute' twice?"</li>
+  <li>"The app times out and retries. Do you open two cases?"</li>
+  <li>"Your worker calls the ledger, and the call times out. What now?"</li>
+  <li>"How do you make sure a customer is never credited twice?"</li>
+  <li>"Walk me through how this system is idempotent, end to end."</li>
+</ul>
+
+<div class="say"><p class="label">The answer, in about a minute</p><p>"Idempotency here isn't one key, it's a stable identity on every boundary. The app makes a request key once per tap and resends it on every retry. The key record goes into the same commit as the case, so a retry gets the same case back. Two separate taps have two keys, so a business uniqueness rule returns the existing case: same transaction, same customer, same reason family, while a case is live. Every money action has its own key, like CB-812:PROVISIONAL_CREDIT:v1. So if the ledger times out, I retry with the same key, and it can't credit twice. The network gets the same submission reference on every retry. A response file is deduped by file id, and each row is applied under file id plus row id. And every consumer of my events dedupes by event id."</p></div>
+
+<h3>Six boundaries, one stable identity each</h3>
+<table>
+  <tr><th>Boundary</th><th>Stable identity, and where it is checked</th><th>What it prevents</th></tr>
+  <tr><td>App → case service, a retry</td><td>The request key, made once per tap. Checked by: the idempotency record, unique on (caller, key), in the same commit as the case.</td><td>A retry that opens a second case</td></tr>
+  <tr><td>Two separate taps</td><td>Business uniqueness: transaction, customer, reason family, live case. Checked by: a uniqueness rule in the case database.</td><td>Two live cases for one purchase. Not the transaction id alone: partial disputes are legitimate.</td></tr>
+  <tr><td>Case → ledger</td><td>The action key, <code>CB-812:PROVISIONAL_CREDIT:v1</code>. Checked by: the ledger, unique on the key.</td><td>A second credit. A reversal has its own key, so it is not a retry.</td></tr>
+  <tr><td>Case → network</td><td>The submission reference, <code>NB-CB-812-1</code>. Checked by: the network. Query by the reference before any resubmit.</td><td>A second dispute at the network</td></tr>
+  <tr><td>Network file → case</td><td>The file id, then <code>file-id:row-id</code>. Checked by: InboundFile, and the key of each row's command.</td><td>A response file applied twice</td></tr>
+  <tr><td>Our events → consumers</td><td>The event id. Checked by: each consumer.</td><td>A notification or a search update applied twice</td></tr>
+</table>
+
+<h3>How the key check works</h3>
+<ol>
+  <li>The app makes the request key once, when Ana taps, and saves it. On a retry, it sends the same key.</li>
+  <li>The case service looks up (caller, key) in the idempotency table.</li>
+  <li>If the key is new, the service runs the command. The same commit writes the key record, a hash of the request and the result.</li>
+  <li>If the key exists with the same request hash, the service returns the stored result. It changes nothing.</li>
+  <li>If the key exists with a different request hash, the service returns a conflict. The caller used one key for two intentions.</li>
+  <li>If two retries arrive at the same moment, the unique constraint lets one insert win. The other one reads the stored result.</li>
+</ol>
+
+<h3>The follow-up questions</h3>
+<table>
+  <tr><th>They ask</th><th>Answer in one line</th></tr>
+  <tr><td>"Why not keep the keys in Redis?"</td><td>Then the key and the case live in two systems. A crash between the two writes loses the key, or saves a key with no case. One Postgres commit holds both.</td></tr>
+  <tr><td>"Why isn't the ledger key the case id?"</td><td>One case needs several money actions. With the case id as the key, the reversal looks like a retry of the credit, and the ledger refuses it.</td></tr>
+  <tr><td>"The ledger times out. Do you retry?"</td><td>Yes, with the same key. A timeout is unknown, not failed. The case stays in "credit pending" until it sees a result. Never a new key.</td></tr>
+  <tr><td>"The network times out."</td><td>Unknown. Query by the same reference before any resubmit. If the network has no safe resubmit, escalate to a human.</td></tr>
+  <tr><td>"How long do you keep the keys?"</td><td>Longer than any retry: a window like 24–72 hours for customer commands. The business uniqueness rule covers the rest of the case's life.</td></tr>
+  <tr><td>"Kafka has exactly-once. Isn't that enough?"</td><td>It covers Kafka to Kafka and stops at your database write. Consumers still dedupe by event id.</td></tr>
+</table>
+
+<h2 id="tech">12. The technologies, and why</h2>
+<p class="question">Name a technology only with its reason. The numbers from section 3 decide the choice, not fashion.</p>
+
+<table>
+  <tr><th>Box on the board</th><th>Technology</th><th>Why this one</th></tr>
+  <tr><td>Case database: cases, events, deadline rows, key records, outbox rows</td><td>PostgreSQL. One primary, with a synchronous replica in another zone.</td><td>One ACID commit holds all five writes. Unique constraints and the <code>(status, due_at)</code> index come for free. 8 writes a second at peak is far below one primary's thousands.</td></tr>
+  <tr><td>Outbox workers, adapters, timer, sweeper</td><td>Stateless services on Kubernetes</td><td>Every side effect is idempotent, so they scale by adding pods. Claims use <code>SELECT … FOR UPDATE SKIP LOCKED</code>.</td></tr>
+  <tr><td>Events after the commit</td><td>Kafka</td><td>Carries case events to notifications, search and analytics. Each consumer dedupes by event id. Nubank already runs Kafka.</td></tr>
+  <tr><td>Evidence files</td><td>Object storage, for example Amazon S3, with versioning and encryption</td><td>8 TB a month never goes in the database. Short-lived upload URLs keep the bytes away from the case service.</td></tr>
+  <tr><td>Malware and format scan</td><td>A scan worker with its own queue</td><td>Scan throughput is the limit, not storage.</td></tr>
+  <tr><td>Ops search</td><td>OpenSearch (Elasticsearch), built from case events</td><td>A projection that you can rebuild. It may lag, so Ops opens the real case by id before acting.</td></tr>
+  <tr><td>Network adapter</td><td>One per network: an API client, or the batch job with FTP</td><td>The network chooses the protocol. Only the adapter changes.</td></tr>
+  <tr><td>Metrics, alerts, traces</td><td>Prometheus and Grafana, traces with OpenTelemetry</td><td>Queue age per dependency, oldest deadline, outbox age, command p99. One correlation id across every call.</td></tr>
+</table>
+
+<h3>What I would not add, and why</h3>
+<ul>
+  <li><strong>A separate store for idempotency keys.</strong> The key must be in the same commit as the case.</li>
+  <li><strong>A queue in front of the case database.</strong> At 8 writes a second it has no job. It is one more place to lose a command.</li>
+  <li><strong>A workflow engine as the source of truth.</strong> If the company has one, use it for timers and retries. The case service still owns transitions, policy, audit and idempotency.</li>
+  <li><strong>Sharding on day one.</strong> One primary handles ten times this load. Split by case id later, for failover size, not for writes.</li>
+  <li><strong>NoSQL "for scale".</strong> The numbers don't ask for it.</li>
+</ul>
+
+<div class="say"><p class="label">Say it</p><p>"I'll use Postgres for the case store, because one commit has to hold the event, the snapshot, the deadlines, the key and the outbox row, and at eight writes a second one primary is plenty. Kafka carries events after the commit, S3 holds the evidence, OpenSearch serves Ops search, and everything else is stateless workers on Kubernetes."</p></div>
+
+<h3>If they ask about Nubank's own stack</h3>
+<p>Nubank's postings list Clojure, Kafka, Datomic, DynamoDB, AWS, Kubernetes and Prometheus. You don't need to design in Clojure. Say one sentence in their language, once, when it fits.</p>
+<div class="say"><p class="label">In their words</p><p>"Your Datomic transaction function is where my check-and-write becomes one atomic operation. Kafka carries the outbox events between services, and every consumer dedupes on a correlation id, which is how you already do it."</p></div>
+<div class="say"><p class="label">"Why Postgres and not DynamoDB?"</p><p>"Either can work. Postgres gives me one transaction across five tables, unique constraints, and the deadline index with no extra design. With DynamoDB I'd use transactional writes with conditions, and I'd design the due-deadline query as a secondary index up front."</p></div>
+
+<h2 id="rollout">13. Rollout, in three lines</h2>
 <p>One country, one network, one reason family. First <strong>shadow</strong>: run the new rules on real inputs with every side effect blocked, compare. Then enable network submissions behind a kill switch, then money behind its own. Legal owns the rules, Ops owns the queues, the ledger team owns money, we own the mechanics.</p>
 
-<h2 id="lead">12. Lead signals, in their words</h2>
+<h2 id="lead">14. Lead signals, in their words</h2>
 <p class="question">The Buenos Aires Lead posting names four things: trade-offs said out loud, failure-domain isolation, observability, and disaster recovery. Here is where each one lives in this design, and the sentence to say.</p>
 
 <h3>Communicating trade-offs</h3>
@@ -907,7 +987,7 @@
 <p>The region numbers are an assumption to say out loud. Synchronous replication across regions would make the recovery point zero, but every commit would pay a 50 to 150 ms hop. For a workflow that runs over weeks, a few seconds of exposure that reconciliation repairs is the better trade.</p>
 <div class="say"><p class="label">Say it</p><p>"Losing a zone costs us seconds and no data. Losing a region is a human decision: the replica there can miss the last few seconds of commands. The apps retry with the same keys, and reconciliation against the network and the ledger catches anything that went out but wasn't recorded."</p></div>
 
-<h2 id="never">13. Never say</h2>
+<h2 id="never">15. Never say</h2>
 <ul>
   <li>"Opening the case credits the customer." (Credit is a separate policy decision.)</li>
   <li>"The scheduler will handle the deadline." (The row is the obligation.)</li>
@@ -919,6 +999,8 @@
   <li>"Retry the upload with a fresh file." (That resends every dispute in it.)</li>
   <li>"Reject the whole file if a row is bad." (That blocks 199 good cases for one.)</li>
   <li>"The cron job handles the schedule." (The claim is a transaction. The cron is only a trigger.)</li>
+  <li>"We'd add an idempotency key." (Say whose key, where it lives and what it prevents.)</li>
+  <li>"Retry with a new key after a timeout." (That is how a customer is credited twice.)</li>
 </ul>
 
 <footer>
