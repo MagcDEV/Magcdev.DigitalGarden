@@ -44,7 +44,7 @@ Ana's R$300 dispute from section 6 of the card, played step by step on the same 
 
 ## The ledger on one card
 
-The ledger guide condensed to what is worth memorising, in the same shape as the chargeback card: the one sentence, the hour in four steps, the boundary question, features, numbers and six rules, the six nouns, three operations and the table schema of the five rows written in one commit, the drawing, Ana's R$10 transfer to Bruno narrated end to end on a numbered diagram (including the cross-shard legs through clearing), the three timeouts and the one rule, the failure table, the tenfold answer, rollout, the four Lead signals with a sentence for each, and the things never to say.
+The ledger guide condensed to what is worth memorising, in the same shape as the chargeback card: the one sentence, the hour in four steps, the boundary question, features, numbers and six rules, the six nouns, three operations and the table schema of the five rows written in one commit, the drawing, Ana's R$10 transfer to Bruno narrated end to end on a numbered diagram (including the cross-shard legs through clearing), the three timeouts and the one rule, the failure table, the scale and performance questions, the idempotency question with its answer, the technologies and why, rollout, the four Lead signals with a sentence for each, and the things never to say.
 
 <form class="guide-open" action="../../assets/nubank-guides/nubank-ledger-one-card.html" method="get" target="_blank">
 <button type="submit">Open full page</button>

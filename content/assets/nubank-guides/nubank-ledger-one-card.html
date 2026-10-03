@@ -56,6 +56,7 @@
   h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
   h4 { font-size: 17px; font-weight: 600; margin: 40px 0 6px; line-height: 1.35; }
   h4 .when { font-weight: 400; color: var(--ink-soft); }
+  td code { overflow-wrap: anywhere; }
   p { margin: 0 0 16px; }
   ul, ol { margin: 0 0 18px; padding-left: 26px; }
   li { margin-bottom: 8px; }
@@ -263,9 +264,11 @@
     <li><a href="#timeouts">7. The three timeouts, and the one rule</a></li>
     <li><a href="#failures">8. When things break</a></li>
     <li><a href="#tenfold">9. Scale and performance</a></li>
-    <li><a href="#rollout">10. Rollout, in three lines</a></li>
-    <li><a href="#lead">11. Lead signals, in their words</a></li>
-    <li><a href="#never">12. Never say</a></li>
+    <li><a href="#idempotency">10. Idempotency: the question, and the answer</a></li>
+    <li><a href="#tech">11. The technologies, and why</a></li>
+    <li><a href="#rollout">12. Rollout, in three lines</a></li>
+    <li><a href="#lead">13. Lead signals, in their words</a></li>
+    <li><a href="#never">14. Never say</a></li>
   </ol>
 </nav>
 <main>
@@ -663,11 +666,89 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
   <tr><td>Disk commit</td><td>1–10 ms</td></tr>
   <tr><td>Sizes</td><td>Small JSON event about 1 KB, photo about 1 MB, scanned PDF about 10 MB</td></tr>
 </table>
-<h2 id="rollout">10. Rollout, in three lines</h2>
+<h2 id="idempotency">10. Idempotency: the question, and the answer</h2>
+<p class="question">Interviewers ask about idempotency in almost every report. Waiting to be asked is a negative signal, so name the key on every arrow before they ask.</p>
+
+<h3>How they ask it</h3>
+<ul data-ste="spoken">
+  <li>"Ana taps 'send' and the app times out. It retries. Does Bruno get R$20?"</li>
+  <li>"Who generates the idempotency key, and why?"</li>
+  <li>"The same key arrives with a different amount. What do you do?"</li>
+  <li>"The dispute platform's credit call times out. How do you make sure it posts once?"</li>
+  <li>"Kafka can deliver a message twice. How does the feed not show the transfer twice?"</li>
+</ul>
+
+<div class="say"><p class="label">The answer, in about a minute</p><p>"The client owns the key, because only the client knows a retry is a retry. Ana's app makes K1 once at the tap and sends it on every retry. The ledger stores the key record in the same commit as the posting, unique on caller and key, with a hash of the payload. So the same key always returns the same transaction, and a different payload under the same key is rejected, never reinterpreted. A service caller derives its key from its own state, like CB-812:PROVISIONAL_CREDIT:v1. A cross-shard transfer gives each leg its own key, K1:LEG_A and K1:LEG_B. A rail gets a stable end-to-end id. And the outbox is at-least-once, so every consumer dedupes by event id."</p></div>
+
+<h3>Six boundaries, one stable identity each</h3>
+<table>
+  <tr><th>Boundary</th><th>Stable identity, and where it is checked</th><th>What it prevents</th></tr>
+  <tr><td>App → ledger, a retry</td><td>The client key K1, made once per tap. Checked by: the key record, unique on (caller, key), in the same commit as the posting.</td><td>A retry that moves money twice</td></tr>
+  <tr><td>Same key, different payload</td><td>The payload hash in the key record. Checked by: the ledger, before any posting.</td><td>One key read as a second intention. The ledger returns a deterministic conflict.</td></tr>
+  <tr><td>Service → ledger</td><td>A key from the caller's own state, like <code>CB-812:PROVISIONAL_CREDIT:v1</code>. Checked by: the key record, scoped per caller.</td><td>A second credit after a timeout. One caller replaying another's key.</td></tr>
+  <tr><td>Shard → shard</td><td><code>K1:LEG_A</code> and <code>K1:LEG_B</code>. Checked by: the key record on each shard.</td><td>A leg posted twice when the transfer retries</td></tr>
+  <tr><td>Ledger → rail</td><td>A stable end-to-end id. Checked by: the rail, then reconciliation.</td><td>Money sent out twice</td></tr>
+  <tr><td>Ledger → Kafka consumers</td><td>The event id. Checked by: each consumer.</td><td>A feed line or a notification applied twice after a republish</td></tr>
+</table>
+
+<h3>How the key check works</h3>
+<ol>
+  <li>The app makes K1 once, when Ana taps, and saves it. On a retry, it sends the same K1.</li>
+  <li>The ledger looks up (caller, K1) in the key records.</li>
+  <li>If the key is new, the ledger validates and posts. The same commit writes the key record, the payload hash and the transaction id.</li>
+  <li>If the key exists with the same payload hash, the ledger returns the stored transaction. It moves no money.</li>
+  <li>If the key exists with a different payload hash, the ledger returns a conflict. It processes neither payload.</li>
+  <li>If two retries of K1 arrive at the same moment, the unique constraint lets one insert win. The other one reads the stored transaction.</li>
+</ol>
+
+<h3>The follow-up questions</h3>
+<table>
+  <tr><th>They ask</th><th>Answer in one line</th></tr>
+  <tr><td>"Why does the client make the key, not the ledger?"</td><td>Only the client knows a retry is a retry. If the ledger made the key on arrival, a lost response plus a retry would move money twice.</td></tr>
+  <tr><td>"Why not keep the keys in Redis?"</td><td>Then the key and the money live in two systems. A crash between the two writes moves money twice or loses the key. One Postgres commit holds both.</td></tr>
+  <tr><td>"Same key, different payload?"</td><td>A deterministic conflict, such as HTTP 409 <code>IDEMPOTENCY_KEY_CONFLICT</code>, with the original transaction id. Process neither, overwrite nothing.</td></tr>
+  <tr><td>"How long do you keep the keys?"</td><td>Longer than any retry: 24–72 hours for customer commands, longer for service commands.</td></tr>
+  <tr><td>"The outbox worker crashes after Kafka acked."</td><td>On restart it publishes the row again. Delivery is at-least-once, so consumers dedupe by event id.</td></tr>
+  <tr><td>"Kafka has exactly-once. Isn't that enough?"</td><td>It covers Kafka to Kafka and stops at your database write. Nubank said at QCon that every consumer dedupes on a correlation id.</td></tr>
+</table>
+
+<h2 id="tech">11. The technologies, and why</h2>
+<p class="question">Name a technology only with its reason. The numbers from section 3 decide the choice: this ledger outgrows one primary.</p>
+
+<table>
+  <tr><th>Box on the board</th><th>Technology</th><th>Why this one</th></tr>
+  <tr><td>Write authority: accounts, transactions, entries, key records, outbox rows</td><td>PostgreSQL. One primary per customer partition, each with a synchronous replica in another zone.</td><td>One ACID commit holds all five rows. The version check and the unique (caller, key) come for free. 30k writes a second at peak is past one primary, so partition by customer.</td></tr>
+  <tr><td>Amounts</td><td><code>BIGINT</code> in minor units</td><td>Floats round. Money doesn't.</td></tr>
+  <tr><td>Outbox worker</td><td>One per partition on Kubernetes, claiming rows with <code>SKIP LOCKED</code></td><td>Publishes in order, and marks the row after the ack.</td></tr>
+  <tr><td>Events after the commit</td><td>Kafka, partitioned by account id</td><td>Order per account. Consumers dedupe by event id. Nubank already runs Kafka.</td></tr>
+  <tr><td>Projections: feed, statements, search</td><td>Postgres or OpenSearch, built from the journal</td><td>Feed reads are ten times the writes. They never touch the write authority, and you can rebuild them.</td></tr>
+  <tr><td>Analytics</td><td>A columnar warehouse fed from Kafka</td><td>Aggregating on the transactional database did not scale. That is Nubank's own lesson.</td></tr>
+  <tr><td>Old entries</td><td>Checkpoints per account, cold entries in object storage such as Amazon S3</td><td>0.8 TB of entries a month. A rebuild replays from the last checkpoint, and the archive stays replayable.</td></tr>
+  <tr><td>Rail adapter</td><td>One per rail, such as PIX</td><td>Carries the stable end-to-end id. Only the adapter knows the rail's protocol.</td></tr>
+  <tr><td>Metrics, alerts, traces</td><td>Prometheus and Grafana, traces with OpenTelemetry</td><td>Posting p99, version conflicts, oldest outbox row, replica lag, clearing age. One correlation id across every call.</td></tr>
+</table>
+
+<h3>What I would not add, and why</h3>
+<ul>
+  <li><strong>A separate store for keys.</strong> The key record must be in the same commit as the money.</li>
+  <li><strong>A balance cache, or authorising from a read replica.</strong> A stale balance is a double spend.</li>
+  <li><strong>Kafka as the source of truth.</strong> It has no funds check, no unique key and no version check.</li>
+  <li><strong>Two-phase commit across shards.</strong> The clearing account gives a visible in-between state instead of a lock held across databases.</li>
+  <li><strong>A queue in front of the posting path.</strong> "Post now, confirm later" turns "Sent" into "we'll try". Never for an internal transfer.</li>
+</ul>
+
+<div class="say"><p class="label">Say it</p><p>"Postgres, partitioned by customer, is my write authority, because one commit has to hold the transaction, the entries, both aggregates, the key and the outbox row. At thirty thousand writes a second that's several primaries, each with a synchronous replica in another zone. Kafka carries the facts afterwards, partitioned by account, and projections serve every read except the funds check."</p></div>
+
+<h3>If they ask about Nubank's own stack</h3>
+<p>Nubank's postings list Clojure, Kafka, Datomic, DynamoDB, AWS, Kubernetes and Prometheus. You don't need to design in Clojure. Say one sentence in their language, once, when it fits.</p>
+<div class="say"><p class="label">In their words</p><p>"Your Datomic transaction function is where my check-and-write becomes one atomic operation. Kafka carries the outbox events between services, and every consumer dedupes on a correlation id, which is how you already do it."</p></div>
+<div class="say"><p class="label">"Why Postgres and not Datomic?"</p><p>"Either works for the ledger. Datomic gives immutability and free read scaling, but it serialises writes per database. That's exactly why you shard by customer, and it's the same split I'd make in Postgres. The design doesn't change, only where the atomic check-and-write runs."</p></div>
+
+<h2 id="rollout">12. Rollout, in three lines</h2>
 <p>One transfer type, one country. Shadow the old ledger: post to both, compare totals, nobody reads the new one. Then a small cohort behind a kill switch. Partition only when a measurement says so, never pre-emptively.</p>
 <p><strong>Schema changes after launch:</strong> add fields, never repurpose. Expand, migrate, contract. Events carry a schema version, and consumers accept N and N+1 during a rollout. Never rewrite entries. <strong>Caching:</strong> display balances and versioned reference data, under a version key, like their evergreen cache. Never the thing that decides, which is the available balance.</p>
 
-<h2 id="lead">11. Lead signals, in their words</h2>
+<h2 id="lead">13. Lead signals, in their words</h2>
 <p class="question">The Buenos Aires Lead posting names four things: trade-offs said out loud, failure-domain isolation, observability, and disaster recovery. Here is where each one lives in this design, and the sentence to say.</p>
 
 <h3>Communicating trade-offs</h3>
@@ -717,7 +798,7 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
 <p>The region numbers are an assumption to say out loud. Synchronous replication across regions would make the recovery point zero, but every commit would pay a 50 to 150 ms hop. The posting budget is tens of milliseconds, so the trade is a few seconds of exposure that reconciliation repairs.</p>
 <div class="say"><p class="label">Say it</p><p>"Losing a zone costs seconds and no money. Losing a region is a human decision with a few seconds of exposure. The books still balance because commits are lost whole, and reconciliation with the rails and the clients re-posts what was lost, once, under the original keys."</p></div>
 
-<h2 id="never">12. Never say</h2>
+<h2 id="never">14. Never say</h2>
 <ul>
   <li>"Kafka gives us exactly-once." (Your ledger makes the effect happen once; the network can't.)</li>
   <li>"Roll back the transfer because the event didn't go out." (Committed money is a fact; the outbox republishes.)</li>
@@ -726,6 +807,8 @@ UPDATE accounts … WHERE id = ? AND version = ?   (zero rows updated means some
   <li>"Use a float for the amount." (Integers in minor units; floats round, money doesn't.)</li>
   <li>"It'll be a lot of data." (Say the number and what it decides: this one does outgrow one primary.)</li>
   <li>"Edit the wrong entry." (A new, opposite entry that points at it.)</li>
+  <li>"We'd add an idempotency key." (Say whose key, where it lives and what it prevents.)</li>
+  <li>"Generate a new key on each retry." (A new key is a new intention: money moves twice.)</li>
 </ul>
 
 <footer>
