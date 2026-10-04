@@ -57,6 +57,7 @@
   h4 { font-size: 17px; font-weight: 600; margin: 40px 0 6px; line-height: 1.35; }
   h4 .when { font-weight: 400; color: var(--ink-soft); }
   td code { overflow-wrap: anywhere; }
+  table.wrap td:first-child { white-space: normal; font-weight: 400; }
   p { margin: 0 0 16px; }
   ul, ol { margin: 0 0 18px; padding-left: 26px; }
   li { margin-bottom: 8px; }
@@ -318,6 +319,17 @@ Balance reads ≈ transactions; feed reads 10× that, served from projections</c
   <li><strong>Authorise, post, clear and settle are different states.</strong> A hold lowers available, not posted.</li>
   <li><strong>Every external movement is reconcilable</strong> against the counterparty's records.</li>
 </ol>
+<h3>Functional and non-functional, side by side</h3>
+<p><strong>Functional</strong> requirements say what the system does: the features. You test them with "can a user do this?". <strong>Non-functional</strong> requirements say how well it does them: correctness, scale, speed, availability. You test them only with a number or a guarantee.</p>
+<table class="wrap">
+  <tr><th>Functional (the features)</th><th>Non-functional (the qualities)</th></tr>
+  <tr><td>A client submits a transfer with a key and gets a definite answer: done, rejected, or the same answer again.</td><td>Correctness: entries balance to zero, and one intention never moves money twice.</td></tr>
+  <tr><td>Anyone authorised reads a balance now.</td><td>Fresh funds: the funds check reads the write authority, never a cache or a replica.</td></tr>
+  <tr><td>Anyone authorised reads a statement, including "as of" a past date.</td><td>Definite answers: same key, same answer, for 24–72 hours.</td></tr>
+  <tr><td>Other systems learn about every posting afterwards.</td><td>Scale: about 8,000 transfers a second at peak, about 30,000 writes. That is past one primary.</td></tr>
+  <tr><td>A correction is a new posting linked to the old one, never an edit.</td><td>Latency: tens of milliseconds p99 on the posting path.</td></tr>
+</table>
+<p><strong>Why both matter.</strong> The functional list tells you which boxes you need. The non-functional list tells you how to build each box. For example, "one intention never moves money twice" is why the key record lives in the same commit as the money.</p>
 <div class="say"><p class="label">The scope sentence, at minute twelve</p><p>"I'm designing the authoritative ledger: one strongly consistent decision per transfer, history that is never edited, everything else told afterwards. I'll design the single-shard version first and show where it splits. The two things I won't compromise: the funds check reads the authority, and the key lives in the same commit as the money."</p></div>
 
 <h2 id="step2">4. Step 2: six nouns, three operations, the schema</h2>

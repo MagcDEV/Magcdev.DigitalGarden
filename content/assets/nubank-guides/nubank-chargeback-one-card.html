@@ -57,6 +57,7 @@
   h4 { font-size: 17px; font-weight: 600; margin: 40px 0 6px; line-height: 1.35; }
   h4 .when { font-weight: 400; color: var(--ink-soft); }
   td code { overflow-wrap: anywhere; }
+  table.wrap td:first-child { white-space: normal; font-weight: 400; }
   p { margin: 0 0 16px; }
   ul, ol { margin: 0 0 18px; padding-left: 26px; }
   li { margin-bottom: 8px; }
@@ -328,6 +329,17 @@
   <li>Evidence is <strong>versioned</strong> and access-controlled. Old bytes are never overwritten.</li>
   <li>Every decision records the <strong>policy version</strong> that made it.</li>
 </ol>
+<h3>Functional and non-functional, side by side</h3>
+<p><strong>Functional</strong> requirements say what the system does: the features. You test them with "can a user do this?". <strong>Non-functional</strong> requirements say how well it does them: correctness, scale, speed, availability. You test them only with a number or a guarantee.</p>
+<table class="wrap">
+  <tr><th>Functional (the features)</th><th>Non-functional (the qualities)</th></tr>
+  <tr><td>A customer disputes a transaction and sees its status.</td><td>Audit: every case is reproducible as it stood on any date.</td></tr>
+  <tr><td>An operator reviews evidence and decides.</td><td>Deadlines: a legal deadline is never missed silently.</td></tr>
+  <tr><td>The platform submits to the network and records the outcome.</td><td>Idempotency: a retry never credits twice.</td></tr>
+  <tr><td>The platform asks the ledger for credit, and for its reversal.</td><td>Scale: about 8 writes a second at peak, and still correct at ten times that.</td></tr>
+  <tr><td></td><td>Latency: a command accepted in under a second, the Ops case view in under 300 ms.</td></tr>
+</table>
+<p><strong>Why both matter.</strong> The functional list tells you which boxes you need. The non-functional list tells you how to build each box. For example, "a retry never credits twice" is why the outbox and the action keys exist.</p>
 <div class="say"><p class="label">The scope sentence, at minute twelve</p><p>"I'll scope to the issuer-side workflow with provisional credit, because that's where correctness is hardest. The network is an adapter, the ledger is an existing system. Speed matters less than in payments; audit, deadlines and money correctness are strict."</p></div>
 
 <h2 id="step2">4. Step 2: six nouns, three operations</h2>
