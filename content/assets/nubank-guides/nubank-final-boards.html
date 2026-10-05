@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Every final board, on one page</title>
+<style>
+  :root {
+    --ink: #14213D;
+    --ink-soft: #3E4A63;
+    --paper: #FFFFFF;
+    --paper-tint: #F4F6F9;
+    --rule: #D9DEE7;
+    --dia-line: #5F5E5A;
+    --dia-line-soft: #888780;
+    --dia-fill: #F1EFE8;
+    --dia-text: #2C2C2A;
+    color-scheme: light;
+    --strong: #0F6E56;
+    --strong-bg: #E1F5EE;
+    --strong-ink: #085041;
+    --eventual: #534AB7;
+    --eventual-bg: #EEEDFE;
+    --eventual-ink: #3C3489;
+    --money: #BA7517;
+    --money-bg: #FAEEDA;
+    --money-ink: #633806;
+    --warn-bg: #FCEBEB;
+    --warn-ink: #791F1F;
+    --warn: #A32D2D;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; font-family: var(--serif); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+  a { color: var(--strong); }
+  a:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+
+  .page { display: grid; grid-template-columns: 240px minmax(0, 68ch); gap: 56px; max-width: 1080px; margin: 0 auto; padding: 48px 32px 120px; }
+  nav.toc { position: sticky; top: 32px; align-self: start; font-size: 14.5px; line-height: 1.5; }
+  nav.toc p { margin: 0 0 12px; color: var(--ink-soft); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--rule); }
+  nav.toc li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink); text-decoration: none; }
+  nav.toc li a:hover { border-left-color: var(--strong); }
+  nav.toc li.sub a { padding-left: 26px; color: var(--ink-soft); font-size: 13.5px; }
+
+  header.hero { margin-bottom: 56px; }
+  header.hero h1 { font-size: 44px; line-height: 1.08; font-weight: 500; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 22ch; }
+  header.hero p.lede { font-size: 21px; line-height: 1.5; margin: 0 0 20px; color: var(--ink-soft); }
+  header.hero .source { font-size: 14.5px; color: var(--ink-soft); }
+
+  h2 { font-size: 30px; line-height: 1.2; font-weight: 500; margin: 72px 0 8px; padding-top: 24px; border-top: 1px solid var(--rule); }
+  h2 + p.question { font-size: 15px; color: var(--ink-soft); margin: 0 0 28px; font-style: italic; }
+  h3 { font-size: 21px; font-weight: 500; margin: 36px 0 10px; line-height: 1.3; }
+  h4 { font-size: 17px; font-weight: 600; margin: 40px 0 6px; line-height: 1.35; }
+  h4 .when { font-weight: 400; color: var(--ink-soft); }
+  td code { overflow-wrap: anywhere; }
+  table.wrap td:first-child { white-space: normal; font-weight: 400; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 18px; padding-left: 26px; }
+  li { margin-bottom: 8px; }
+  li > ul, li > ol { margin-top: 8px; }
+  strong { font-weight: 600; }
+  code { font-family: var(--mono); font-size: 0.86em; background: var(--paper-tint); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--paper-tint); border: 1px solid var(--rule); padding: 16px 18px; overflow-x: auto; margin: 0 0 20px; border-radius: 4px; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  .thesis { font-size: 22px; line-height: 1.45; padding: 4px 0 4px 22px; border-left: 4px solid var(--strong); margin: 0 0 32px; }
+  .say { background: var(--strong-bg); color: var(--strong-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .say .label { font-size: 13px; color: var(--strong); margin: 0 0 6px; }
+  .say p { margin: 0; font-style: italic; font-size: 18px; line-height: 1.5; }
+  .trap { background: var(--warn-bg); color: var(--warn-ink); border-radius: 6px; padding: 14px 20px; margin: 24px 0; }
+  .trap .label { font-size: 13px; color: var(--warn); margin: 0 0 4px; }
+  .trap p { margin: 0 0 8px; }
+  .trap p:last-child { margin: 0; }
+  .recap { background: var(--eventual-bg); color: var(--eventual-ink); border-radius: 6px; padding: 16px 20px; margin: 28px 0; }
+  .recap .label { font-size: 13px; color: var(--eventual); margin: 0 0 6px; }
+  .recap p { margin: 0 0 10px; }
+  .recap p:last-child { margin: 0; }
+
+  figure { margin: 28px 0 36px; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; margin: 0 0 24px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 600; }
+  td:first-child { white-space: nowrap; font-weight: 600; }
+  .rows { border-top: 1px solid var(--rule); margin: 0 0 24px; }
+  .rows > div { display: grid; grid-template-columns: 13ch 1fr; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .rows > div > span:first-child { font-weight: 600; }
+  .cheat li { margin-bottom: 14px; }
+  .cheat li span { display: block; font-size: 14px; color: var(--ink-soft); margin-top: 2px; }
+
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--rule); font-size: 14.5px; color: var(--ink-soft); }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 32px; padding: 32px 20px 96px; }
+    nav.toc { position: static; }
+    header.hero h1 { font-size: 34px; }
+    header.hero p.lede { font-size: 18px; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    .rows > div { grid-template-columns: 1fr; gap: 4px; }
+    td:first-child { white-space: normal; }
+  }
+  @media print {
+    nav.toc { display: none; }
+    .page { grid-template-columns: 1fr; padding: 0; }
+    h2 { break-before: page; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* Dark mode. The palette follows the garden's saved "theme" preference
+     (shared with the Quartz toggle) and, when none is saved, the system
+     setting. Content and layout are unchanged; only the colours swap. */
+  :root[data-theme="dark"] {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+    --ink: #E4E9F2;
+    --ink-soft: #A6B0C3;
+    --paper: #0E131C;
+    --paper-tint: #171E2B;
+    --rule: #2B3548;
+    --strong: #5CCBA8;
+    --strong-bg: #10302A;
+    --strong-ink: #B9E8D6;
+    --eventual: #A9A0F5;
+    --eventual-bg: #24214A;
+    --eventual-ink: #D6D2FB;
+    --money: #E3A84D;
+    --money-bg: #342611;
+    --money-ink: #F2D8A8;
+    --warn-bg: #3B1A1A;
+    --warn-ink: #F5C4C4;
+    --warn: #EF8585;
+    --dia-line: #B2B9C7;
+    --dia-line-soft: #6F7889;
+    --dia-fill: #1B2231;
+    --dia-text: #E4E9F2;
+    color-scheme: dark;
+    }
+  }
+
+  /* Diagrams carry their colours as fill/stroke attributes from the light
+     palette. These rules map each attribute value onto a theme variable so
+     the SVGs follow the theme without touching their markup. */
+  svg [fill="#0F6E56" i] { fill: var(--strong); }
+  svg [stroke="#0F6E56" i] { stroke: var(--strong); }
+  svg [fill="#E1F5EE" i] { fill: var(--strong-bg); }
+  svg [stroke="#E1F5EE" i] { stroke: var(--strong-bg); }
+  svg [fill="#085041" i] { fill: var(--strong-ink); }
+  svg [stroke="#085041" i] { stroke: var(--strong-ink); }
+  svg [fill="#534AB7" i] { fill: var(--eventual); }
+  svg [stroke="#534AB7" i] { stroke: var(--eventual); }
+  svg [fill="#EEEDFE" i] { fill: var(--eventual-bg); }
+  svg [stroke="#EEEDFE" i] { stroke: var(--eventual-bg); }
+  svg [fill="#3C3489" i] { fill: var(--eventual-ink); }
+  svg [stroke="#3C3489" i] { stroke: var(--eventual-ink); }
+  svg [fill="#BA7517" i] { fill: var(--money); }
+  svg [stroke="#BA7517" i] { stroke: var(--money); }
+  svg [fill="#FAEEDA" i] { fill: var(--money-bg); }
+  svg [stroke="#FAEEDA" i] { stroke: var(--money-bg); }
+  svg [fill="#633806" i] { fill: var(--money-ink); }
+  svg [stroke="#633806" i] { stroke: var(--money-ink); }
+  svg [fill="#A32D2D" i] { fill: var(--warn); }
+  svg [stroke="#A32D2D" i] { stroke: var(--warn); }
+  svg [fill="#FCEBEB" i] { fill: var(--warn-bg); }
+  svg [stroke="#FCEBEB" i] { stroke: var(--warn-bg); }
+  svg [fill="#791F1F" i] { fill: var(--warn-ink); }
+  svg [stroke="#791F1F" i] { stroke: var(--warn-ink); }
+  svg [fill="#3E4A63" i] { fill: var(--ink-soft); }
+  svg [stroke="#3E4A63" i] { stroke: var(--ink-soft); }
+  svg [fill="#5F5E5A" i] { fill: var(--dia-line); }
+  svg [stroke="#5F5E5A" i] { stroke: var(--dia-line); }
+  svg [fill="#888780" i] { fill: var(--dia-line-soft); }
+  svg [stroke="#888780" i] { stroke: var(--dia-line-soft); }
+  svg [fill="#F1EFE8" i] { fill: var(--dia-fill); }
+  svg [stroke="#F1EFE8" i] { stroke: var(--dia-fill); }
+  svg [fill="#2C2C2A" i] { fill: var(--dia-text); }
+  svg [stroke="#2C2C2A" i] { stroke: var(--dia-text); }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--rule); background: var(--paper-tint); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--strong); color: var(--strong); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--eventual); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<style>
+  /* One column for a portrait screen: every board at full width, no side contents. */
+  .page { display: block; max-width: 920px; padding: 0 24px 120px; }
+  nav.jump { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 12px 64px 12px 0; margin: 0 0 32px; display: flex; flex-wrap: wrap; gap: 6px 8px; font-size: 14px; line-height: 1.3; }
+  nav.jump a { text-decoration: none; color: var(--ink); border: 1px solid var(--rule); border-radius: 999px; padding: 4px 11px; background: var(--paper-tint); }
+  nav.jump a:hover { border-color: var(--strong); color: var(--strong); }
+  header.hero { margin: 8px 0 24px; }
+  header.hero h1 { font-size: 38px; max-width: none; }
+  section.board { scroll-margin-top: 72px; }
+  h2 { margin-top: 56px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+  .family { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+  .family.long { background: var(--strong-bg); color: var(--strong-ink); }
+  .family.money { background: var(--money-bg); color: var(--money-ink); }
+  .family.other { background: var(--eventual-bg); color: var(--eventual-ink); }
+  .summary { font-size: 18px; line-height: 1.6; margin: 0 0 18px; }
+  figure { margin: 18px 0 14px; }
+  .rows { margin-top: 8px; }
+  .rows > div { grid-template-columns: 11ch 1fr; padding: 9px 0; font-size: 15.5px; }
+  .say { margin: 18px 0 0; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 16px; margin: 0 0 24px; font-size: 15px; }
+  .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; border: 1px solid var(--dia-line-soft); }
+  .k-strong { background: var(--strong-bg); border-color: var(--strong) !important; }
+  .k-eventual { background: var(--eventual-bg); border-color: var(--eventual) !important; }
+  .k-grey { background: var(--dia-fill); }
+  .k-money { background: var(--money-bg); border-color: var(--money) !important; }
+  .k-warn { background: var(--warn-bg); border-color: var(--warn) !important; }
+  @media (max-width: 900px) { .page { padding: 0 16px 96px; } header.hero h1 { font-size: 30px; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+</button>
+<div class="page">
+<main>
+<nav class="jump" aria-label="Boards">
+  <a href="#family">Which family?</a>
+  <a href="#chargebacks">Chargebacks</a>
+  <a href="#ftp">Chargebacks by FTP</a>
+  <a href="#ledger">Ledger</a>
+  <a href="#authoriser">Authorisation</a>
+  <a href="#fraud">Fraud</a>
+  <a href="#pix">PIX</a>
+  <a href="#ride">Ride-hailing</a>
+  <a href="#ads">Ad clicks</a>
+  <a href="#others">Four more</a>
+</nav>
+
+<header class="hero">
+  <h1>Every final board, on one page</h1>
+  <p class="lede">The finished diagram of each prompt, with one paragraph that says how it works. Keep this page open on the vertical screen while you practise.</p>
+  <p class="source">Built 5 October 2026. The diagrams and their captions come unchanged from the chargeback card, the ledger card and the pivot guide. Each section ends with the line to say.</p>
+</header>
+
+<section class="board" id="family">
+<h2>Which family?</h2>
+<p class="question">The first question for any prompt you haven't seen.</p>
+
+<p>Every Nubank prompt has one of two shapes. A money-moving system decides in milliseconds, so it copies the ledger. A long-running system manages a process over days, so it copies chargebacks. The generic prompts reuse the same habits with new nouns.</p>
+
+<table>
+  <tr><th>Family</th><th>Prompts</th><th>Copy this board</th><th>The hard part</th></tr>
+  <tr><td><span class="family money">Money-moving</span></td><td>Ledger, card authorisation, credit limit, PIX, fraud decision</td><td>Ledger</td><td>The balance under latency; hot accounts</td></tr>
+  <tr><td><span class="family long">Long-running</span></td><td>Chargebacks, onboarding, lending, collections</td><td>Chargebacks</td><td>Unknown external results; deadlines; people</td></tr>
+  <tr><td><span class="family other">Generic</span></td><td>Ride-hailing, ad clicks, notifications, statements</td><td>The closest of the two</td><td>The scale number decides</td></tr>
+</table>
+
+<p>All the boards use the same colours:</p>
+<div class="legend">
+  <div><span class="k-strong"></span>Green: the one place something is decided</div>
+  <div><span class="k-eventual"></span>Purple: after the commit, or only read</div>
+  <div><span class="k-grey"></span>Grey: outside the system</div>
+  <div><span class="k-money"></span>Amber: money waiting in a clearing account</div>
+  <div><span class="k-warn"></span>Red: unknown, or held apart</div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"Before I draw anything: is this system deciding about money in real time, or running a process over days? That tells me whether I need an authoritative aggregate with a version, or a case with events, deadlines and versioned policy."</p></div>
+</section>
+
+<section class="board" id="chargebacks">
+<h2>1. Chargebacks <span class="family long">Long-running</span></h2>
+<p class="question">A dispute case that lives for weeks.</p>
+
+<p class="summary">A chargeback platform manages a dispute case over weeks. Every change to a case is a command on that case. One commit writes the event, the snapshot, the deadline rows, the idempotency record and the outbox rows. After the commit, workers call the ledger, the card network and notifications, each with a stable key. Whatever the workers see comes back into the case as a new event. Deadlines are rows, so the sweeper finds them even when the timer dies.</p>
+
+<figure>
+<svg viewBox="0 0 760 424" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>The chargeback design, as you draw it on the whiteboard</title>
+<desc>Draw order: 1 the customer app sends a command with a request key to 2 the case service, which checks and validates it. 3 The case database writes one commit: event and snapshot with version, deadline rows, the idempotency record and outbox rows. 4 After the commit, outbox workers read the rows and call 5 the ledger with an action key, the card network with a submission reference, and notifications with an event id. 6 What they saw comes back to the case service as new events. 7 A timer and a sweeper read the deadline rows. 8 A search index built from events serves the Ops console, which opens the real case by id. 9 Evidence files go to object storage, and a command links them.</desc>
+<defs><marker id="arrow-card-board" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="140" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="90.0" y="51.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Customer app</text><text x="90.0" y="71.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">opens, adds evidence</text></g>
+<path d="M160 60 L218 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="189" y="48" text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic" fill="#BA7517">request key</text>
+<g><rect x="220" y="30" width="190" height="60" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="42.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case service</text><text x="315.0" y="62.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">check key, version, role;</text><text x="315.0" y="80.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">validate vs policy</text></g>
+<path d="M315 90 L315 128" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="220" y="130" width="190" height="130" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="150.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case database</text><text x="315.0" y="170.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">one commit writes:</text><text x="315.0" y="188.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">event + snapshot, version</text><text x="315.0" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">deadline rows</text><text x="315.0" y="224.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">idempotency record</text><text x="315.0" y="242.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">outbox rows</text></g>
+<path d="M410 195 L448 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="429" y="183" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">after</text>
+<g><rect x="450" y="160" width="120" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="510.0" y="177.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox workers</text><text x="510.0" y="197.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">read rows,</text><text x="510.0" y="215.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">call out</text></g>
+<path d="M570 195 L600 195 L600 135 L628 135" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<path d="M600 195 L628 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<path d="M600 195 L600 255 L628 255" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="630" y="110" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="126.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ledger</text><text x="687.5" y="146.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: action key</text></g>
+<g><rect x="630" y="170" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="186.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network</text><text x="687.5" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: submission ref</text></g>
+<g><rect x="630" y="230" width="115" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="246.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Notifications</text><text x="687.5" y="266.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: event id</text></g>
+<path d="M510 160 L510 60 L412 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="420" y="48" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">what they saw comes back as new events</text>
+<path d="M260 260 L260 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-board)"/>
+<text x="268" y="290" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">due rows</text>
+<g><rect x="220" y="320" width="190" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="315.0" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Timer + sweeper</text><text x="315.0" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">timer wakes; sweeper</text><text x="315.0" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">catches what it missed</text></g>
+<path d="M510 230 L510 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-board)"/>
+<text x="518" y="290" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">from events</text>
+<g><rect x="450" y="320" width="120" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="510.0" y="341.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Search index</text><text x="510.0" y="361.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">may lag</text></g>
+<path d="M570 350 L628 350" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<g><rect x="630" y="320" width="115" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Ops console</text><text x="687.5" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">search, then open</text><text x="687.5" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">the case by id</text></g>
+<path d="M90 90 L90 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-board)"/>
+<text x="98" y="200" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">upload bytes,</text>
+<text x="98" y="214" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">then a command</text>
+<text x="98" y="228" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">links them</text>
+<g><rect x="20" y="320" width="140" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="90.0" y="341.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Object storage</text><text x="90.0" y="361.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">evidence files</text></g>
+<rect x="10" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">1</text>
+<rect x="210" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">2</text>
+<rect x="210" y="120" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">3</text>
+<rect x="440" y="150" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="160.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">4</text>
+<rect x="620" y="100" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="630" y="110.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">5</text>
+<rect x="500" y="90" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="510" y="100.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">6</text>
+<rect x="210" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">7</text>
+<rect x="440" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">8</text>
+<rect x="10" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">9</text>
+<rect x="20" y="400" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+<text x="42" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Decided: one commit.</text>
+<rect x="180" y="400" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/>
+<text x="202" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">After the commit.</text>
+<rect x="340" y="400" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/>
+<text x="362" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Outside the platform.</text>
+<text x="520" y="407" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key:</text>
+<text x="550" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">the key on that arrow.</text>
+</svg>
+<figcaption>The chargeback design as you draw it on the whiteboard. The square numbers are the order you draw it. Green is the one place anything is decided. Purple happens after the commit. Grey is outside the platform. Italic text after "key:" names the key on that arrow.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>70k cases a day is under 1 write a second. Not a throughput problem: a correctness, deadline and people problem.</span></div>
+  <div><span>Keys</span><span>Request key · action key <code>CB-812:PROVISIONAL_CREDIT:v1</code> · submission reference <code>NB-CB-812-1</code> · event id</span></div>
+  <div><span>Dives</span><span>Provisional credit, then failures, then rollout in three lines</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"A case command commits workflow state and intent locally; external side effects happen after commit and come back as new events. Won is a decision; financially settled is a fact."</p></div>
+</section>
+
+<section class="board" id="ftp">
+<h2>2. Chargebacks, network by FTP <span class="family long">Long-running</span></h2>
+<p class="question">The same case model, when the card network takes a CSV four times a day.</p>
+
+<p class="summary">Everything up to the outbox stays the same, and only the meaning of "send" changes. Four times a day, a batch run claims every ready row in one transaction. The job builds the file with the same bytes every time and uploads it under a name made from the run id. The answers come back the next morning as a file. Each good row becomes a case command keyed by file id plus row id. Bad rows go to quarantine, and every unanswered row ages in the reconciliation queue.</p>
+
+<figure>
+<svg viewBox="0 0 760 374" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>The network as a file over FTP, as you draw it</title>
+<desc>Outbound: queued submissions in the case database are claimed in one transaction into a batch run with an id from the date and slot. A CSV is built deterministically from the claimed rows and uploaded by FTP under a name derived from the run id. Each row carries its stable submission reference. Inbound: the next morning a response file is downloaded, deduplicated by file id, and parsed row by row. Each good row becomes a case command keyed by file id plus row id, which writes an acknowledged, rejected or award event. Bad rows go to quarantine with the raw line and the rest of the file still processes. A reconciliation queue holds one item per sent row; each answer closes one item, and the age of the oldest open item raises the alert.</desc>
+<defs><marker id="arrow-card-ftp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect x="20" y="30" width="160" height="70" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="100.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case database</text><text x="100.0" y="67.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">submission QUEUED,</text><text x="100.0" y="85.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">from the outbox</text>
+<path d="M180 65 L218 65" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<rect x="220" y="30" width="170" height="70" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="305.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Batch run, 4× a day</text><text x="305.0" y="67.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">claim rows: one transaction</text><text x="305.0" y="85.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">run id 2026-09-06-14</text>
+<path d="M390 65 L428 65" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<rect x="430" y="30" width="150" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="505.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Build and upload</text><text x="505.0" y="67.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">same rows, same bytes;</text><text x="505.0" y="85.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">file name = run id</text>
+<path d="M580 65 L618 65" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<text x="599" y="53" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">FTP</text>
+<rect x="620" y="30" width="125" height="70" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="682.5" y="47.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network</text><text x="682.5" y="67.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">FTP server</text><text x="682.5" y="85.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: NB-CB-812-1</text>
+<path d="M682 100 L682 185 L582 185" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<text x="690" y="140" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">response file</text>
+<text x="690" y="154" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">next morning</text>
+<rect x="430" y="150" width="150" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="505.0" y="158.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Inbound parser</text><text x="505.0" y="178.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">dedupe by file id,</text><text x="505.0" y="196.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">one command per row</text><text x="505.0" y="214.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: file-id:row-id</text>
+<path d="M430 185 L392 185" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<rect x="220" y="150" width="170" height="70" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="305.0" y="167.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Case service</text><text x="305.0" y="187.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">event per row: ACKED,</text><text x="305.0" y="205.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">REJECTED, or the award</text>
+<path d="M505 220 L505 268" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-card-ftp)"/>
+<text x="513" y="244" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">bad rows</text>
+<rect x="430" y="270" width="150" height="60" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="505.0" y="282.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">Quarantine</text><text x="505.0" y="302.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#A32D2D">raw line + reason;</text><text x="505.0" y="320.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#A32D2D">the file goes on</text>
+<path d="M450 220 L450 245 L305 245 L305 268" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-card-ftp)"/>
+<text x="378" y="236" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">closes the item</text>
+<rect x="220" y="270" width="170" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="305.0" y="282.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Reconciliation queue</text><text x="305.0" y="302.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">one item per sent row;</text><text x="305.0" y="320.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">alert on the oldest</text>
+<rect x="210" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">1</text>
+<rect x="420" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="430" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">2</text>
+<rect x="610" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="620" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">3</text>
+<rect x="420" y="140" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="430" y="150.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">4</text>
+<rect x="210" y="140" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="150.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">5</text>
+<rect x="420" y="260" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="430" y="270.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">6</text>
+<rect x="210" y="260" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="270.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">7</text>
+<rect x="20" y="350" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="42" y="357" dominant-baseline="central" font-size="12" fill="#3E4A63">One transaction.</text><rect x="175" y="350" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="197" y="357" dominant-baseline="central" font-size="12" fill="#3E4A63">After the commit.</text><rect x="335" y="350" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="357" y="357" dominant-baseline="central" font-size="12" fill="#3E4A63">Outside the platform.</text><rect x="520" y="350" width="14" height="14" rx="3" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="542" y="357" dominant-baseline="central" font-size="12" fill="#3E4A63">Kept, not applied.</text>
+</svg>
+<figcaption>The card network as a file. Green is one transaction: the claim of rows into a run, and each command that an answer row becomes. Purple runs after the commit. Red keeps bad rows without applying them. The reconciliation queue holds what you don't know yet.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>70k rows over 4 slots is about 18k rows per file, a few MB. Easy to build, painful to resend.</span></div>
+  <div><span>Keys</span><span>Run id <code>2026-09-06-14</code> · row <code>NB-CB-812-1</code> · <code>file-id:row-id</code></span></div>
+  <div><span>Timeout</span><span>Unknown, not failed. List the remote directory, then re-upload the same file under the same name. Never a new run id.</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"The file is just a slower, batched version of an external call. Durable intent before sending, a stable identity per row and per file, answers recorded as events, and everything unanswered aged in a reconciliation queue."</p></div>
+</section>
+
+<section class="board" id="ledger">
+<h2>3. Ledger <span class="family money">Money-moving</span></h2>
+<p class="question">Every money movement as a pair of balancing entries.</p>
+
+<p class="summary">A ledger writes every money movement as a pair of balancing entries, saved in one database commit. The transfer carries the client's key. The ledger looks up that key, then checks the accounts, the currency, the available amount and the account version. One commit writes the transaction, both entries, both account aggregates, the key record and the outbox row. The ledger returns "done" because the commit succeeded. After that, the outbox worker publishes to Kafka, and consumers build the feed and the statements.</p>
+
+<figure>
+<svg viewBox="0 0 760 424" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>The ledger design, as you draw it on the whiteboard</title>
+<desc>Draw order: 1 the client app makes its key once and sends the transfer to 2 the ledger service, which looks up the key and validates funds and the account version. 3 The customer&#x27;s partition writes one commit: the transaction, two entries, two aggregates with the version check, the key record and an outbox row. 4 After the commit, an outbox worker publishes in order to 5 Kafka, keyed by the transaction id. 6 Projections and consumers dedupe by event id and build the feed, statements, notifications and fraud input, and they can be rebuilt from the journal. 7 Reconciliation checks entries against aggregates. 8 When the other customer lives on another partition, leg A moves money into the clearing account with K1:LEG_A, and leg B posts on the other shard with K1:LEG_B. 9 An external rail gets a stable end-to-end id.</desc>
+<defs><marker id="arrow-ledger-board" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="20" y="30" width="140" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="90.0" y="51.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Client app</text><text x="90.0" y="71.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">makes the key once</text></g>
+<path d="M160 60 L218 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<text x="189" y="48" text-anchor="middle" dominant-baseline="central" font-size="11" font-style="italic" fill="#BA7517">client key</text>
+<g><rect x="220" y="30" width="190" height="60" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="42.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Ledger service</text><text x="315.0" y="62.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">look up the key;</text><text x="315.0" y="80.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">validate funds, version</text></g>
+<path d="M315 90 L315 128" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<g><rect x="220" y="130" width="190" height="130" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="315.0" y="150.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Partition (by customer)</text><text x="315.0" y="170.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">one commit writes:</text><text x="315.0" y="188.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">transaction, 2 entries</text><text x="315.0" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">2 aggregates + version</text><text x="315.0" y="224.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">key record</text><text x="315.0" y="242.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">outbox row</text></g>
+<path d="M410 195 L448 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<text x="429" y="183" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">after</text>
+<g><rect x="450" y="160" width="120" height="70" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="510.0" y="177.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Outbox worker</text><text x="510.0" y="197.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">publish in order,</text><text x="510.0" y="215.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">mark after ack</text></g>
+<path d="M570 195 L628 195" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<g><rect x="630" y="165" width="115" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="687.5" y="186.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Kafka</text><text x="687.5" y="206.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: transaction id</text></g>
+<path d="M510 160 L510 60 L628 60" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<g><rect x="630" y="30" width="115" height="60" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="687.5" y="51.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">External rail</text><text x="687.5" y="71.0" text-anchor="middle" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key: end-to-end id</text></g>
+<path d="M687 225 L687 290 L510 290 L510 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ledger-board)"/>
+<text x="600" y="280" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">dedupe by event id</text>
+<g><rect x="450" y="320" width="295" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="597.5" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Projections and consumers</text><text x="597.5" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">feed, statements, notifications, fraud;</text><text x="597.5" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">rebuilt from the journal</text></g>
+<path d="M360 260 L360 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ledger-board)"/>
+<g><rect x="220" y="320" width="190" height="60" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="315.0" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Reconciliation</text><text x="315.0" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">entries vs aggregates;</text><text x="315.0" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">journal sums to zero</text></g>
+<path d="M220 215 L90 215 L90 318" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ledger-board)"/>
+<text x="98" y="232" text-anchor="start" dominant-baseline="central" font-size="11" font-style="italic" fill="#BA7517">K1:LEG_A</text>
+<text x="98" y="248" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">other customer&#x27;s</text>
+<text x="98" y="262" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">partition only</text>
+<g><rect x="20" y="320" width="140" height="60" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/><text x="90.0" y="332.0" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#633806">Clearing account</text><text x="90.0" y="352.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">then K1:LEG_B</text><text x="90.0" y="370.0" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#BA7517">on the other shard</text></g>
+<rect x="10" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">1</text>
+<rect x="210" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">2</text>
+<rect x="210" y="120" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="130.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">3</text>
+<rect x="440" y="150" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="160.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">4</text>
+<rect x="620" y="155" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="630" y="165.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">5</text>
+<rect x="440" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="450" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">6</text>
+<rect x="210" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="220" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">7</text>
+<rect x="10" y="310" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="20" y="320.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">8</text>
+<rect x="620" y="20" width="20" height="20" rx="3" fill="#F1EFE8" stroke="#2C2C2A" stroke-width="1"/><text x="630" y="30.5" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="700" fill="#2C2C2A">9</text>
+<rect x="20" y="400" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+<text x="42" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Decided: one commit.</text>
+<rect x="180" y="400" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/>
+<text x="202" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">After the commit.</text>
+<rect x="340" y="400" width="14" height="14" rx="3" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.75"/>
+<text x="362" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">Clearing, between shards.</text>
+<text x="540" y="407" dominant-baseline="central" font-size="12" font-style="italic" fill="#BA7517">key:</text>
+<text x="570" y="407" dominant-baseline="central" font-size="12" fill="#3E4A63">the key on that arrow.</text>
+</svg>
+<figcaption>The ledger design as you draw it on the whiteboard. The square numbers are the order you draw it. Green is the one place anything is decided. Purple happens after the commit. Grey is outside the ledger, and amber is the clearing account. Italic text after "key:" names the key on that arrow.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Keys</span><span>Client key <code>K1</code> · transaction id to Kafka · <code>K1:LEG_A</code>, <code>K1:LEG_B</code> between shards · end-to-end id to the rail</span></div>
+  <div><span>Dives</span><span>The three timeouts, the hot account, the transfer across two shards</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"Money becomes durable in the atomic store; events describe that fact afterwards. The idempotency key lives in the same commit as the money, so the same key always returns the same transaction."</p></div>
+</section>
+
+<section class="board" id="authoriser">
+<h2>4. Card authorisation and credit limit <span class="family money">Money-moving</span></h2>
+<p class="question">Approve or decline in a few hundred milliseconds, even at midnight with the cloud link down.</p>
+
+<p class="summary">The card network asks "approve or decline?" and expects the answer in a few hundred milliseconds. One replica owns each account and keeps its available limit in memory, fed from an ordered log. An approval writes a hold and the decision in one atomic step, conditional on the account version. The hold lowers the available limit, not the posted balance. The ledger posts real entries only at capture. If the replica's lag or ownership is unknown, the replica declines.</p>
+
+<figure>
+<svg viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Card authorisation path</title>
+<desc>The card network sends an authorisation request to the authoriser instance that owns the account. It reads the in-memory available limit, evaluates rules, writes the hold and decision atomically, and answers within the budget. After the decision, an event goes to the cloud ledger, feed and fraud signals. The cloud remains the source of truth and syncs open-to-buy to every authoriser replica through an ordered log with snapshots.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="180" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#3E4A63">Edge: answer in a few hundred ms</text>
+<g><rect x="60" y="48" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="180" y="66" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Card network request</text><text x="180" y="84" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Ana, R$80, petrol station, ref N1</text></g>
+<line x1="180" y1="104" x2="180" y2="126" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="128" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="146" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Owner for Ana's account</text><text x="180" y="164" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">One replica decides per account</text></g>
+<line x1="180" y1="184" x2="180" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="208" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="226" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Read available limit</text><text x="180" y="244" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">limit − posted − open holds</text></g>
+<line x1="180" y1="264" x2="180" y2="286" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="288" width="240" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="306" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Rules + fraud signal</text><text x="180" y="324" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Versioned; inputs recorded</text></g>
+<line x1="180" y1="344" x2="180" y2="366" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="50" y="368" width="260" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="180" y="386" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Write hold + decision, atomically</text><text x="180" y="404" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Version check; appended to the log</text></g>
+<line x1="180" y1="424" x2="180" y2="446" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<g><rect x="60" y="448" width="240" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="180" y="466" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Approve / decline</text><text x="180" y="484" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">No "processing" here</text></g>
+<text x="520" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#3E4A63">Cloud: the source of truth</text>
+<g><rect x="420" y="128" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="146" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Ordered log + snapshots</text><text x="520" y="164" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Syncs open-to-buy to replicas</text></g>
+<g><rect x="420" y="288" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="306" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Ledger</text><text x="520" y="324" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Posts on capture, not on auth</text></g>
+<g><rect x="420" y="368" width="200" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="520" y="386" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Feed, fraud, limits</text><text x="520" y="404" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Consumers of the decision event</text></g>
+<line x1="310" y1="396" x2="418" y2="396" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M418 156 L360 156 L360 236 L302 236" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+<path d="M520 344 L520 366" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4"/>
+<path d="M520 184 L520 286" fill="none" stroke="#5F5E5A" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+<rect x="60" y="526" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="82" y="533" dominant-baseline="central" font-size="12" fill="#3E4A63">Decision path, one owner per account</text>
+<rect x="360" y="526" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="382" y="533" dominant-baseline="central" font-size="12" fill="#3E4A63">After the decision, asynchronous</text>
+</svg>
+<figcaption>The dashed line is the whole design in one arrow. The cloud is the truth. It pushes the current open-to-buy to the replica that owns Ana's account, fast enough that the replica is never meaningfully stale. If that arrow breaks, the replica must know it is stale and refuse to approve, not guess.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>2 billion a month is about 770 a second, some 8,000 at peak. A cross-region hop is 100 ms or more, so the decision stays local.</span></div>
+  <div><span>Keys</span><span>The network's reference, <code>N1</code>, on authorise and on capture</span></div>
+  <div><span>Dives</span><span>Availability at the edge versus truth of the balance, then failures</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"Truth in the cloud, decisions at the edge, one fenced owner per account, and a measured link between them. A stale replica is how money gets spent twice, so unknown lag means decline, not guess."</p></div>
+</section>
+
+<section class="board" id="fraud">
+<h2>5. Fraud decision in the payment path <span class="family money">Money-moving</span></h2>
+<p class="question">Allow, block or step-up, inside the authorisation budget.</p>
+
+<p class="summary">A decision service returns allow, block or step-up in about 50 ms, and it never moves money. It reads features from a hot store, runs the rules and then the model. It records the decision, the feature snapshot and both versions before it returns. A slower lane on the event stream computes richer features, sends cases to review and joins the late labels. New rule and model versions come back through a shadowed rollout. When the model is down, a fallback decides, and Risk chooses its direction in advance.</p>
+
+<figure>
+<svg viewBox="0 0 680 330" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Real-time fraud decision: a budgeted sync lane and an async learning lane</title>
+<desc>Inside the authorisation budget a request fetches hot features, is scored against a versioned rule set and model, and returns a decision with reasons that is recorded. On the event log every payment gets richer features, review queues produce labels, retraining produces new versions that feed back into the sync lane. Blocked payments never label themselves, so some are sampled for review.</desc>
+<defs><marker id="arrow-pv-fraud" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<text x="40" y="32" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">Sync, inside the budget (~50 ms)</text>
+<g><rect x="40" y="46" width="110" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="95.0" y="64" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Request</text><text x="95.0" y="82" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">caller's key</text></g>
+<line x1="150" y1="74" x2="178" y2="74" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="180" y="46" width="120" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="240.0" y="64" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Hot features</text><text x="240.0" y="82" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">precomputed store</text></g>
+<line x1="300" y1="74" x2="328" y2="74" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="330" y="46" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="405.0" y="64" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Rules vN + model vM</text><text x="405.0" y="82" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">allow, block, step-up</text></g>
+<line x1="480" y1="74" x2="508" y2="74" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="510" y="46" width="150" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="585.0" y="64" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Decision + reasons</text><text x="585.0" y="82" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">recorded with inputs</text></g>
+<text x="170" y="118" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">same key → same decision; never moves money</text>
+<text x="40" y="150" text-anchor="start" dominant-baseline="central" font-size="13" fill="#3E4A63">Async, on the event log</text>
+<g><rect x="40" y="164" width="110" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="95.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Every payment</text><text x="95.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">event stream</text></g>
+<line x1="150" y1="192" x2="178" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="180" y="164" width="120" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="240.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Richer features</text><text x="240.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">no budget</text></g>
+<line x1="300" y1="192" x2="328" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="330" y="164" width="150" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="405.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Review queues</text><text x="405.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">labels; sampled blocks</text></g>
+<line x1="480" y1="192" x2="508" y2="192" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-fraud)"/>
+<g><rect x="510" y="164" width="150" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="585.0" y="182" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Retraining</text><text x="585.0" y="200" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">new versions, shadowed</text></g>
+<path d="M585 164 L585 130 L405 130 L405 104" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-pv-fraud)"/>
+<text x="495" y="116" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">versioned rollout, shadow first</text>
+<rect x="40" y="250" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="257" dominant-baseline="central" font-size="12" fill="#3E4A63">Strong: the decision record. Explainable later: inputs, rule version, model version.</text>
+<rect x="40" y="274" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="281" dominant-baseline="central" font-size="12" fill="#3E4A63">Eventual: features and learning. Model down → deterministic fallback whose direction Risk chose.</text>
+<text x="40" y="304" text-anchor="start" dominant-baseline="central" font-size="11" fill="#3E4A63">Feedback trap: blocked payments never produce a "was it fraud?" label; sample a capped share and review them.</text>
+</svg>
+<figcaption>Two lanes that never share a budget. The top lane must answer in tens of milliseconds and never moves money. Its only strong write is the decision record. The bottom lane has all the time in the world. It feeds new versions back into the top lane through a shadowed, versioned rollout, which is the dashed line.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>About 8,000 decisions a second at peak, a 50 ms budget: a dozen feature reads and one small model</span></div>
+  <div><span>Keys</span><span>The caller's request key: the same key returns the same decision. Labels join by decision id.</span></div>
+  <div><span>Dives</span><span>Where synchronous stops, failures, and blocked payments that never label themselves</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"The decision service decides inside the budget and never moves money. Every decision records its inputs, rules version and model version so it can be explained. Degraded mode is a deterministic fallback whose direction is a risk decision, and the feedback loop has to be designed because blocked payments never label themselves."</p></div>
+</section>
+
+<section class="board" id="pix">
+<h2>6. Sending a PIX to another bank <span class="family money">Money-moving</span></h2>
+<p class="question">The ledger, with a leg outside it.</p>
+
+<p class="summary">We orchestrate PIX, and we don't rebuild it. One commit debits the customer into a clearing account and writes an outbox row. After the commit, an adapter submits to the rail with an end-to-end id that is made once per intent. The customer sees Processing until the rail answers. Each outcome is a new posting with its own key. A rail timeout is unknown, so the adapter queries by the same id and never submits again with a new one.</p>
+
+<figure>
+<svg viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Sending a PIX payment: one debit into clearing, one submission, three outcomes</title>
+<desc>A command with key K produces one atomic ledger commit that debits the customer into a PIX clearing account and shows Processing. An outbox row drives a rail adapter that submits with a stable end-to-end id. If the rail confirms, clearing is settled and the payment is Completed. If the rail rejects, a linked reversal returns the money. If the rail is silent, the adapter queries by the same id and, after a bounded time, routes to Ops. It never submits twice.</desc>
+<defs><marker id="arrow-pv-pix" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="30" y="40" width="150" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="105.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Command</text><text x="105.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">key K, Ana → other bank</text></g>
+<line x1="180" y1="68" x2="198" y2="68" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/>
+<g><rect x="200" y="40" width="210" height="64" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="305.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Ledger commit</text><text x="305.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Ana −100 · PIX clearing +100</text><text x="305.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">state: Processing</text></g>
+<line x1="410" y1="72" x2="448" y2="72" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/><text x="429" y="90" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">outbox</text>
+<g><rect x="450" y="40" width="200" height="64" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="550.0" y="58" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Rail adapter</text><text x="550.0" y="76" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">submit with E2E-1</text><text x="550.0" y="92" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">same id on every attempt</text></g>
+<path d="M550 104 L550 150 L498 150" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/>
+<path d="M550 104 L550 220 L498 220" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/>
+<path d="M550 104 L550 290 L498 290" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-pv-pix)"/>
+<g><rect x="290" y="124" width="206" height="52" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="393.0" y="142" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Rail confirms</text><text x="393.0" y="160" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">clearing −100 · settlement +100</text></g>
+<g><rect x="290" y="194" width="206" height="52" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="393.0" y="212" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Rail rejects</text><text x="393.0" y="230" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">clearing −100 · Ana +100, linked</text></g>
+<g><rect x="290" y="264" width="206" height="52" rx="8" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.75"/><text x="393.0" y="282" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#791F1F">Rail silent</text><text x="393.0" y="300" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#A32D2D">query E2E-1; bounded wait</text></g>
+<text x="230" y="150" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#085041">Completed</text>
+<text x="230" y="220" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#085041">Failed, money back</text>
+<text x="230" y="290" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#791F1F">Ops queue, never a</text>
+<text x="230" y="304" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#791F1F">second submission</text>
+<rect x="30" y="338" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="52" y="345" dominant-baseline="central" font-size="12" fill="#3E4A63">Every money step is its own atomic posting with its own key; the original debit is never deleted</text>
+<rect x="30" y="362" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="52" y="369" dominant-baseline="central" font-size="12" fill="#3E4A63">The rail is an external call: unknown after a timeout means query before retry; reconcile daily</text>
+</svg>
+<figcaption>The ledger shape with an external leg. The first green commit is the customer's latency. Everything after it is Processing. Each outcome is a new posting with its own key. The red box is the honest one. Silence means unknown. Unknown means query by the same id, never a second submission.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>A few thousand sends a second at the 18:00 payday peak. The hot account is PIX clearing.</span></div>
+  <div><span>Keys</span><span>The customer's idempotency key · the end-to-end id <code>E2E-1</code>, reused on every attempt</span></div>
+  <div><span>Dives</span><span>Rail timeout, adapter crash after the commit, the hot clearing account</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"One debit per command into clearing, one submission per intent with a stable end-to-end id, Processing until the rail answers, unknown after a timeout means query before retry, and daily reconciliation against the rail's own records."</p></div>
+</section>
+
+<section class="board" id="ride">
+<h2>7. Ride-hailing <span class="family other">Generic</span></h2>
+<p class="question">Match riders with nearby drivers.</p>
+
+<p class="summary">Drivers report their location every few seconds, so the location stream is the scale problem. The system indexes drivers by geographic cell, and each matching service owns some cells. A match reads the rider's cell and its neighbours. One driver gets at most one active match, through a conditional claim on the driver record with a version. That claim is strong. The map of nearby cars is eventual.</p>
+
+<figure>
+<svg viewBox="0 0 680 400" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ride-hailing v2: location by geo-cell, one claim per driver</title>
+<desc>Drivers report location to stateless ingest services, which stream updates through Kafka partitioned by geographic cell. Matchers own cells and keep an in-memory index of drivers per cell. A rider request queries the rider's cell and neighbours, then wins a driver through a conditional claim on the driver record's version. The map of nearby cars is an eventual projection.</desc>
+<defs><marker id="arrow-ride" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="40" y="30" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="115.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Drivers</text><text x="115.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">location every 3 s</text></g>
+<line x1="190" y1="55" x2="238" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/>
+<g><rect x="240" y="30" width="160" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="320.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Location ingest</text><text x="320.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">stateless, horizontal</text></g>
+<line x1="400" y1="55" x2="438" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/><text x="419" y="41" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">330k/s</text>
+<g><rect x="440" y="30" width="200" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="540.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Kafka, by geo-cell</text><text x="540.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">same cell, same partition</text></g>
+<line x1="540" y1="80" x2="540" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/>
+<g><rect x="440" y="130" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="540.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Matchers own cells</text><text x="540.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">cell index; query cell + neighbours</text></g>
+<g><rect x="40" y="130" width="150" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="115.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Rider request</text><text x="115.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">one key per request</text></g>
+<line x1="190" y1="155" x2="438" y2="155" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/><text x="314" y="141" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">retry with the same key</text>
+<line x1="540" y1="186" x2="540" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ride)"/>
+<g><rect x="440" y="230" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="540.0" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Conditional claim</text><text x="540.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">driver.version = n → one match</text></g>
+<path d="M438 258 L402 258" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ride)"/>
+<g><rect x="240" y="230" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="320.0" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Map of nearby cars</text><text x="320.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">eventual; staleness stamp</text></g>
+<text x="320" y="300" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">stale > N seconds: excluded from matching</text>
+<rect x="40" y="334" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="341" dominant-baseline="central" font-size="12" fill="#3E4A63">Strong: the claim. One driver, one active match, never two riders.</text>
+<rect x="40" y="358" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="365" dominant-baseline="central" font-size="12" fill="#3E4A63">Eventual: the stream and the map a rider looks at.</text>
+<rect x="40" y="382" width="14" height="14" rx="3" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="62" y="389" dominant-baseline="central" font-size="12" fill="#3E4A63">Stateless: ingest and request handling, horizontal.</text>
+</svg>
+<figcaption>The same two colours as the fintech diagrams, carrying the same meaning. Green is the one thing that must be exclusive: a driver claimed by a conditional write on a version, exactly like the case version. Purple is everything a rider merely looks at. The rider's request key is what makes a retry after a matcher crash safe.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>1M drivers every 3 s is about 330k updates a second, 1.4 TB a day. Partition the location state by cell.</span></div>
+  <div><span>Keys</span><span>The rider's request key, so a retry after a matcher crash never matches twice</span></div>
+  <div><span>Dives</span><span>The hot cell, the staleness rule, two riders and one driver</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"The claim on a driver is strong: a conditional write on a version, exactly like the case version. The map of nearby cars is eventual, and that's fine for something a rider only looks at."</p></div>
+</section>
+
+<section class="board" id="ads">
+<h2>8. Ad-click aggregator <span class="family other">Generic</span></h2>
+<p class="question">Count clicks per ad in near real time.</p>
+
+<p class="summary">Clicks go to Kafka, partitioned by ad id. Stream processors keep a counter per ad per minute in memory, with checkpoints, and feed a fresh dashboard. The raw clicks also land in cheap object storage. A batch over that raw log closes each window after a grace period and gives the exact number for billing. So the dashboard is fresh and approximate, and the invoice is exact and late.</p>
+
+<figure>
+<svg viewBox="0 0 680 456" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Charter, Georgia, serif">
+<title>Ad-click aggregator v2: a fresh stream and an exact batch</title>
+<desc>Clicks flow into Kafka partitioned by ad id. Stream processors keep per-ad-per-minute counters with checkpoints and flush to a time-series store that serves an eventual dashboard. Raw clicks also land in object storage. A batch job over the raw log produces the exact billing number and appends corrections for late clicks.</desc>
+<defs><marker id="arrow-ads" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<g><rect x="40" y="30" width="140" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="110.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Clicks</text><text x="110.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">100k/s peak, click id</text></g>
+<line x1="180" y1="55" x2="218" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
+<g><rect x="220" y="30" width="200" height="50" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="320.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Kafka, by ad id</text><text x="320.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">hot ad → split partition</text></g>
+<line x1="420" y1="55" x2="478" y2="55" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
+<g><rect x="480" y="30" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="560.0" y="48" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Stream processors</text><text x="560.0" y="66" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">per-ad-per-minute, checkpoints</text></g>
+<line x1="560" y1="86" x2="560" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/><text x="572" y="107" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">dedupe by click id</text>
+<g><rect x="480" y="130" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="560.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#3C3489">Time-series store</text><text x="560.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">flushed counters</text></g>
+<line x1="560" y1="186" x2="560" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
+<g><rect x="480" y="230" width="160" height="50" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.75"/><text x="560.0" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#2C2C2A">Dashboard</text><text x="560.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">eventual, seconds behind</text></g>
+<line x1="320" y1="80" x2="320" y2="128" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/><text x="332" y="104" text-anchor="start" dominant-baseline="central" font-size="11" fill="#5F5E5A">every click, raw</text>
+<g><rect x="220" y="130" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="320.0" y="148" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Object storage: raw log</text><text x="320.0" y="166" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">cheap, immutable, replayable</text></g>
+<line x1="320" y1="186" x2="320" y2="228" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
+<g><rect x="220" y="230" width="200" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="320.0" y="248" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Batch over the raw log</text><text x="320.0" y="266" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">windows close after a grace period</text></g>
+<line x1="320" y1="286" x2="320" y2="328" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow-ads)"/>
+<g><rect x="220" y="330" width="200" height="50" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="320.0" y="348" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="600" fill="#085041">Billing number</text><text x="320.0" y="366" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">exact, later; corrections appended</text></g>
+<path d="M420 258 L478 258" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow-ads)"/>
+<text x="449" y="244" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">reconcile</text>
+<rect x="40" y="404" width="14" height="14" rx="3" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/><text x="62" y="411" dominant-baseline="central" font-size="12" fill="#3E4A63">Exact: the raw log, the batch, the invoice. Appended, never edited.</text>
+<rect x="40" y="428" width="14" height="14" rx="3" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/><text x="62" y="435" dominant-baseline="central" font-size="12" fill="#3E4A63">Fresh: the stream, the counters, the dashboard. Eventual, deduped.</text>
+</svg>
+<figcaption>Two paths from one log. The purple path is fresh and approximate: counters in memory, checkpoints, a dashboard seconds behind. The green path is exact and late. The raw log sits in cheap storage. A batch closes windows after a grace period. An invoice's corrections are appended, never edited. The dashed line is the reconciliation between them.</figcaption>
+</figure>
+
+<div class="rows">
+  <div><span>Numbers</span><span>10k clicks a second, 100k at peak, about 100 GB a day raw. The raw log is the storage problem.</span></div>
+  <div><span>Keys</span><span>The click id, deduped within the window · a signed impression id checked before the stream</span></div>
+  <div><span>Dives</span><span>No lost clicks, one click per impression, the hot ad</span></div>
+</div>
+
+<div class="say"><p class="label">Say it</p><p>"The stream gives freshness, the batch over the raw log gives exactness. I run both and reconcile them. The dashboard is eventual; the billing number is exact and comes later."</p></div>
+</section>
+
+<section class="board" id="others">
+<h2>Four more prompts, without a board</h2>
+<p class="question">Name the family in step 1, then draw the board it copies.</p>
+
+<table>
+  <tr><th>Prompt</th><th>Family, and the board to copy</th><th>The hard part</th></tr>
+  <tr><td>Lending, installments</td><td>Long-running. The chargeback board; the ledger posts the money.</td><td>Recalculating after an early payment without rewriting history. An accrual run once a day, claimed and dated like the batch file.</td></tr>
+  <tr><td>Onboarding, KYC</td><td>Long-running. The chargeback board with different nouns.</td><td>Bureau timeouts. Re-verification when the rules change, as a versioned command.</td></tr>
+  <tr><td>Notifications</td><td>A delivery service. Consumers of events, deduped by event id.</td><td>Payday bursts and duplicates. Eventual consistency is fine, and you say so.</td></tr>
+  <tr><td>Statements, history</td><td>A projection of the ledger, never the truth.</td><td>Rebuilding beside the old copy and switching. The lag a customer notices.</td></tr>
+</table>
+</section>
+
+<footer>
+  <p>Built on 5 October 2026 from Chargebacks on one card (sections 5 and 10), The ledger on one card (section 5) and the pivot guide (sections 2 to 6). The diagrams and captions are copied unchanged. When a board needs its story, open the guide it came from. Prose written toward Simplified Technical English (ASD-STE100 Issue 9), at about 80% strictness. Spoken lines are unchanged.</p>
+</footer>
+</main>
+</div>
+</body>
+</html>

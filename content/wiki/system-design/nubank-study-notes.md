@@ -5,7 +5,7 @@ tags:
   - system-design
   - nubank
 date_created: 2026-09-06
-date_modified: 2026-10-03
+date_modified: 2026-10-05
 sources:
   - "[[sources/articles/2026-10-02-nubank-system-design-interview-research]]"
 cssclasses:
@@ -21,6 +21,19 @@ Each guide also has an **Open full page** button. That loads the original HTML a
 
 > [!info] What the web says, checked 2 October 2026
 > The format is stable: one whiteboard round of about an hour, on Miro or Excalidraw, with one or two engineers. Chargebacks is still the only prompt with a named candidate report. The ledger, fraud, credit limit and PIX prompts mostly come from prep sites that cite nothing. Candidates and one Nubank employee call the round easy, but the Lead bar sits in the deep dives. The Buenos Aires hub is a development base like Berlin, so the prompts will come from the products in Brazil, Mexico and Colombia. Full notes, with each source graded: [[sources/articles/2026-10-02-nubank-system-design-interview-research|Nubank's system design round: what the web says]].
+
+> [!tip] The numbers step
+> Practise the arithmetic with inputs you haven't memorised: [[wiki/system-design/back-of-envelope|Back-of-envelope numbers]] has the constants, the thresholds that turn a number into a decision, and a drill with answers.
+
+## Every final board, on one page
+
+The finished diagram of every prompt on one long page, made for a vertical screen: chargebacks, chargebacks with the network as a file, the ledger, card authorisation, fraud, PIX, ride-hailing and ad clicks. Each board has one paragraph on how it works, its numbers, its keys, its deep dives and the line to say. A "which family?" table at the top and four more prompts at the bottom cover a prompt you haven't seen. Keep it open beside you while you practise.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-final-boards.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-final-boards.html" type="text/html" title="Every final board, on one page">
 
 ## Chargebacks on one card
 
