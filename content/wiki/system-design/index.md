@@ -43,6 +43,7 @@ tags:
 
 ## Interview deep-dives
 
+- [[wiki/system-design/back-of-envelope|Back-of-envelope numbers]]: the constants, the four calculations, the thresholds that turn a number into a decision, and worked chargeback, PIX and authorisation prompts
 - [[wiki/system-design/nubank-study-notes|Nubank lead system design study notes]] — Nubank's prep document decoded (numbers, v1 → v2 → v3, degradation, security, six-day plan), the Hello Interview method they recommend mapped onto the hour, chargebacks, chargeback mock interview, ledger, and pivot prompts (authoriser, credit limit, fraud, PIX, ride-hailing, ad clicks)
 
 ## Classic Design Problems
@@ -59,7 +60,7 @@ tags:
 
 > [!tip] System Design Interview Framework
 > 1. **Clarify requirements** (functional + non-functional)
-> 2. **Back-of-envelope estimation** (QPS, storage, bandwidth)
+> 2. **Back-of-envelope estimation** (QPS, storage, bandwidth): see [[wiki/system-design/back-of-envelope|Back-of-Envelope Numbers]]
 > 3. **High-level design** (API + data model + architecture diagram)
 > 4. **Deep dive** (pick 2-3 components to detail)
 > 5. **Bottlenecks & trade-offs** (what breaks at 10x scale?)
