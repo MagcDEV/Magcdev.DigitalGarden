@@ -31,6 +31,9 @@ Quartz → renders everything as a browsable site
 > [!abstract] [[wiki/concepts/index|Core Concepts]]
 > SOLID, design patterns, clean code, testing, and cross-cutting engineering principles.
 
+> [!abstract] [[wiki/ai-coding/index|AI-Assisted Coding]]
+> Building with an AI coding agent: decomposition, briefing in slices, reviewing every diff, and the interview rounds that grade it.
+
 ## Writing
 
 > [!quote] [[posts/index|Essays & Blog Posts]]

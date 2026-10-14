@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nubank AI Coding Interview — Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --panel: #f3f0fa;
+    --panel-2: #fbf9ff;
+    --ink: #1c1a2e;
+    --ink-2: #4a4664;
+    --muted: #7a7692;
+    --line: #dcd7ea;
+    --accent: #6b2fd6;
+    --accent-ink: #4b1fa3;
+    --say: #0f6e56;
+    --say-bg: #e6f4ef;
+    --warn: #a3421a;
+    --warn-bg: #fbeee6;
+    --code-bg: #1e1b2e;
+    --code-ink: #e9e4f7;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #141222;
+      --panel: #1e1b30;
+      --panel-2: #191731;
+      --ink: #ece9f6;
+      --ink-2: #c3bedb;
+      --muted: #8d88a8;
+      --line: #322e4b;
+      --accent: #a985f0;
+      --accent-ink: #c2a6ff;
+      --say: #6fd3b2;
+      --say-bg: #16302a;
+      --warn: #f0a07a;
+      --warn-bg: #3a2318;
+      --code-bg: #0e0c1a;
+      --code-ink: #e9e4f7;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #141222; --panel: #1e1b30; --panel-2: #191731; --ink: #ece9f6; --ink-2: #c3bedb;
+    --muted: #8d88a8; --line: #322e4b; --accent: #a985f0; --accent-ink: #c2a6ff;
+    --say: #6fd3b2; --say-bg: #16302a; --warn: #f0a07a; --warn-bg: #3a2318;
+    --code-bg: #0e0c1a; --code-ink: #e9e4f7;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  * { box-sizing: inherit; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 700px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  h1 { font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; }
+  h2 { font-size: 1.35rem; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; margin: 48px 0 14px; padding-top: 8px; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 24px 0 8px; }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--accent); }
+  a { color: var(--accent-ink); }
+  strong { font-weight: 600; }
+  .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 60ch; }
+  .frame { border-left: 4px solid var(--accent); padding: 4px 0 4px 16px; margin: 22px 0 28px; font-size: 1.15rem; font-weight: 500; }
+
+  nav.toc { background: var(--panel); border-radius: 10px; padding: 14px 18px; margin: 0 0 8px; }
+  nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+  nav.toc li { break-inside: avoid; margin-bottom: 4px; }
+  nav.toc a { text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  @media (max-width: 480px) { nav.toc ol { columns: 1; } }
+
+  .say {
+    background: var(--say-bg); color: var(--say);
+    border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px;
+    font-style: italic;
+  }
+  .say::before { content: "Say: "; font-style: normal; font-weight: 600; }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px; }
+  .warn::before { content: "Avoid: "; font-weight: 600; }
+
+  pre {
+    background: var(--code-bg); color: var(--code-ink);
+    border-radius: 10px; padding: 14px 16px; margin: 8px 0 18px;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.86rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word;
+  }
+  pre .ph { color: #ffd277; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.9em; background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+  .prompt-label { font-size: 0.85rem; color: var(--muted); margin: 14px 0 2px; }
+
+  /* timeline */
+  .timeline { position: relative; margin: 20px 0 10px; padding-left: 0; list-style: none; }
+  .timeline::before { content: ""; position: absolute; left: 60px; top: 10px; bottom: 10px; width: 2px; background: var(--line); }
+  .phase { position: relative; display: grid; grid-template-columns: 52px 1fr; gap: 0 26px; margin-bottom: 22px; }
+  .phase .t { font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: var(--accent-ink); font-weight: 500; text-align: right; padding-top: 3px; }
+  .phase .t::after { content: ""; position: absolute; left: 55px; top: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .phase .body { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .phase h3 { margin: 0 0 6px; }
+  .phase .goal { color: var(--muted); font-size: 0.92rem; margin-bottom: 8px; }
+  .phase ul { margin-bottom: 6px; }
+  @media (max-width: 480px) {
+    .timeline::before { display: none; }
+    .phase { grid-template-columns: 1fr; gap: 4px; }
+    .phase .t { text-align: left; }
+    .phase .t::after { display: none; }
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 18px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+  .tablewrap { overflow-x: auto; }
+
+  .check { list-style: none; padding-left: 0; }
+  .check li { position: relative; padding-left: 28px; }
+  .check li::before { content: ""; position: absolute; left: 0; top: 5px; width: 16px; height: 16px; border: 2px solid var(--accent); border-radius: 4px; }
+
+  details { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; background: var(--panel-2); }
+  summary { cursor: pointer; font-weight: 600; }
+  summary:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  details p:last-child, details ul:last-child { margin-bottom: 4px; }
+
+  .foot { color: var(--muted); font-size: 0.9rem; margin-top: 50px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media (max-width: 780px) { h1 { padding-right: 48px; } }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+<main>
+
+<h1>Nubank AI Coding Interview<br>Playbook</h1>
+<p class="lede">Sixty minutes, a browser VS Code, Claude Code in the terminal, Andrey watching how you think. This is the script to internalize before the mocks: what to set up, what to say, what to type, in order.</p>
+
+<div class="frame">They are not grading the program. They are grading the engineer who directed it.</div>
+
+<nav class="toc" aria-label="Sections">
+<ol>
+  <li><a href="#rules">The four things being scored</a></li>
+  <li><a href="#before">Before the call</a></li>
+  <li><a href="#open">The opening (first 2 minutes)</a></li>
+  <li><a href="#timeline">The 60-minute timeline</a></li>
+  <li><a href="#prompts">Prompt templates</a></li>
+  <li><a href="#narrate">Narration bank</a></li>
+  <li><a href="#review">Reviewing AI output</a></li>
+  <li><a href="#debug">Debug protocol</a></li>
+  <li><a href="#recover">When things go wrong</a></li>
+  <li><a href="#andrey">About Andrey</a></li>
+  <li><a href="#practice">Practice plan</a></li>
+</ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="rules">1. The four things being scored</h2>
+<p>Straight from their guide. Every move in this playbook maps to one of these.</p>
+<div class="tablewrap">
+<table>
+<tr><th>Criterion</th><th>What it looks like on camera</th></tr>
+<tr><td><strong>Logical reasoning &amp; decomposition</strong></td><td>You break a vague ask into 3–5 testable steps before any code exists.</td></tr>
+<tr><td><strong>AI steering &amp; collaboration</strong></td><td>Precise briefs, small slices, you read everything, you redirect when it drifts.</td></tr>
+<tr><td><strong>Code readability &amp; maintainability</strong></td><td>Small focused functions, clear names, edge cases handled, tests that matter.</td></tr>
+<tr><td><strong>Communication</strong></td><td>You narrate trade-offs and assumptions out loud, before generating, and you ask instead of guessing.</td></tr>
+</table>
+</div>
+<p>Their own words on what fails: going quiet, accepting code you didn't read, skipping tests, getting stuck without asking for a hint.</p>
+
+<!-- 2 -->
+<h2 id="before">2. Before the call</h2>
+<ul class="check">
+  <li>Language decided and fixed: <strong>Go</strong> (swap if you change your mind, but decide before the call, never during).</li>
+  <li>Browser: Chrome, fresh profile or clean window, no extensions fighting the VS Code tab. Second monitor or split screen so Meet and the editor are both visible.</li>
+  <li>Audio tested. Headphones. Water next to you.</li>
+  <li>A notepad (paper or a scratch <code>NOTES.md</code> in the workspace) for the plan and the edge-case list. You will refer back to it.</li>
+  <li>This playbook open on your phone, not on the shared screen.</li>
+  <li>Read sections 3, 5 and 8 once more, 20 minutes before.</li>
+</ul>
+
+<!-- 3 -->
+<h2 id="open">3. The opening (first 2 minutes)</h2>
+<p>When the editor loads, don't touch it. Orient the room first.</p>
+<div class="say">Before I start, I'll take a couple of minutes to make sure I understand the problem, write a short plan, and list edge cases. Then I'll build it in small slices with Claude Code, reviewing each one. I'll think out loud the whole time, so stop me whenever you want.</div>
+<p>This one sentence tells Andrey you know how the round is scored. It also buys you the silence you need to read the problem.</p>
+<p>Then, while reading the statement, narrate what you notice:</p>
+<div class="say">Inputs are X, output is Y. The ambiguous part is Z, I'll ask about that. The thing that could bite us is W.</div>
+
+<!-- 4 -->
+<h2 id="timeline">4. The 60-minute timeline</h2>
+<p>Times are targets, not rules. The point is that each phase has a visible exit, and you announce it.</p>
+
+<ol class="timeline">
+
+<li class="phase">
+  <div class="t">0–10</div>
+  <div class="body">
+    <h3>Understand and plan. No code.</h3>
+    <div class="goal">Scores: decomposition, communication</div>
+    <ul>
+      <li>Restate the problem in one sentence. Get a nod.</li>
+      <li>Ask 3–4 clarifying questions (see bank in §6). Input size, format guarantees, what to do on bad input, what "done" means.</li>
+      <li>Write the plan in <code>NOTES.md</code> on screen: 3–5 steps, each with a verifiable result.</li>
+      <li>List edge cases under the plan: empty input, duplicates, malformed lines, boundaries, concurrency if relevant, "what if it runs twice".</li>
+      <li>State your data model and the main trade-off you're taking.</li>
+    </ul>
+    <div class="say">Plan is set. Step 1 is the parser with a test, step 2 the core logic, step 3 the output. I'll tackle them in that order and we'll have something runnable after step 1.</div>
+  </div>
+</li>
+
+<li class="phase">
+  <div class="t">10–15</div>
+  <div class="body">
+    <h3>Brief Claude Code. Skeleton only.</h3>
+    <div class="goal">Scores: AI steering</div>
+    <ul>
+      <li>Send the kickoff prompt (§5, template A). Language, structure, constraints, and "plan first, wait for my go".</li>
+      <li>Read its proposed plan out loud. Accept, trim, or correct it. Then say "go".</li>
+      <li>Skeleton lands: files, types, function signatures, a failing test. Run it.</li>
+    </ul>
+  </div>
+</li>
+
+<li class="phase">
+  <div class="t">15–40</div>
+  <div class="body">
+    <h3>Build in slices. One step per prompt.</h3>
+    <div class="goal">Scores: AI steering, readability, communication</div>
+    <ul>
+      <li>For each plan step: prompt (template B), read the diff aloud, run, accept or correct, tick the step in <code>NOTES.md</code>.</li>
+      <li>Keep each slice under ~50 lines of change. If it comes back bigger, say so and split it.</li>
+      <li>Explain at least one design choice per slice: why this structure, why this error handling.</li>
+      <li>Check in with Andrey at each tick: "Step 2 done, parser handles empty and malformed lines. Moving to the core."</li>
+    </ul>
+  </div>
+</li>
+
+<li class="phase">
+  <div class="t">40–52</div>
+  <div class="body">
+    <h3>Tests on the hard cases.</h3>
+    <div class="goal">Scores: readability, decomposition</div>
+    <ul>
+      <li>Go back to your edge-case list. Prompt for tests on those specifically (template D).</li>
+      <li>Read each test. Delete or fix any that only test the happy path or that assert the wrong thing. Say why.</li>
+      <li>Run them. A failing test here is good: it's your debug protocol on display (§8).</li>
+    </ul>
+  </div>
+</li>
+
+<li class="phase">
+  <div class="t">52–60</div>
+  <div class="body">
+    <h3>Final pass and handoff.</h3>
+    <div class="goal">Scores: communication, readability</div>
+    <ul>
+      <li>Walk the solution top to bottom as if handing it to a teammate: entry point, data flow, where errors surface.</li>
+      <li>Name what's fragile and what you'd do with another hour.</li>
+      <li>Ask your questions for Andrey (§10) if there's time.</li>
+    </ul>
+    <div class="say">If this were going to production I'd add structured logging around the parser and make the writer idempotent. For the scope here, it's complete and the tricky cases are covered by tests.</div>
+  </div>
+</li>
+
+</ol>
+
+<!-- 5 -->
+<h2 id="prompts">5. Prompt templates</h2>
+<p>Claude Code reads plain technical language. Brief it like a strong teammate who has never seen the task: context, constraints, expected behavior, stop condition. Fill the <span style="color:#b8860b;font-family:'IBM Plex Mono',monospace;font-size:0.9em">yellow</span> parts live.</p>
+
+<p class="prompt-label">A. Kickoff (once, after your plan is written)</p>
+<pre>We're solving this in Go. Problem: <span class="ph">one-sentence restatement</span>.
+
+Constraints:
+- Standard library only, no external deps.
+- Package main, one file per concern: <span class="ph">parser.go, core.go, main.go</span>, plus _test.go files.
+- Small functions, explicit error returns, no panics on bad input.
+
+My plan is in NOTES.md. Before writing any code, tell me in 3-5 bullets how you'd structure it and which types you'd define. Then wait for my go.</pre>
+
+<p class="prompt-label">B. One slice (repeat per plan step)</p>
+<pre>Step <span class="ph">N</span>: <span class="ph">what this step does</span>.
+
+Expected behavior: <span class="ph">input -> output, including the edge case for this step</span>.
+Keep it to <span class="ph">the one function/file</span>. Don't touch other files.
+Don't write tests yet unless I ask. Show me the diff and stop.</pre>
+
+<p class="prompt-label">C. Correction (when the output isn't what you want)</p>
+<pre>Not quite. <span class="ph">What's wrong, in one line</span>. Change only <span class="ph">the specific thing</span>: <span class="ph">what it should do instead</span>. Leave the rest as is.</pre>
+
+<p class="prompt-label">D. Tests on hard cases</p>
+<pre>Write table-driven tests for <span class="ph">function</span> covering exactly these cases:
+- <span class="ph">empty input</span>
+- <span class="ph">duplicate / boundary / malformed case</span>
+- <span class="ph">the "runs twice" case</span>
+One assertion per case, clear case names. No happy-path-only tests.</pre>
+
+<p class="prompt-label">E. Debug (only after you've stated your own hypothesis)</p>
+<pre>Test <span class="ph">name</span> fails with <span class="ph">actual vs expected</span>. I think the cause is <span class="ph">your hypothesis</span>. Confirm or correct that, and fix only that. Don't rewrite the function.</pre>
+
+<p class="prompt-label">F. Final review</p>
+<pre>Review the full solution for: unhandled errors, naming, functions doing more than one thing, missing edge cases from NOTES.md. List findings, don't change anything yet.</pre>
+
+<h3>Prompt rules of thumb</h3>
+<ul>
+  <li>One task per prompt. If you wrote "and" twice, split it.</li>
+  <li>Always say what <em>not</em> to touch. It keeps diffs small and reviewable.</li>
+  <li>"Show the diff and stop" / "wait for my go" is how you stay in control.</li>
+  <li>If it starts running away (editing many files, adding deps), interrupt it and redirect. Interrupting is a positive signal.</li>
+  <li>If it produced something you don't understand, ask it to explain the lines before you accept. That's reviewing, not weakness.</li>
+</ul>
+
+<!-- 6 -->
+<h2 id="narrate">6. Narration bank</h2>
+<p>Silence reads as uncertainty. Use these to keep talking, especially during the boring parts.</p>
+
+<h3>Clarifying questions (pick 3–4)</h3>
+<ul>
+  <li>How large is the input: fits in memory, or should I stream it?</li>
+  <li>Can I trust the format, or should I expect malformed records? Skip them or fail fast?</li>
+  <li>Is the order of the output significant?</li>
+  <li>Can the same record appear twice? How should I treat that?</li>
+  <li>Is this run once, or repeatedly on the same data? (Idempotency.)</li>
+  <li>What does "done" look like for this hour: working CLI, a library with tests, or both?</li>
+</ul>
+
+<h3>While Claude Code works</h3>
+<div class="say">While it generates, I'm expecting a struct for the record and a parse function returning an error. If it adds anything beyond that, I'll trim it.</div>
+<div class="say">This looks right. One thing I'd change: the name. I'll ask for that in the next prompt rather than nitpick now.</div>
+<div class="say">Rejecting this part: it swallows the error. I want it returned so the caller decides.</div>
+
+<h3>Trade-offs</h3>
+<div class="say">I'm going with a map keyed by ID for O(1) lookup. Memory is fine at this size; if we were streaming millions I'd rethink.</div>
+<div class="say">I'm choosing to fail fast on a malformed line instead of skipping, because silent data loss is worse than a visible failure in a payments context. Happy to flip that if the requirement is different.</div>
+
+<h3>Checkpoints</h3>
+<div class="say">Step 2 done and runnable. Next is the aggregation. Any concerns before I go on?</div>
+<div class="say">I'm about 25 minutes in and on plan. I'll leave the last 15 for tests and a final walkthrough.</div>
+
+<!-- 7 -->
+<h2 id="review">7. Reviewing AI output</h2>
+<p>Do this on every diff, out loud, in roughly this order. Thirty seconds is enough.</p>
+<ol>
+  <li><strong>Does it do only what I asked?</strong> Extra files, extra features, extra deps: cut them.</li>
+  <li><strong>Errors:</strong> are they returned, not swallowed or panicked? Are they wrapped with context?</li>
+  <li><strong>Edge cases from NOTES.md:</strong> empty, nil, zero, duplicate, boundary. Is each one handled or deliberately deferred?</li>
+  <li><strong>Names and shape:</strong> would a teammate understand this function from its name and signature alone? Is it doing more than one thing?</li>
+  <li><strong>Can I explain every line?</strong> If not, ask Claude Code to explain it before accepting.</li>
+</ol>
+<div class="warn">Scrolling past a diff and saying "looks good". The tips sheet calls this out by name. One rejected line per session is worth more than ten accepted ones.</div>
+
+<!-- 8 -->
+<h2 id="debug">8. Debug protocol</h2>
+<p>A failing test or runtime error is the best moment in the hour. It's where "owning the bugs" is observed. Follow this order, and narrate each step.</p>
+<ol>
+  <li><strong>Read the error fully, aloud.</strong> Line number, message, actual vs expected.</li>
+  <li><strong>State a hypothesis before touching anything.</strong> "I think this is the boundary check in the loop."</li>
+  <li><strong>Verify it yourself:</strong> open the file, point at the line, add a print or a focused test if needed.</li>
+  <li><strong>Fix it by hand if it's small.</strong> One-line fixes typed by you look better than a re-prompt.</li>
+  <li><strong>Otherwise prompt with the hypothesis</strong> (template E). Never "it's broken, fix it".</li>
+  <li><strong>Re-run, confirm, say what the root cause was.</strong></li>
+</ol>
+<div class="warn">Re-prompting three times with slightly different wording and hoping. That's the exact behavior the guide says is penalized.</div>
+
+<!-- 9 -->
+<h2 id="recover">9. When things go wrong</h2>
+
+<details>
+<summary>I'm stuck and the clock is moving</summary>
+<p>Ask for a hint. Their guide says it's normal and expected. Phrase it as a decision, not a plea:</p>
+<div class="say">I see two ways to handle this and I'm not sure which matches what you'd expect. Would you lean toward A or B?</div>
+</details>
+
+<details>
+<summary>Claude Code went off the rails (rewrote everything, added a framework)</summary>
+<p>Interrupt it. Say what happened and why you're rejecting it:</p>
+<div class="say">That's more than I asked for. I'm discarding this and re-briefing with a tighter scope.</div>
+<p>Then template C with explicit "don't touch" boundaries. Mention that this is why you work in slices.</p>
+</details>
+
+<details>
+<summary>Running out of time with steps left</summary>
+<p>Announce a scope cut at the 45-minute mark, not at 58. Prioritize a working, tested core over a complete but shaky whole.</p>
+<div class="say">I'm going to drop step 4 and make sure steps 1–3 are solid and tested. I'll describe how step 4 would slot in during the walkthrough.</div>
+</details>
+
+<details>
+<summary>The environment is slow or Claude Code is unresponsive</summary>
+<p>Say it, don't suffer silently. Keep narrating what you'd be doing. Write the next function signature by hand while you wait. Interviewers are used to this and will not hold it against you.</p>
+</details>
+
+<details>
+<summary>Andrey pushes back on a choice</summary>
+<p>Engage, don't fold or dig in. Ask what he's optimizing for, then either adjust or defend with a reason:</p>
+<div class="say">Good point. If we expect retries, you're right that this needs to be idempotent. Let me add a check on the ID before writing.</div>
+</details>
+
+<details>
+<summary>I don't understand the problem statement</summary>
+<p>Ask. Then restate it until you get a yes. Guessing quietly is the riskier move by far, and they say so.</p>
+</details>
+
+<!-- 10 -->
+<h2 id="andrey">10. About Andrey</h2>
+<p>Staff engineer, six and a half years at Nubank, all on the Colombia launch: first Bills &amp; Payments, now cross-BU stability and reliability. Clojure, Datomic, Kafka background.</p>
+<p>What that changes for you: the <em>problem</em> will be the standard one, but his <em>follow-ups</em> will come from reliability instincts. Pre-empt them during planning and you'll sound like a colleague:</p>
+<ul>
+  <li>"What happens if this runs twice?" Mention idempotency early.</li>
+  <li>"What if a record is malformed?" Decide fail-fast vs skip, say why.</li>
+  <li>"What if it's partially processed and crashes?" Note where you'd add a checkpoint or make writes atomic.</li>
+  <li>"How would you know it's broken in production?" One line about logging or a metric.</li>
+</ul>
+<p>Don't use Clojure. He'll know you picked your language and won't expect his.</p>
+
+<h3>Questions to ask him</h3>
+<ul>
+  <li>How does the Colombia BU handle reliability incidents that cross squad boundaries?</li>
+  <li>How are teams at Nu using AI coding tools day to day, and what has changed in code review because of it?</li>
+  <li>What distinguishes a strong session in this round from an average one, in your experience running it?</li>
+</ul>
+
+<!-- 11 -->
+<h2 id="practice">11. Practice plan</h2>
+<p>Four timed mocks, each 60 minutes, each narrated aloud as if someone is listening. Record audio for at least two of them and listen for the silences.</p>
+<ol>
+  <li><strong>Transaction CSV reconciliation.</strong> Parse records, detect duplicates within a time window, output a summary. Edge cases: malformed lines, out-of-order timestamps, same ID different amount.</li>
+  <li><strong>In-memory key-value store with TTL.</strong> Get/set/delete, expiry, simple eviction. Edge cases: zero TTL, overwrite with new TTL, expiry at exact boundary.</li>
+  <li><strong>Bill payment scheduler.</strong> Payments with due dates and a daily cap: decide what runs today. Must be safe to run twice. Edge cases: cap exactly reached, past-due items, empty day.</li>
+  <li><strong>Token-bucket rate limiter.</strong> Allow/deny with refill. Edge cases: burst at start, refill boundary, zero capacity.</li>
+</ol>
+<p>After each mock, grade yourself 1–4 on the four criteria in §1 and write one sentence on what to change next time. By mock three the opening script and the slice rhythm should feel automatic.</p>
+
+<p class="foot">Built from Nubank's Candidate Preparation Guide and Useful Tips sheet for the AI Coding Interview. Keep this on your phone; the shared screen shows only the editor and NOTES.md.</p>
+
+</main>
+</body>
+</html>

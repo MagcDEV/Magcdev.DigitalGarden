@@ -27,3 +27,6 @@ Language fundamentals, idioms, concurrency, the standard library, and Go-specifi
 
 ### [[wiki/concepts/index|Core Concepts]]
 Cross-cutting software engineering concepts: design patterns, clean code, testing, DevOps, and professional practice.
+
+### [[wiki/ai-coding/index|AI-Assisted Coding]]
+Working with an AI coding agent such as Claude Code: planning, prompting in small slices, reviewing output, debugging, and AI coding interview rounds.

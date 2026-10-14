@@ -5,7 +5,7 @@ tags:
   - system-design
   - nubank
 date_created: 2026-09-06
-date_modified: 2026-10-05
+date_modified: 2026-10-14
 sources:
   - "[[sources/articles/2026-10-02-nubank-system-design-interview-research]]"
 cssclasses:
@@ -21,6 +21,9 @@ Each guide also has an **Open full page** button. That loads the original HTML a
 
 > [!info] What the web says, checked 2 October 2026
 > The format is stable: one whiteboard round of about an hour, on Miro or Excalidraw, with one or two engineers. Chargebacks is still the only prompt with a named candidate report. The ledger, fraud, credit limit and PIX prompts mostly come from prep sites that cite nothing. Candidates and one Nubank employee call the round easy, but the Lead bar sits in the deep dives. The Buenos Aires hub is a development base like Berlin, so the prompts will come from the products in Brazil, Mexico and Colombia. Full notes, with each source graded: [[sources/articles/2026-10-02-nubank-system-design-interview-research|Nubank's system design round: what the web says]].
+
+> [!success] Next round
+> This round is passed. The next one is the AI coding round: [[wiki/ai-coding/nubank-ai-coding-interview|Nubank AI coding interview playbook]].
 
 > [!tip] The numbers step
 > Practise the arithmetic with inputs you haven't memorised: [[wiki/system-design/back-of-envelope|Back-of-envelope numbers]] has the constants, the thresholds that turn a number into a decision, and a drill with answers.
