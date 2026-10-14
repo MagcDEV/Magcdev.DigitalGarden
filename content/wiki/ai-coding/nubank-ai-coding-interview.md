@@ -1,10 +1,13 @@
 ---
 title: "Nubank AI Coding Interview Playbook"
+aliases:
+  - "Go for the Nubank AI coding interview"
 tags:
   - wiki
   - ai-coding
   - nubank
   - interview
+  - go
 date_created: 2026-10-14
 date_modified: 2026-10-14
 cssclasses:
@@ -50,9 +53,35 @@ The guide is the full script, in eleven sections:
 
 <embed class="guide-frame" src="../../assets/nubank-guides/nubank-ai-coding-playbook.html" type="text/html" title="Nubank AI Coding Interview Playbook">
 
+## Go for the interview
+
+The companion guide teaches enough Go to read every line that Claude Code writes, reject the wrong ones, and explain your choices. It is built around the four practice problems in the playbook. It has fifteen sections:
+
+- reading Go in ten minutes, the project setup, and the commands to run
+- errors the senior way: return, wrap with `%w`, sentinel errors, and the `run()` pattern
+- money as `int64` cents, named types, time, and slices and maps without surprises
+- parsing input from an `io.Reader`, table-driven tests, and an injected clock
+- just enough concurrency, and the reliability patterns (idempotency, fail-fast or skip, atomic output)
+- worked code for duplicate detection, the TTL store, and the token bucket
+- the mistakes that give you away, and the phrases that signal seniority
+
+> [!success] The code runs
+> The worked code (parsing, duplicate detection, the TTL store and the token bucket) was compiled and run on Go 1.24 with `go vet` and `go test -race`, on 14 October 2026. Two fixes came out of that run, and the guide now shows both.
+
+`parseCents` now rejects `""`, `".5"` and `"--5"`. Before the fix, the empty string parsed as 0 with no error. So the guide's own `"empty"` test failed.
+
+The token bucket now clamps a negative `elapsed` to zero. Before the fix, a test with a fixed past clock drained the bucket on the first call.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-ai-coding-go.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-ai-coding-go.html" type="text/html" title="Go for the Nubank AI Coding Interview">
+
 ## Related
 
 - [[wiki/ai-coding/index|AI-Assisted Coding]]: the area this note belongs to.
 - [[wiki/system-design/nubank-study-notes|Nubank system design study notes]]: the previous round, with the idempotency and failure stories that the follow-ups reuse.
-- [[wiki/go/index|Go Programming]]: the language for the round. Use the standard library only, return explicit errors, and write table-driven tests.
+- [[wiki/go/index|Go Programming]]: the language for the round. The Go guide above is the interview-sized version.
+- [[wiki/go/leetcode-snippets|Go LeetCode snippets]]: the idioms for maps, slices and sorting in algorithm code.
 - [[wiki/system-design/back-of-envelope|Back-of-envelope numbers]]: for the "fits in memory, or stream it?" question during planning.

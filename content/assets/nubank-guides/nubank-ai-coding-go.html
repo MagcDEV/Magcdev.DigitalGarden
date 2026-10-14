@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Go for the Nubank AI Coding Interview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff; --panel: #f3f0fa; --panel-2: #fbf9ff;
+    --ink: #1c1a2e; --ink-2: #4a4664; --muted: #7a7692; --line: #dcd7ea;
+    --accent: #6b2fd6; --accent-ink: #4b1fa3;
+    --say: #0f6e56; --say-bg: #e6f4ef;
+    --warn: #a3421a; --warn-bg: #fbeee6;
+    --code-bg: #1e1b2e; --code-ink: #e9e4f7; --code-cmt: #8f89b3; --code-kw: #c9b6ff; --code-str: #9fe0c5;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #141222; --panel: #1e1b30; --panel-2: #191731; --ink: #ece9f6; --ink-2: #c3bedb;
+      --muted: #8d88a8; --line: #322e4b; --accent: #a985f0; --accent-ink: #c2a6ff;
+      --say: #6fd3b2; --say-bg: #16302a; --warn: #f0a07a; --warn-bg: #3a2318;
+      --code-bg: #0e0c1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #141222; --panel: #1e1b30; --panel-2: #191731; --ink: #ece9f6; --ink-2: #c3bedb;
+    --muted: #8d88a8; --line: #322e4b; --accent: #a985f0; --accent-ink: #c2a6ff;
+    --say: #6fd3b2; --say-bg: #16302a; --warn: #f0a07a; --warn-bg: #3a2318;
+    --code-bg: #0e0c1a;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  * { box-sizing: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 17px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 2rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; }
+  h2 { font-size: 1.35rem; line-height: 1.2; font-weight: 700; margin: 48px 0 14px; }
+  h3 { font-size: 1.05rem; font-weight: 600; margin: 26px 0 8px; }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li::marker { color: var(--accent); }
+  a { color: var(--accent-ink); }
+  strong { font-weight: 600; }
+  .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 60ch; }
+  .frame { border-left: 4px solid var(--accent); padding: 4px 0 4px 16px; margin: 22px 0 28px; font-size: 1.15rem; font-weight: 500; }
+  nav.toc { background: var(--panel); border-radius: 10px; padding: 14px 18px; margin: 0 0 8px; }
+  nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+  nav.toc li { break-inside: avoid; margin-bottom: 4px; }
+  nav.toc a { text-decoration: none; }
+  @media (max-width: 480px) { nav.toc ol { columns: 1; } }
+  .say { background: var(--say-bg); color: var(--say); border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px; font-style: italic; }
+  .say::before { content: "Say: "; font-style: normal; font-weight: 600; }
+  .warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px; }
+  .warn::before { content: "Gotcha: "; font-weight: 600; }
+  .why { background: var(--panel); border-radius: 8px; padding: 10px 14px; margin: -8px 0 18px; font-size: 0.95rem; color: var(--ink-2); }
+  .why::before { content: "Why it reads as senior: "; font-weight: 600; color: var(--ink); }
+  pre { background: var(--code-bg); color: var(--code-ink); border-radius: 10px; padding: 14px 16px; margin: 8px 0 14px; font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 0.84rem; line-height: 1.5; overflow-x: auto; }
+  pre .c { color: var(--code-cmt); font-style: italic; }
+  pre .k { color: var(--code-kw); }
+  pre .s { color: var(--code-str); }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.9em; background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+  .label { font-size: 0.85rem; color: var(--muted); margin: 14px 0 2px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 18px; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+  .tablewrap { overflow-x: auto; }
+  .foot { color: var(--muted); font-size: 0.9rem; margin-top: 50px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+  .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media (max-width: 780px) { h1 { padding-right: 48px; } }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+<main>
+
+<h1>Go for the interview</h1>
+<p class="lede">Enough Go to read every line Claude Code writes, reject the wrong ones, and explain your choices in the vocabulary a Staff engineer expects. Built around the four practice problems.</p>
+
+<div class="frame">You don't need to be a Go expert. You need to know what good Go looks like, so you can recognize it, demand it, and defend it.</div>
+
+<nav class="toc" aria-label="Sections">
+<ol>
+  <li><a href="#read">Reading Go in 10 minutes</a></li>
+  <li><a href="#setup">Project setup and commands</a></li>
+  <li><a href="#errors">Errors: the senior way</a></li>
+  <li><a href="#model">Modeling data (and money)</a></li>
+  <li><a href="#collections">Slices and maps without surprises</a></li>
+  <li><a href="#io">Parsing input safely</a></li>
+  <li><a href="#tests">Table-driven tests</a></li>
+  <li><a href="#inject">Injecting time and I/O</a></li>
+  <li><a href="#concurrency">Just enough concurrency</a></li>
+  <li><a href="#reliability">Reliability patterns</a></li>
+  <li><a href="#worked1">Worked example: reconciliation</a></li>
+  <li><a href="#worked2">Worked example: TTL store</a></li>
+  <li><a href="#worked3">Sketch: token bucket</a></li>
+  <li><a href="#mistakes">Mistakes that give you away</a></li>
+  <li><a href="#phrases">Phrases that signal seniority</a></li>
+</ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="read">1. Reading Go in 10 minutes</h2>
+<p>Go is small on purpose. There's no inheritance, no exceptions, no generics magic you'll need here. If you can read this block, you can read anything Claude Code produces in the session.</p>
+
+<pre><span class="k">package</span> main                    <span class="c">// every runnable program lives in package main</span>
+
+<span class="k">import</span> (
+    <span class="s">"errors"</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"time"</span>
+)
+
+<span class="c">// A struct is just a bag of named fields. Capitalized = exported (public).</span>
+<span class="k">type</span> Transaction <span class="k">struct</span> {
+    ID        string
+    Amount    int64       <span class="c">// cents, never float for money (see §4)</span>
+    Timestamp time.Time
+}
+
+<span class="c">// Functions return multiple values. The last is conventionally an error.</span>
+<span class="k">func</span> parseAmount(s string) (int64, error) {
+    <span class="k">if</span> s == <span class="s">""</span> {
+        <span class="k">return</span> 0, errors.New(<span class="s">"empty amount"</span>)   <span class="c">// errors are plain values</span>
+    }
+    <span class="c">// ... real parsing here</span>
+    <span class="k">return</span> 1234, nil                           <span class="c">// nil error = success</span>
+}
+
+<span class="c">// A method: the thing before the name is the "receiver". *T = pointer, can mutate.</span>
+<span class="k">func</span> (t *Transaction) Reverse() {
+    t.Amount = -t.Amount
+}
+
+<span class="k">func</span> main() {
+    amount, err := parseAmount(<span class="s">"12.34"</span>)   <span class="c">// := declares AND assigns. Type is inferred.</span>
+    <span class="k">if</span> err != nil {                        <span class="c">// you check errors immediately, every time</span>
+        fmt.Println(<span class="s">"bad input:"</span>, err)
+        <span class="k">return</span>
+    }
+
+    txs := []Transaction{}                 <span class="c">// a slice: a growable list</span>
+    txs = append(txs, Transaction{ID: <span class="s">"a"</span>, Amount: amount, Timestamp: time.Now()})
+
+    seen := make(map[string]bool)          <span class="c">// a map: hash table. make() allocates it.</span>
+    <span class="k">for</span> _, tx := <span class="k">range</span> txs {               <span class="c">// range gives index, value. _ ignores one.</span>
+        <span class="k">if</span> seen[tx.ID] {                   <span class="c">// missing key returns the zero value (false)</span>
+            <span class="k">continue</span>
+        }
+        seen[tx.ID] = true
+    }
+    fmt.Printf(<span class="s">"%d unique\n"</span>, len(seen))
+}</pre>
+
+<h3>The ten things to know</h3>
+<ul>
+  <li><strong>Zero values.</strong> Every type has a default: <code>0</code>, <code>""</code>, <code>false</code>, <code>nil</code>. An unset struct field is the zero value, never "undefined". Senior Go leans on this.</li>
+  <li><strong><code>:=</code> vs <code>=</code>.</strong> <code>:=</code> declares a new variable. <code>=</code> assigns to an existing one. Mixing them up causes "shadowing" bugs (see §14).</li>
+  <li><strong>Errors are values.</strong> No try/catch. A function returns <code>(result, error)</code> and you check <code>if err != nil</code> right there.</li>
+  <li><strong>Pointers are simple.</strong> <code>&amp;x</code> takes the address, <code>*p</code> reads through it. Use pointer receivers when a method mutates or the struct is big. Otherwise values are fine.</li>
+  <li><strong>Interfaces are implicit.</strong> If your type has the methods, it satisfies the interface. No <code>implements</code> keyword. <code>io.Reader</code> is the one you'll meet most.</li>
+  <li><strong><code>defer</code></strong> runs a call when the function returns. Used for <code>Close()</code> and <code>Unlock()</code>. Reads as "cleanup, guaranteed".</li>
+  <li><strong>Slices</strong> are views over an array. <code>append</code> may or may not allocate. Treat the return value of <code>append</code> as the new slice, always.</li>
+  <li><strong>Maps</strong> must be created with <code>make</code> (or a literal) before writing. Iteration order is random by design.</li>
+  <li><strong>Capitalization is visibility.</strong> <code>Parse</code> is public, <code>parse</code> is private to the package. In a single-package interview this barely matters, but it signals intent.</li>
+  <li><strong><code>gofmt</code> is law.</strong> There is one formatting style. Run it and never argue about braces.</li>
+</ul>
+
+<!-- 2 -->
+<h2 id="setup">2. Project setup and commands</h2>
+<p>The environment is a browser VS Code with a terminal. The first thing you (or Claude Code) do:</p>
+<pre>go mod init interview          <span class="c"># creates go.mod; needed before `go test` works</span>
+go run .                       <span class="c"># build and run package main in this folder</span>
+go test ./...                  <span class="c"># run all tests</span>
+go test -run TestParse -v      <span class="c"># one test, verbose</span>
+go test -race ./...            <span class="c"># race detector: run this if you used goroutines or a mutex</span>
+go vet ./...                   <span class="c"># static checks, catches real bugs (unused results, printf mistakes)</span>
+gofmt -l .                     <span class="c"># lists files that aren't formatted; empty output = clean</span></pre>
+
+<h3>File layout for a 60-minute problem</h3>
+<pre>interview/
+  go.mod
+  main.go          <span class="c">// tiny: read input, call the core, print output, exit code</span>
+  model.go         <span class="c">// types: Transaction, Report, sentinel errors</span>
+  parse.go         <span class="c">// input -> []Transaction</span>
+  core.go          <span class="c">// the actual logic</span>
+  parse_test.go
+  core_test.go
+  NOTES.md         <span class="c">// your plan and edge cases, visible to the interviewer</span></pre>
+<div class="why">Separating parse / core / main means the core logic takes plain Go values and is trivially testable. <code>main</code> stays under 30 lines. You can say "the core has no idea where the data came from" and mean it.</div>
+
+<!-- 3 -->
+<h2 id="errors">3. Errors: the senior way</h2>
+<p>This is the single area where non-experts and experienced Go engineers look most different. Get this right and the whole session reads as careful.</p>
+
+<h3>Rule 1: return errors, never panic on input</h3>
+<pre><span class="c">// Bad: crashes the program on bad data.</span>
+<span class="k">func</span> mustParse(s string) int64 {
+    n, err := strconv.ParseInt(s, 10, 64)
+    <span class="k">if</span> err != nil {
+        panic(err)
+    }
+    <span class="k">return</span> n
+}
+
+<span class="c">// Good: the caller decides what a failure means.</span>
+<span class="k">func</span> parseInt(s string) (int64, error) {
+    n, err := strconv.ParseInt(s, 10, 64)
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> 0, fmt.Errorf(<span class="s">"parse %q as integer: %w"</span>, s, err)
+    }
+    <span class="k">return</span> n, nil
+}</pre>
+<div class="why"><code>panic</code> is for programmer bugs, not for user input. In a payments context, a malformed line should be a visible, handled failure, not a crash. Say that.</div>
+
+<h3>Rule 2: wrap with <code>%w</code> and add context</h3>
+<p>Every time an error passes through a layer, add what that layer knows. <code>%w</code> keeps the original error inspectable.</p>
+<pre><span class="k">func</span> ParseFile(path string) ([]Transaction, error) {
+    f, err := os.Open(path)
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> nil, fmt.Errorf(<span class="s">"open %s: %w"</span>, path, err)
+    }
+    <span class="k">defer</span> f.Close()
+
+    txs, err := ParseTransactions(f)
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> nil, fmt.Errorf(<span class="s">"parse %s: %w"</span>, path, err)
+    }
+    <span class="k">return</span> txs, nil
+}
+<span class="c">// Result reads like a stack: "parse input.csv: line 12: malformed record: amount "12.3.4""</span></pre>
+
+<h3>Rule 3: sentinel errors for cases the caller must distinguish</h3>
+<pre><span class="k">var</span> (
+    ErrMalformed = errors.New(<span class="s">"malformed record"</span>)
+    ErrDuplicate = errors.New(<span class="s">"duplicate transaction"</span>)
+)
+
+<span class="c">// Producer wraps the sentinel:</span>
+<span class="k">return</span> Transaction{}, fmt.Errorf(<span class="s">"%w: empty id"</span>, ErrMalformed)
+
+<span class="c">// Consumer checks identity through any number of wraps:</span>
+<span class="k">if</span> errors.Is(err, ErrMalformed) {
+    log.Printf(<span class="s">"skipping bad line: %v"</span>, err)
+    <span class="k">continue</span>
+}</pre>
+<div class="why">Callers branching on <code>errors.Is</code> instead of string-matching error messages is a clear marker of someone who has maintained Go in production.</div>
+
+<h3>Rule 4: handle each error exactly once</h3>
+<p>Either log it, or return it, or both with a reason. Logging and then returning the same error at every layer produces duplicate noise in production logs. Pick one place, usually <code>main</code>.</p>
+<pre><span class="k">func</span> main() {
+    <span class="k">if</span> err := run(os.Args[1:], os.Stdin, os.Stdout); err != nil {
+        fmt.Fprintln(os.Stderr, <span class="s">"error:"</span>, err)
+        os.Exit(1)
+    }
+}</pre>
+<div class="why">The <code>run()</code> pattern: <code>main</code> only translates an error into an exit code. Everything else is testable because it takes <code>io.Reader</code>/<code>io.Writer</code>, not files.</div>
+
+<!-- 4 -->
+<h2 id="model">4. Modeling data (and money)</h2>
+
+<h3>Money is an integer</h3>
+<pre><span class="c">// Never: float64 can't represent 0.1 exactly. 0.1 + 0.2 != 0.3.</span>
+<span class="k">type</span> Transaction <span class="k">struct</span> { Amount float64 }
+
+<span class="c">// Always: smallest unit, as an integer. Name the unit.</span>
+<span class="k">type</span> Transaction <span class="k">struct</span> { AmountCents int64 }
+
+<span class="c">// Parse "12.34" into 1234 without ever touching a float.</span>
+<span class="k">func</span> parseCents(s string) (int64, error) {
+    neg := strings.HasPrefix(s, <span class="s">"-"</span>)
+    whole, frac, _ := strings.Cut(strings.TrimPrefix(s, <span class="s">"-"</span>), <span class="s">"."</span>)
+    <span class="k">if</span> whole == <span class="s">""</span> || !isDigits(whole) || !isDigits(frac) {   <span class="c">// "", ".5", "--5", "1.x"</span>
+        <span class="k">return</span> 0, fmt.Errorf(<span class="s">"amount %q is not a decimal number"</span>, s)
+    }
+    <span class="k">if</span> len(frac) &gt; 2 {
+        <span class="k">return</span> 0, fmt.Errorf(<span class="s">"amount %q has more than 2 decimals"</span>, s)
+    }
+    <span class="k">for</span> len(frac) &lt; 2 {
+        frac += <span class="s">"0"</span>
+    }
+    n, err := strconv.ParseInt(whole+frac, 10, 64)
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> 0, fmt.Errorf(<span class="s">"amount %q: %w"</span>, s, err)
+    }
+    <span class="k">if</span> neg {
+        n = -n
+    }
+    <span class="k">return</span> n, nil
+}
+
+<span class="k">func</span> isDigits(s string) bool {
+    <span class="k">for</span> _, r := <span class="k">range</span> s {
+        <span class="k">if</span> r &lt; <span class="s">'0'</span> || r &gt; <span class="s">'9'</span> {
+            <span class="k">return</span> false
+        }
+    }
+    <span class="k">return</span> true
+}</pre>
+<div class="warn">Check the empty string before parsing. Without the <code>isDigits</code> guard, <code>""</code> pads to <code>"00"</code> and parses as 0 with no error, and <code>"--5"</code> comes back as +500. The table in §7 has a row for each.</div>
+<div class="why">Saying "I'm storing cents as int64 because floats lose precision and this is money" to a fintech interviewer is worth more than any algorithm. It's the first thing Andrey's team would check in a code review.</div>
+
+<h3>Named types for IDs and states</h3>
+<pre><span class="k">type</span> AccountID string              <span class="c">// can't accidentally pass a TransactionID where an AccountID goes</span>
+
+<span class="k">type</span> Status int                    <span class="c">// an "enum": a named int with constants</span>
+<span class="k">const</span> (
+    StatusPending Status = iota    <span class="c">// 0</span>
+    StatusPaid                     <span class="c">// 1</span>
+    StatusFailed                   <span class="c">// 2</span>
+)
+
+<span class="k">func</span> (s Status) String() string {
+    <span class="k">switch</span> s {
+    <span class="k">case</span> StatusPending: <span class="k">return</span> <span class="s">"pending"</span>
+    <span class="k">case</span> StatusPaid:    <span class="k">return</span> <span class="s">"paid"</span>
+    <span class="k">case</span> StatusFailed:  <span class="k">return</span> <span class="s">"failed"</span>
+    }
+    <span class="k">return</span> fmt.Sprintf(<span class="s">"Status(%d)"</span>, int(s))
+}</pre>
+
+<h3>Time</h3>
+<ul>
+  <li>Use <code>time.Time</code>, not strings or ints, inside the program. Parse at the edge, once.</li>
+  <li>Compare with <code>a.Before(b)</code>, <code>a.After(b)</code>, <code>a.Equal(b)</code>. Never <code>==</code> (it compares internal fields including location).</li>
+  <li>Differences are <code>time.Duration</code>: <code>b.Sub(a) &lt;= 5*time.Minute</code>.</li>
+  <li>Parse with a layout: <code>time.Parse(time.RFC3339, s)</code>. Be explicit about UTC in tests.</li>
+</ul>
+
+<!-- 5 -->
+<h2 id="collections">5. Slices and maps without surprises</h2>
+
+<pre><span class="c">// Nil map: reading is fine, writing panics.</span>
+<span class="k">var</span> m map[string]int
+m[<span class="s">"a"</span>] = 1                        <span class="c">// PANIC: assignment to entry in nil map</span>
+m = make(map[string]int)          <span class="c">// now it's safe</span>
+
+<span class="c">// Two-value lookup tells you "present?" separately from the value.</span>
+v, ok := m[<span class="s">"a"</span>]
+<span class="k">if</span> !ok { <span class="c">/* key absent */</span> }
+
+<span class="c">// Map iteration order is random. If output order matters, sort the keys.</span>
+keys := make([]string, 0, len(m))
+<span class="k">for</span> k := <span class="k">range</span> m {
+    keys = append(keys, k)
+}
+sort.Strings(keys)
+
+<span class="c">// Sorting a slice of structs (Go 1.21+). Copy first if the caller's order matters.</span>
+sorted := slices.Clone(txs)
+slices.SortFunc(sorted, <span class="k">func</span>(a, b Transaction) int {
+    <span class="k">return</span> a.Timestamp.Compare(b.Timestamp)
+})
+
+<span class="c">// A "set" is a map to struct{} (zero bytes per value) or to bool (more readable).</span>
+seen := make(map[string]struct{})
+seen[id] = struct{}{}
+_, exists := seen[id]
+
+<span class="c">// Preallocate when you know the size: avoids repeated growth.</span>
+out := make([]Transaction, 0, len(input))</pre>
+<div class="warn">A <code>range</code> loop copies each element. <code>for _, tx := range txs { tx.Amount = 0 }</code> changes nothing. Use the index: <code>txs[i].Amount = 0</code>, or a slice of pointers.</div>
+
+<!-- 6 -->
+<h2 id="io">6. Parsing input safely</h2>
+<p>Three practice problems start with "parse this". The pattern is the same every time: take an <code>io.Reader</code>, stream it, validate each record, report line numbers in errors.</p>
+
+<pre><span class="k">func</span> ParseTransactions(r io.Reader) ([]Transaction, error) {
+    cr := csv.NewReader(r)
+    cr.FieldsPerRecord = 4          <span class="c">// csv package rejects rows with the wrong count for us</span>
+
+    <span class="k">var</span> out []Transaction
+    line := 0
+    <span class="k">for</span> {
+        rec, err := cr.Read()
+        <span class="k">if</span> errors.Is(err, io.EOF) {
+            <span class="k">break</span>
+        }
+        line++
+        <span class="k">if</span> err != nil {
+            <span class="k">return</span> nil, fmt.Errorf(<span class="s">"line %d: %w"</span>, line, err)
+        }
+        <span class="k">if</span> line == 1 &amp;&amp; rec[0] == <span class="s">"id"</span> {
+            <span class="k">continue</span>                    <span class="c">// header</span>
+        }
+        tx, err := parseRecord(rec)
+        <span class="k">if</span> err != nil {
+            <span class="k">return</span> nil, fmt.Errorf(<span class="s">"line %d: %w"</span>, line, err)
+        }
+        out = append(out, tx)
+    }
+    <span class="k">return</span> out, nil
+}
+
+<span class="k">func</span> parseRecord(rec []string) (Transaction, error) {
+    <span class="k">if</span> rec[0] == <span class="s">""</span> {
+        <span class="k">return</span> Transaction{}, fmt.Errorf(<span class="s">"%w: empty id"</span>, ErrMalformed)
+    }
+    cents, err := parseCents(rec[2])
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> Transaction{}, fmt.Errorf(<span class="s">"%w: %v"</span>, ErrMalformed, err)
+    }
+    ts, err := time.Parse(time.RFC3339, rec[3])
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> Transaction{}, fmt.Errorf(<span class="s">"%w: timestamp %q"</span>, ErrMalformed, rec[3])
+    }
+    <span class="k">return</span> Transaction{ID: rec[0], AccountID: rec[1], AmountCents: cents, Timestamp: ts}, nil
+}</pre>
+<div class="why"><code>io.Reader</code> instead of a filename means the test passes <code>strings.NewReader("id,acc,amount,ts\n...")</code> and never touches disk. Line numbers in errors mean a support engineer can find the bad row at 3am. Both are things you can say out loud.</div>
+
+<p>If the input could be huge, say so and switch to processing record by record instead of building a slice. Same loop shape, you just call the core per record. Don't do it unless asked; mention it.</p>
+
+<!-- 7 -->
+<h2 id="tests">7. Table-driven tests</h2>
+<p>This is <em>the</em> idiomatic Go test shape. Interviewers recognize it instantly. No assertion library needed.</p>
+
+<pre><span class="k">func</span> TestParseCents(t *testing.T) {
+    tests := []<span class="k">struct</span> {
+        name    string
+        in      string
+        want    int64
+        wantErr bool
+    }{
+        {<span class="s">"whole"</span>, <span class="s">"12"</span>, 1200, false},
+        {<span class="s">"two decimals"</span>, <span class="s">"12.34"</span>, 1234, false},
+        {<span class="s">"one decimal"</span>, <span class="s">"12.3"</span>, 1230, false},
+        {<span class="s">"negative"</span>, <span class="s">"-0.05"</span>, -5, false},
+        {<span class="s">"zero"</span>, <span class="s">"0"</span>, 0, false},
+        {<span class="s">"three decimals rejected"</span>, <span class="s">"1.234"</span>, 0, true},
+        {<span class="s">"not a number"</span>, <span class="s">"abc"</span>, 0, true},
+        {<span class="s">"empty"</span>, <span class="s">""</span>, 0, true},
+        {<span class="s">"no whole part"</span>, <span class="s">".5"</span>, 0, true},
+        {<span class="s">"double sign"</span>, <span class="s">"--5"</span>, 0, true},
+    }
+    <span class="k">for</span> _, tc := <span class="k">range</span> tests {
+        t.Run(tc.name, <span class="k">func</span>(t *testing.T) {
+            got, err := parseCents(tc.in)
+            <span class="k">if</span> (err != nil) != tc.wantErr {
+                t.Fatalf(<span class="s">"err = %v, wantErr %v"</span>, err, tc.wantErr)
+            }
+            <span class="k">if</span> got != tc.want {
+                t.Errorf(<span class="s">"got %d, want %d"</span>, got, tc.want)
+            }
+        })
+    }
+}</pre>
+
+<h3>Test habits that show care</h3>
+<ul>
+  <li>Case names describe the behavior, not the input: <code>"exactly at window boundary"</code>, not <code>"case 3"</code>.</li>
+  <li><code>t.Fatalf</code> when continuing makes no sense (nil result); <code>t.Errorf</code> when you want to see all failures in one run.</li>
+  <li>Test the error <em>kind</em> with <code>errors.Is(err, ErrMalformed)</code>, not the message string.</li>
+  <li>One behavior per case. If a case has three asserts about unrelated things, split it.</li>
+  <li>Boundaries get their own case: window exactly equal, cap exactly reached, TTL exactly expired.</li>
+  <li>Fixed times in UTC: <code>time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)</code>. Never <code>time.Now()</code> in a test.</li>
+</ul>
+<div class="warn">When Claude Code writes tests, read the expectations. It will sometimes write a test that asserts whatever the code currently does, bug included. Catching one of those out loud is a highlight moment.</div>
+
+<!-- 8 -->
+<h2 id="inject">8. Injecting time and I/O</h2>
+<p>The two things that make code untestable are <code>time.Now()</code> and the filesystem. Senior Go pushes both to the edge.</p>
+
+<pre><span class="k">type</span> Store <span class="k">struct</span> {
+    data map[string]entry
+    now  <span class="k">func</span>() time.Time       <span class="c">// injected clock; production uses time.Now</span>
+}
+
+<span class="k">func</span> NewStore() *Store {
+    <span class="k">return</span> &amp;Store{data: make(map[string]entry), now: time.Now}
+}
+
+<span class="c">// In a test:</span>
+clock := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+s := NewStore()
+s.now = <span class="k">func</span>() time.Time { <span class="k">return</span> clock }
+<span class="c">// ... later:</span>
+clock = clock.Add(time.Second)     <span class="c">// "time passes", deterministically</span></pre>
+<div class="why">A function-typed field is the lightest way to inject a clock in Go. No interface, no mocking library. Say "I'm injecting the clock so expiry tests are deterministic" and move on. It's a one-liner that signals years of experience.</div>
+
+<p>Same idea for I/O: core functions take <code>io.Reader</code> and <code>io.Writer</code>. Only <code>main</code> knows about <code>os.Stdin</code>, files, or <code>os.Stdout</code>.</p>
+
+<!-- 9 -->
+<h2 id="concurrency">9. Just enough concurrency</h2>
+<p>You probably won't need goroutines in 60 minutes. You might need a mutex if the store or rate limiter is "safe for concurrent use". Know this shape and nothing more.</p>
+
+<pre><span class="k">type</span> Store <span class="k">struct</span> {
+    mu   sync.Mutex             <span class="c">// protects data. Say that. Put it right above what it guards.</span>
+    data map[string]entry
+}
+
+<span class="k">func</span> (s *Store) Set(key, value string) {
+    s.mu.Lock()
+    <span class="k">defer</span> s.mu.Unlock()         <span class="c">// defer = unlocked on every return path, including early ones</span>
+    s.data[key] = entry{value: value}
+}</pre>
+<ul>
+  <li>Lock, <code>defer</code> Unlock, do the work. Never return between Lock and Unlock without defer.</li>
+  <li>Keep the critical section small. Don't do I/O or parsing while holding the lock.</li>
+  <li><code>sync.RWMutex</code> if reads vastly outnumber writes. Mention it, don't reach for it by default.</li>
+  <li>If you used a mutex, run <code>go test -race ./...</code> on camera. That's the move.</li>
+  <li>If asked about scaling: "I'd shard the map by key hash to reduce lock contention" is a complete, honest answer.</li>
+</ul>
+<p>If the problem does involve concurrent work, the one more thing to know is <code>context.Context</code> as the first parameter of anything that could be cancelled: <code>func Process(ctx context.Context, ...)</code>, and <code>if err := ctx.Err(); err != nil { return err }</code> inside long loops.</p>
+
+<!-- 10 -->
+<h2 id="reliability">10. Reliability patterns</h2>
+<p>This is Andrey's world. You don't need to implement all of these; you need to name the one that applies and implement it if cheap.</p>
+
+<h3>Idempotency: "safe to run twice"</h3>
+<pre><span class="c">// Processing is idempotent if re-running with the same input changes nothing.</span>
+<span class="k">type</span> Processor <span class="k">struct</span> {
+    processed map[string]struct{}      <span class="c">// IDs already applied; in prod this is a DB table or a Kafka offset</span>
+}
+
+<span class="k">func</span> (p *Processor) Apply(tx Transaction) error {
+    <span class="k">if</span> _, done := p.processed[tx.ID]; done {
+        <span class="k">return</span> nil                  <span class="c">// already applied; not an error, just a no-op</span>
+    }
+    <span class="k">if</span> err := p.apply(tx); err != nil {
+        <span class="k">return</span> fmt.Errorf(<span class="s">"apply %s: %w"</span>, tx.ID, err)
+    }
+    p.processed[tx.ID] = struct{}{}   <span class="c">// mark only after success</span>
+    <span class="k">return</span> nil
+}</pre>
+<div class="say">If this job gets retried, we'll see the same transactions again. I'm keying on the transaction ID so a second run is a no-op rather than a double charge.</div>
+
+<h3>Fail fast vs skip and continue</h3>
+<p>Decide explicitly, say why, and make it a parameter if it's cheap:</p>
+<ul>
+  <li><strong>Fail fast</strong> (return on first bad record): when partial results are dangerous. Money movement, ledgers.</li>
+  <li><strong>Skip and report</strong> (collect bad lines, continue): when one bad row shouldn't block a thousand good ones. Reports, analytics.</li>
+</ul>
+<pre><span class="k">type</span> ParseResult <span class="k">struct</span> {
+    Transactions []Transaction
+    Rejected     []RejectedLine     <span class="c">// line number + reason; never silently dropped</span>
+}</pre>
+
+<h3>Atomic output</h3>
+<p>If you write a file, write to a temp file and rename. A crash mid-write leaves the old file intact, never a half-written one.</p>
+<pre>tmp, err := os.CreateTemp(filepath.Dir(path), <span class="s">"report-*.tmp"</span>)
+<span class="c">// ... write to tmp, tmp.Close()</span>
+<span class="k">if</span> err := os.Rename(tmp.Name(), path); err != nil { <span class="c">/* ... */</span> }</pre>
+<p>You won't implement this in the session. You'll mention it in the final walkthrough.</p>
+
+<h3>Validate at the boundary, trust inside</h3>
+<p>Parse and validate once at the edge, produce a well-typed <code>Transaction</code>, and let the core assume it's valid. Don't re-check "is amount parseable" in five places.</p>
+
+<h3>Observability in one line</h3>
+<p>You won't build logging. But in the walkthrough: "I'd log at the parser with line number and reason, and emit a counter for rejected records, because that's what you'd alert on."</p>
+
+<!-- 11 -->
+<h2 id="worked1">11. Worked example: duplicate detection</h2>
+<p>Practice problem 1, the core. Read it until every line is obvious. This is roughly what a good 25-minute build looks like.</p>
+
+<pre><span class="c">// core.go</span>
+<span class="k">package</span> main
+
+<span class="k">import</span> (
+    <span class="s">"slices"</span>
+    <span class="s">"time"</span>
+)
+
+<span class="k">type</span> Report <span class="k">struct</span> {
+    Unique     []Transaction
+    Duplicates []Transaction
+}
+
+<span class="c">// FindDuplicates flags a transaction as a duplicate when the same account</span>
+<span class="c">// has a transaction with the same amount within `window` of an earlier one.</span>
+<span class="c">// The input slice is not modified.</span>
+<span class="k">func</span> FindDuplicates(txs []Transaction, window time.Duration) Report {
+    sorted := slices.Clone(txs)
+    slices.SortFunc(sorted, <span class="k">func</span>(a, b Transaction) int {
+        <span class="k">return</span> a.Timestamp.Compare(b.Timestamp)
+    })
+
+    <span class="k">type</span> key <span class="k">struct</span> {
+        account string
+        cents   int64
+    }
+    lastSeen := make(map[key]time.Time)
+
+    <span class="k">var</span> rep Report
+    <span class="k">for</span> _, tx := <span class="k">range</span> sorted {
+        k := key{tx.AccountID, tx.AmountCents}
+        <span class="k">if</span> prev, ok := lastSeen[k]; ok &amp;&amp; tx.Timestamp.Sub(prev) &lt;= window {
+            rep.Duplicates = append(rep.Duplicates, tx)
+            <span class="k">continue</span>
+        }
+        lastSeen[k] = tx.Timestamp
+        rep.Unique = append(rep.Unique, tx)
+    }
+    <span class="k">return</span> rep
+}</pre>
+
+<p>Things to narrate while this comes together:</p>
+<ul>
+  <li>"Sorting a clone so the caller's slice isn't reordered under them."</li>
+  <li>"The key is account plus amount; a struct key in a map is fine and clearer than string concatenation."</li>
+  <li>"<code>&lt;=</code> on the window: a transaction exactly at the boundary counts as a duplicate. I'll write a test for that boundary either way."</li>
+  <li>"I'm comparing against the last <em>unique</em> one, not the last seen. Otherwise a long chain of duplicates would all pass." Then point at the <code>continue</code>.</li>
+</ul>
+
+<pre><span class="c">// core_test.go</span>
+<span class="k">func</span> TestFindDuplicates(t *testing.T) {
+    base := time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC)
+    tx := <span class="k">func</span>(id string, cents int64, offset time.Duration) Transaction {
+        <span class="k">return</span> Transaction{ID: id, AccountID: <span class="s">"acc-1"</span>, AmountCents: cents, Timestamp: base.Add(offset)}
+    }
+
+    tests := []<span class="k">struct</span> {
+        name    string
+        in      []Transaction
+        window  time.Duration
+        wantDup int
+    }{
+        {<span class="s">"empty input"</span>, nil, time.Minute, 0},
+        {<span class="s">"single"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0)}, time.Minute, 0},
+        {<span class="s">"inside window"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0), tx(<span class="s">"b"</span>, 100, 30*time.Second)}, time.Minute, 1},
+        {<span class="s">"outside window"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0), tx(<span class="s">"b"</span>, 100, 2*time.Minute)}, time.Minute, 0},
+        {<span class="s">"exactly at boundary"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0), tx(<span class="s">"b"</span>, 100, time.Minute)}, time.Minute, 1},
+        {<span class="s">"different amount"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0), tx(<span class="s">"b"</span>, 101, 10*time.Second)}, time.Minute, 0},
+        {<span class="s">"out of order input"</span>, []Transaction{tx(<span class="s">"b"</span>, 100, 30*time.Second), tx(<span class="s">"a"</span>, 100, 0)}, time.Minute, 1},
+        {<span class="s">"chain of three"</span>, []Transaction{tx(<span class="s">"a"</span>, 100, 0), tx(<span class="s">"b"</span>, 100, 40*time.Second), tx(<span class="s">"c"</span>, 100, 80*time.Second)}, time.Minute, 1},
+    }
+    <span class="k">for</span> _, tc := <span class="k">range</span> tests {
+        t.Run(tc.name, <span class="k">func</span>(t *testing.T) {
+            got := FindDuplicates(tc.in, tc.window)
+            <span class="k">if</span> len(got.Duplicates) != tc.wantDup {
+                t.Fatalf(<span class="s">"got %d duplicates, want %d"</span>, len(got.Duplicates), tc.wantDup)
+            }
+            <span class="k">if</span> len(got.Unique)+len(got.Duplicates) != len(tc.in) {
+                t.Errorf(<span class="s">"lost transactions: %d in, %d out"</span>, len(tc.in), len(got.Unique)+len(got.Duplicates))
+            }
+        })
+    }
+}</pre>
+<p>Look at the "chain of three" case. With a 1-minute window, b (at 40s) is a duplicate of a. Is c (at 80s) a duplicate? It's 80s after a, the last <em>unique</em>, so no. That's a design decision the test pins down. Either answer is defensible; the senior move is that you decided and wrote the test.</p>
+
+<!-- 12 -->
+<h2 id="worked2">12. Worked example: TTL key-value store</h2>
+<pre><span class="k">type</span> entry <span class="k">struct</span> {
+    value     string
+    expiresAt time.Time
+}
+
+<span class="k">type</span> Store <span class="k">struct</span> {
+    mu   sync.Mutex
+    data map[string]entry
+    now  <span class="k">func</span>() time.Time
+}
+
+<span class="k">func</span> NewStore() *Store {
+    <span class="k">return</span> &amp;Store{data: make(map[string]entry), now: time.Now}
+}
+
+<span class="k">func</span> (s *Store) Set(key, value string, ttl time.Duration) {
+    s.mu.Lock()
+    <span class="k">defer</span> s.mu.Unlock()
+    s.data[key] = entry{value: value, expiresAt: s.now().Add(ttl)}
+}
+
+<span class="c">// Get returns the value and true if present and not expired.</span>
+<span class="c">// Expired entries are removed lazily on read.</span>
+<span class="k">func</span> (s *Store) Get(key string) (string, bool) {
+    s.mu.Lock()
+    <span class="k">defer</span> s.mu.Unlock()
+    e, ok := s.data[key]
+    <span class="k">if</span> !ok {
+        <span class="k">return</span> <span class="s">""</span>, false
+    }
+    <span class="k">if</span> !s.now().Before(e.expiresAt) {      <span class="c">// now &gt;= expiresAt: expired, boundary inclusive</span>
+        delete(s.data, key)
+        <span class="k">return</span> <span class="s">""</span>, false
+    }
+    <span class="k">return</span> e.value, true
+}
+
+<span class="k">func</span> (s *Store) Delete(key string) {
+    s.mu.Lock()
+    <span class="k">defer</span> s.mu.Unlock()
+    delete(s.data, key)                   <span class="c">// deleting a missing key is a no-op in Go. Idempotent for free.</span>
+}</pre>
+
+<pre><span class="k">func</span> TestStoreExpiry(t *testing.T) {
+    clock := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+    s := NewStore()
+    s.now = <span class="k">func</span>() time.Time { <span class="k">return</span> clock }
+
+    s.Set(<span class="s">"k"</span>, <span class="s">"v"</span>, time.Second)
+    <span class="k">if</span> v, ok := s.Get(<span class="s">"k"</span>); !ok || v != <span class="s">"v"</span> {
+        t.Fatalf(<span class="s">"before expiry: got (%q, %v), want (\"v\", true)"</span>, v, ok)
+    }
+
+    clock = clock.Add(time.Second)         <span class="c">// exactly at the boundary</span>
+    <span class="k">if</span> _, ok := s.Get(<span class="s">"k"</span>); ok {
+        t.Fatal(<span class="s">"at boundary: expected expired"</span>)
+    }
+}
+
+<span class="k">func</span> TestStoreOverwriteResetsTTL(t *testing.T) {
+    clock := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+    s := NewStore()
+    s.now = <span class="k">func</span>() time.Time { <span class="k">return</span> clock }
+
+    s.Set(<span class="s">"k"</span>, <span class="s">"v1"</span>, time.Second)
+    clock = clock.Add(500 * time.Millisecond)
+    s.Set(<span class="s">"k"</span>, <span class="s">"v2"</span>, time.Second)         <span class="c">// new TTL from now</span>
+    clock = clock.Add(800 * time.Millisecond) <span class="c">// 1.3s after first set, 0.8s after second</span>
+    <span class="k">if</span> v, ok := s.Get(<span class="s">"k"</span>); !ok || v != <span class="s">"v2"</span> {
+        t.Fatalf(<span class="s">"got (%q, %v), want (\"v2\", true)"</span>, v, ok)
+    }
+}</pre>
+<p>Talking points: lazy expiry vs a background sweeper (lazy is simpler, memory grows until read; say you'd add a sweeper goroutine with a ticker for production). Boundary inclusive or exclusive (you picked inclusive; the test enforces it). Zero TTL means "expires immediately", say whether that's intended.</p>
+
+<!-- 13 -->
+<h2 id="worked3">13. Sketch: token bucket</h2>
+<pre><span class="k">type</span> Bucket <span class="k">struct</span> {
+    mu        sync.Mutex
+    capacity  float64
+    tokens    float64
+    perSecond float64
+    last      time.Time
+    now       <span class="k">func</span>() time.Time
+}
+
+<span class="k">func</span> NewBucket(capacity, perSecond float64) *Bucket {
+    <span class="k">return</span> &amp;Bucket{capacity: capacity, tokens: capacity, perSecond: perSecond, last: time.Now(), now: time.Now}
+}
+
+<span class="k">func</span> (b *Bucket) Allow() bool {
+    b.mu.Lock()
+    <span class="k">defer</span> b.mu.Unlock()
+    t := b.now()
+    elapsed := t.Sub(b.last).Seconds()
+    <span class="k">if</span> elapsed &lt; 0 {
+        elapsed = 0                     <span class="c">// clock moved backwards (or a test swapped it): never take tokens away</span>
+    }
+    b.tokens = math.Min(b.capacity, b.tokens+elapsed*b.perSecond)
+    b.last = t
+    <span class="k">if</span> b.tokens &gt;= 1 {
+        b.tokens--
+        <span class="k">return</span> true
+    }
+    <span class="k">return</span> false
+}</pre>
+<p>Float is fine here: tokens aren't money, and fractional refill is the point. Say that, because you just told them floats are bad for money and they'll notice the switch. Tests: burst of <code>capacity</code> calls all allowed, the next denied, advance the clock, one more allowed.</p>
+<div class="warn"><code>NewBucket</code> sets <code>last</code> from the real clock. A test that then swaps in a fixed past date sees a negative <code>elapsed</code> on the first call. Without the clamp, that drains the bucket and the burst test fails on call one. The clamp also covers a wall clock that steps backwards in production.</div>
+
+<!-- 14 -->
+<h2 id="mistakes">14. Mistakes that give you away</h2>
+<div class="tablewrap">
+<table>
+<tr><th>Mistake</th><th>What it looks like</th><th>Fix</th></tr>
+<tr><td>Ignoring an error</td><td><code>n, _ := strconv.Atoi(s)</code></td><td>Handle it or justify the <code>_</code> out loud ("can't fail here because X").</td></tr>
+<tr><td>Shadowing <code>err</code></td><td><code>err := f()</code> inside an <code>if</code> block when an outer <code>err</code> exists; the outer one never gets set.</td><td>Use <code>=</code> for an existing variable. <code>go vet</code> catches some of these.</td></tr>
+<tr><td>Nil map write</td><td><code>var m map[string]int; m["a"] = 1</code></td><td><code>make(map[string]int)</code>, or a constructor that does it.</td></tr>
+<tr><td>Float for money</td><td><code>Amount float64</code></td><td><code>AmountCents int64</code>.</td></tr>
+<tr><td>Panic on input</td><td><code>panic("bad line")</code></td><td>Return an error with context.</td></tr>
+<tr><td>Forgetting <code>Close</code></td><td><code>f, _ := os.Open(p)</code> and nothing after</td><td><code>defer f.Close()</code> right after the error check.</td></tr>
+<tr><td>Mutating in <code>range</code></td><td><code>for _, x := range xs { x.N = 1 }</code></td><td>Index the slice: <code>xs[i].N = 1</code>.</td></tr>
+<tr><td>Relying on map order</td><td>Printing a map and expecting stable output</td><td>Sort the keys first.</td></tr>
+<tr><td>Comparing times with <code>==</code></td><td><code>a == b</code></td><td><code>a.Equal(b)</code>.</td></tr>
+<tr><td>Lock without defer</td><td><code>mu.Lock(); if x { return }; mu.Unlock()</code></td><td><code>defer mu.Unlock()</code> immediately after <code>Lock()</code>.</td></tr>
+<tr><td>Giant function</td><td>Parse + logic + print in one 120-line <code>main</code></td><td>Three functions, three files. The guide literally asks for this.</td></tr>
+<tr><td>Testing the happy path only</td><td>One test with valid input</td><td>Table with empty / malformed / boundary / duplicate cases.</td></tr>
+</table>
+</div>
+
+<!-- 15 -->
+<h2 id="phrases">15. Phrases that signal seniority</h2>
+<p>Each of these is true, specific, and takes five seconds. Use the ones that apply; don't recite the list.</p>
+<ul>
+  <li>"Money as int64 cents, not float, because floats can't represent decimal fractions exactly."</li>
+  <li>"I'm wrapping with <code>%w</code> so the caller can <code>errors.Is</code> on it without parsing the message."</li>
+  <li>"Panic is for programmer bugs. Bad input is expected, so it's an error."</li>
+  <li>"The core takes an <code>io.Reader</code> so tests use a string and never touch disk."</li>
+  <li>"Injecting the clock so the expiry test is deterministic."</li>
+  <li>"Table-driven tests, one behavior per case, boundaries get their own row."</li>
+  <li>"Keying on the transaction ID so a retry is a no-op, not a double charge."</li>
+  <li>"Fail fast here because partial results would be worse than no results." (or the reverse, with the reason)</li>
+  <li>"Cloning before sort so I don't reorder the caller's data."</li>
+  <li>"Mutex right above the fields it protects, defer unlock, critical section as small as possible. Let me run the race detector."</li>
+  <li>"Validate once at the edge; inside, a Transaction is trusted."</li>
+  <li>"Zero values are meaningful here: an empty report is a valid report, no nil checks needed."</li>
+  <li>"With more time: a sweeper goroutine for expired keys, structured logs at the parser, and a metric on rejected lines."</li>
+</ul>
+
+<p class="foot">Companion to the Nubank AI Coding Interview Playbook. Go version assumed 1.21 or newer (for <code>slices</code> and <code>time.Compare</code>); if the environment is older, <code>sort.Slice</code> does the same job.</p>
+
+</main>
+</body>
+</html>

@@ -8,6 +8,9 @@ tags:
 
 # Go Programming
 
+> [!tip] Interview-sized Go
+> [[wiki/ai-coding/nubank-ai-coding-interview#Go for the interview|Go for the Nubank AI coding interview]] has the subset to know before an interview. It covers errors with `%w`, money as `int64` cents, table-driven tests and an injected clock. Its worked code compiles and passes its tests.
+
 ## Language Fundamentals
 
 - [[wiki/go/types-and-variables|Types & Variables]]
