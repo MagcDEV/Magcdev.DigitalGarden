@@ -139,6 +139,15 @@
   summary:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   details p:last-child, details ul:last-child { margin-bottom: 4px; }
 
+  .ask-n { display: inline-block; min-width: 1.6em; font-family: "IBM Plex Mono", monospace; color: var(--accent-ink); font-weight: 500; }
+  .where { font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
+  .new { display: inline-block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 999px; padding: 0 7px; margin-left: 6px; vertical-align: 2px; font-style: normal; }
+  @media (max-width: 560px) {
+    table.asks tr:first-child { display: none; }
+    table.asks tr { display: block; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    table.asks td { display: block; border: 0; padding: 2px 0; }
+    table.asks td.where { padding-top: 6px; }
+  }
   .foot { color: var(--muted); font-size: 0.9rem; margin-top: 50px; border-top: 1px solid var(--line); padding-top: 16px; }
 
   .theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 10; width: 40px; height: 40px; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
@@ -198,7 +207,8 @@
 <div class="frame">They are not grading the program. They are grading the engineer who directed it.</div>
 
 <nav class="toc" aria-label="Sections">
-<ol>
+<ol start="0">
+  <li><a href="#panel">What the panel asked for</a></li>
   <li><a href="#rules">The four things being scored</a></li>
   <li><a href="#before">Before the call</a></li>
   <li><a href="#open">The opening (first 2 minutes)</a></li>
@@ -212,6 +222,33 @@
   <li><a href="#practice">Practice plan</a></li>
 </ol>
 </nav>
+
+<!-- 0 -->
+<h2 id="panel">0. What the panel asked for <span class="new">New</span></h2>
+<p>Ahead of the session, Nubank's recruiter sent six recommendations on top of the preparation guide. They reflect what the panel looks for at this stage. The rest of this playbook now follows all six, and each row says where.</p>
+<div class="tablewrap">
+<table class="asks">
+<tr><th>Ask</th><th>What to do</th><th>Where</th></tr>
+<tr><td><span class="ask-n">1</span><strong>Decompose before you prompt</strong></td><td>Read, ask your questions, and agree the breakdown with the interviewer before Claude Code generates one line. If you need a minute of silence to think, say so. Prompting before the problem is scoped is the most common way these sessions fail.</td><td class="where">§3, §4 0–10</td></tr>
+<tr><td><span class="ask-n">2</span><strong>Testing is central, and you bring it</strong></td><td>Name TDD and do it: the test first, then the code. Unit tests for each step, and at least one integration test without being asked. Say out loud what each test protects against.</td><td class="where">§4 15–52, §5 B0 B D2</td></tr>
+<tr><td><span class="ask-n">3</span><strong>Steer, don't follow</strong></td><td>You are the engineer; Claude Code is the pair. Give it structural direction and read every output. If it is buggy or overcomplicated, take control and say why you reject it. They don't expect perfect prompts.</td><td class="where">§5, §7</td></tr>
+<tr><td><span class="ask-n">4</span><strong>Raise failure modes unprompted</strong></td><td>Concurrency and races, duplicate or retried input, idempotency, error handling, resource limits. Then how you'd observe it in production: logs and metrics. Observability is the piece most often missing.</td><td class="where">§4 0–10, §6, §10</td></tr>
+<tr><td><span class="ask-n">5</span><strong>Structure over volume</strong></td><td>Clean layers, clear boundaries, modules with one job. A small, tested, well-layered solution reads better than a large one. You are not penalised for not finishing in 60 minutes.</td><td class="where">§4 52–60, §9</td></tr>
+<tr><td><span class="ask-n">6</span><strong>Narrate and manage the clock</strong></td><td>Say assumptions and trade-offs as you go. If one piece eats the session, name the trade-off, park it in <code>NOTES.md</code>, and move on.</td><td class="where">§6, §9</td></tr>
+</table>
+</div>
+
+<h3>The five failure modes to name before anyone asks</h3>
+<ul class="check">
+  <li><strong>Concurrency.</strong> Can two callers hit this at once? If yes: a mutex, and <code>go test -race</code> on camera.</li>
+  <li><strong>Duplicates and retries.</strong> What if the same record arrives twice, or the job runs twice? Key on the ID so the second time is a no-op.</li>
+  <li><strong>Errors.</strong> Malformed input: fail fast or skip and report? Decide, say why, and never drop a line silently.</li>
+  <li><strong>Resource limits.</strong> Does the input fit in memory? Can a map or a goroutine count grow without bound? Name the limit and what you'd do past it.</li>
+  <li><strong>Observability.</strong> One log line (what failed, with the line number) and one metric (rejected records) you'd alert on.</li>
+</ul>
+<div class="say">Before I build anything, the failure modes I'm keeping in mind: retries, so I'll key on the ID; malformed lines, which I'll fail fast on; memory, which is fine at this size; and in production I'd log every rejected line and count them as a metric.</div>
+
+<p>They also recommend a video that shows how this kind of session runs: <em>AI Coding Interview w/ Meta</em> (the link is in their email). Any language is fine, and the environment is ready at the start of the call. There is nothing to install.</p>
 
 <!-- 1 -->
 <h2 id="rules">1. The four things being scored</h2>
@@ -235,14 +272,16 @@
   <li>Audio tested. Headphones. Water next to you.</li>
   <li>A notepad (paper or a scratch <code>NOTES.md</code> in the workspace) for the plan and the edge-case list. You will refer back to it.</li>
   <li>This playbook open on your phone, not on the shared screen.</li>
-  <li>Read sections 3, 5 and 8 once more, 20 minutes before.</li>
+  <li>Watch the video they sent, <em>AI Coding Interview w/ Meta</em>, once. Watch how much happens before the first prompt.</li>
+  <li>Nothing to install: the environment is ready at the start of the call.</li>
+  <li>Read sections 0, 3, 5 and 8 once more, 20 minutes before.</li>
 </ul>
 
 <!-- 3 -->
 <h2 id="open">3. The opening (first 2 minutes)</h2>
 <p>When the editor loads, don't touch it. Orient the room first.</p>
-<div class="say">Before I start, I'll take a couple of minutes to make sure I understand the problem, write a short plan, and list edge cases. Then I'll build it in small slices with Claude Code, reviewing each one. I'll think out loud the whole time, so stop me whenever you want.</div>
-<p>This one sentence tells Andrey you know how the round is scored. It also buys you the silence you need to read the problem.</p>
+<div class="say">Before I start, I'll take a couple of minutes to make sure I understand the problem, write a short plan, and list edge cases. I'd like us to agree on that breakdown before I prompt anything. Then I'll build it test-first in small slices with Claude Code: a failing test, then the code, and I'll review each one. I'll think out loud the whole time, so stop me whenever you want.</div>
+<p>This one sentence tells Andrey you know how the round is scored. It also buys you the silence you need to read the problem. If you need more, ask for it: "Give me a minute to read this properly." The panel says that is fine.</p>
 <p>Then, while reading the statement, narrate what you notice:</p>
 <div class="say">Inputs are X, output is Y. The ambiguous part is Z, I'll ask about that. The thing that could bite us is W.</div>
 
@@ -262,9 +301,11 @@
       <li>Ask 3–4 clarifying questions (see bank in §6). Input size, format guarantees, what to do on bad input, what "done" means.</li>
       <li>Write the plan in <code>NOTES.md</code> on screen: 3–5 steps, each with a verifiable result.</li>
       <li>List edge cases under the plan: empty input, duplicates, malformed lines, boundaries, concurrency if relevant, "what if it runs twice".</li>
+      <li>Name the five failure modes from §0 out loud, before anyone asks.</li>
       <li>State your data model and the main trade-off you're taking.</li>
+      <li><strong>Agree the breakdown with Andrey before the first prompt.</strong></li>
     </ul>
-    <div class="say">Plan is set. Step 1 is the parser with a test, step 2 the core logic, step 3 the output. I'll tackle them in that order and we'll have something runnable after step 1.</div>
+    <div class="say">Plan is set. Step 1 is the parser, step 2 the core logic, step 3 the output, and each one starts with a failing test. At the end, one integration test through the entry point. Does that breakdown match what you'd expect before I start prompting?</div>
   </div>
 </li>
 
@@ -284,10 +325,11 @@
 <li class="phase">
   <div class="t">15–40</div>
   <div class="body">
-    <h3>Build in slices. One step per prompt.</h3>
+    <h3>Build in slices, test first. One step per prompt.</h3>
     <div class="goal">Scores: AI steering, readability, communication</div>
     <ul>
-      <li>For each plan step: prompt (template B), read the diff aloud, run, accept or correct, tick the step in <code>NOTES.md</code>.</li>
+      <li>For each plan step: prompt for the test (template B0), read it, and say what each case protects against. Run it and watch it fail.</li>
+      <li>Then prompt for the code (template B). Run the test green, read the diff aloud, accept or correct, tick the step in <code>NOTES.md</code>.</li>
       <li>Keep each slice under ~50 lines of change. If it comes back bigger, say so and split it.</li>
       <li>Explain at least one design choice per slice: why this structure, why this error handling.</li>
       <li>Check in with Andrey at each tick: "Step 2 done, parser handles empty and malformed lines. Moving to the core."</li>
@@ -298,10 +340,11 @@
 <li class="phase">
   <div class="t">40–52</div>
   <div class="body">
-    <h3>Tests on the hard cases.</h3>
+    <h3>Integration test, then the hard cases left.</h3>
     <div class="goal">Scores: readability, decomposition</div>
     <ul>
-      <li>Go back to your edge-case list. Prompt for tests on those specifically (template D).</li>
+      <li>Write at least one integration test through the entry point (template D2): real input in, real output out. Don't wait to be asked.</li>
+      <li>Go back to your edge-case list. Any case without a test gets one now (template D).</li>
       <li>Read each test. Delete or fix any that only test the happy path or that assert the wrong thing. Say why.</li>
       <li>Run them. A failing test here is good: it's your debug protocol on display (§8).</li>
     </ul>
@@ -316,6 +359,8 @@
     <ul>
       <li>Walk the solution top to bottom as if handing it to a teammate: entry point, data flow, where errors surface.</li>
       <li>Name what's fragile and what you'd do with another hour.</li>
+      <li>Say how you'd observe it in production: one log line and one metric.</li>
+      <li>If you didn't finish, say what's left and where it slots in. Unfinished is not penalised; untested and tangled is.</li>
       <li>Ask your questions for Andrey (§10) if there's time.</li>
     </ul>
     <div class="say">If this were going to production I'd add structured logging around the parser and make the writer idempotent. For the scope here, it's complete and the tricky cases are covered by tests.</div>
@@ -336,14 +381,24 @@ Constraints:
 - Package main, one file per concern: <span class="ph">parser.go, core.go, main.go</span>, plus _test.go files.
 - Small functions, explicit error returns, no panics on bad input.
 
+We work test-first: for each step I'll ask for the test, then the implementation.
+
 My plan is in NOTES.md. Before writing any code, tell me in 3-5 bullets how you'd structure it and which types you'd define. Then wait for my go.</pre>
 
-<p class="prompt-label">B. One slice (repeat per plan step)</p>
+<p class="prompt-label">B0. Test first (per plan step, before B) <span class="new">New</span></p>
 <pre>Step <span class="ph">N</span>: <span class="ph">what this step does</span>.
 
+Write a table-driven test for <span class="ph">function</span> in <span class="ph">file</span>_test.go only. Cases:
+- <span class="ph">the normal case</span>
+- <span class="ph">the edge case for this step</span>
+Don't write the implementation. A stub that returns zero values is fine so it compiles. Show me the test and stop.</pre>
+
+<p class="prompt-label">B. One slice: make the test pass (repeat per plan step)</p>
+<pre>Step <span class="ph">N</span>: make <span class="ph">TestName</span> pass.
+
 Expected behavior: <span class="ph">input -> output, including the edge case for this step</span>.
-Keep it to <span class="ph">the one function/file</span>. Don't touch other files.
-Don't write tests yet unless I ask. Show me the diff and stop.</pre>
+Keep it to <span class="ph">the one function/file</span>. Don't touch the test or other files.
+Show me the diff and stop.</pre>
 
 <p class="prompt-label">C. Correction (when the output isn't what you want)</p>
 <pre>Not quite. <span class="ph">What's wrong, in one line</span>. Change only <span class="ph">the specific thing</span>: <span class="ph">what it should do instead</span>. Leave the rest as is.</pre>
@@ -355,6 +410,12 @@ Don't write tests yet unless I ask. Show me the diff and stop.</pre>
 - <span class="ph">the "runs twice" case</span>
 One assertion per case, clear case names. No happy-path-only tests.</pre>
 
+<p class="prompt-label">D2. One integration test through the entry point <span class="new">New</span></p>
+<pre>Write one integration test that calls run(args, in, out) end to end.
+Input: <span class="ph">3-5 lines, including one duplicate</span>. Assert the exact output.
+Add a second case with <span class="ph">one malformed line</span>: assert the error names the line.
+Use strings.NewReader and bytes.Buffer. No files, no network.</pre>
+
 <p class="prompt-label">E. Debug (only after you've stated your own hypothesis)</p>
 <pre>Test <span class="ph">name</span> fails with <span class="ph">actual vs expected</span>. I think the cause is <span class="ph">your hypothesis</span>. Confirm or correct that, and fix only that. Don't rewrite the function.</pre>
 
@@ -363,6 +424,7 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
 
 <h3>Prompt rules of thumb</h3>
 <ul>
+  <li>Test first, always. The test is the spec you hand Claude Code, and the check on what it hands back.</li>
   <li>One task per prompt. If you wrote "and" twice, split it.</li>
   <li>Always say what <em>not</em> to touch. It keeps diffs small and reviewable.</li>
   <li>"Show the diff and stop" / "wait for my go" is how you stay in control.</li>
@@ -393,6 +455,16 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
 <div class="say">I'm going with a map keyed by ID for O(1) lookup. Memory is fine at this size; if we were streaming millions I'd rethink.</div>
 <div class="say">I'm choosing to fail fast on a malformed line instead of skipping, because silent data loss is worse than a visible failure in a payments context. Happy to flip that if the requirement is different.</div>
 
+<h3>What each test protects against</h3>
+<div class="say">This case protects against counting a retried transaction twice.</div>
+<div class="say">This one pins the window boundary: exactly one minute apart counts as a duplicate. That's where an off-by-one would hide.</div>
+<div class="say">The integration test protects the wiring: the parser, the core and the output agree on the format, which no unit test checks.</div>
+
+<h3>Failure modes, before anyone asks</h3>
+<div class="say">If two requests hit this store at once, the map needs a mutex. I'll add it and run the race detector.</div>
+<div class="say">If this input doesn't fit in memory, I'd stream it record by record. For this size, a slice is fine; I'll note the limit in NOTES.md.</div>
+<div class="say">In production I'd log each rejected line with its line number and count rejections as a metric. That's what you'd alert on.</div>
+
 <h3>Checkpoints</h3>
 <div class="say">Step 2 done and runnable. Next is the aggregation. Any concerns before I go on?</div>
 <div class="say">I'm about 25 minutes in and on plan. I'll leave the last 15 for tests and a final walkthrough.</div>
@@ -406,6 +478,7 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
   <li><strong>Edge cases from NOTES.md:</strong> empty, nil, zero, duplicate, boundary. Is each one handled or deliberately deferred?</li>
   <li><strong>Names and shape:</strong> would a teammate understand this function from its name and signature alone? Is it doing more than one thing?</li>
   <li><strong>Can I explain every line?</strong> If not, ask Claude Code to explain it before accepting.</li>
+  <li><strong>Is it simpler than this?</strong> If it is overcomplicated, reject it out loud and say why. Taking control is what is scored, not perfect prompts.</li>
 </ol>
 <div class="warn">Scrolling past a diff and saying "looks good". The tips sheet calls this out by name. One rejected line per session is worth more than ten accepted ones.</div>
 
@@ -440,8 +513,14 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
 
 <details>
 <summary>Running out of time with steps left</summary>
-<p>Announce a scope cut at the 45-minute mark, not at 58. Prioritize a working, tested core over a complete but shaky whole.</p>
+<p>Announce a scope cut at the 45-minute mark, not at 58. Prioritize a working, tested core over a complete but shaky whole. The panel says you are not penalised for not finishing in 60 minutes.</p>
 <div class="say">I'm going to drop step 4 and make sure steps 1–3 are solid and tested. I'll describe how step 4 would slot in during the walkthrough.</div>
+</details>
+
+<details>
+<summary>One piece is eating the session</summary>
+<p>Name the trade-off, park it in <code>NOTES.md</code>, and move on. The panel asks for exactly this.</p>
+<div class="say">This date-format corner is taking too long. I'll support RFC 3339 only for now, note the rest in NOTES.md, and come back if there's time.</div>
 </details>
 
 <details>
@@ -469,6 +548,8 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
   <li>"What if a record is malformed?" Decide fail-fast vs skip, say why.</li>
   <li>"What if it's partially processed and crashes?" Note where you'd add a checkpoint or make writes atomic.</li>
   <li>"How would you know it's broken in production?" One line about logging or a metric.</li>
+  <li>"What if two requests hit this at once?" Name the shared state and the lock.</li>
+  <li>"What if the input is 10 GB?" Stream it, and say where memory would grow.</li>
 </ul>
 <p>Don't use Clojure. He'll know you picked your language and won't expect his.</p>
 
@@ -481,16 +562,16 @@ One assertion per case, clear case names. No happy-path-only tests.</pre>
 
 <!-- 11 -->
 <h2 id="practice">11. Practice plan</h2>
-<p>Four timed mocks, each 60 minutes, each narrated aloud as if someone is listening. Record audio for at least two of them and listen for the silences.</p>
+<p>Four timed mocks, each 60 minutes, each narrated aloud as if someone is listening. Record audio for at least two of them and listen for the silences. Every mock runs test-first and ends with one integration test.</p>
 <ol>
   <li><strong>Transaction CSV reconciliation.</strong> Parse records, detect duplicates within a time window, output a summary. Edge cases: malformed lines, out-of-order timestamps, same ID different amount.</li>
   <li><strong>In-memory key-value store with TTL.</strong> Get/set/delete, expiry, simple eviction. Edge cases: zero TTL, overwrite with new TTL, expiry at exact boundary.</li>
   <li><strong>Bill payment scheduler.</strong> Payments with due dates and a daily cap: decide what runs today. Must be safe to run twice. Edge cases: cap exactly reached, past-due items, empty day.</li>
   <li><strong>Token-bucket rate limiter.</strong> Allow/deny with refill. Edge cases: burst at start, refill boundary, zero capacity.</li>
 </ol>
-<p>After each mock, grade yourself 1–4 on the four criteria in §1 and write one sentence on what to change next time. By mock three the opening script and the slice rhythm should feel automatic.</p>
+<p>After each mock, grade yourself 1–4 on the four criteria in §1, check each of the six asks in §0, and write one sentence on what to change next time. By mock three the opening script and the slice rhythm should feel automatic.</p>
 
-<p class="foot">Built from Nubank's Candidate Preparation Guide and Useful Tips sheet for the AI Coding Interview. Keep this on your phone; the shared screen shows only the editor and NOTES.md.</p>
+<p class="foot">Built from Nubank's Candidate Preparation Guide, the Useful Tips sheet, and the recruiter's recommendations for the AI Coding Interview. Keep this on your phone; the shared screen shows only the editor and NOTES.md.</p>
 
 </main>
 </body>

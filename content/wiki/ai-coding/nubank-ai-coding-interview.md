@@ -9,7 +9,7 @@ tags:
   - interview
   - go
 date_created: 2026-10-14
-date_modified: 2026-10-14
+date_modified: 2026-10-16
 cssclasses:
   - nubank-guides
 ---
@@ -22,27 +22,41 @@ The **Open full page** button loads the guide as a standalone document. Keep tha
 > They do not grade the program. They grade the engineer who directed it. Each move in the playbook maps to one of four criteria: decomposition, AI steering, readable code, and communication.
 
 > [!tip] What to reread 20 minutes before the call
-> Section 3 is the opening script. Section 5 has the six prompt templates (kickoff, slice, correction, tests, debug, final review). Section 8 is the debug protocol: read the error aloud, state a hypothesis, verify it, then fix.
+> Section 0 is what the panel asked for. Section 3 is the opening script. Section 5 has the prompt templates, in test-first order. Section 8 is the debug protocol: read the error aloud, state a hypothesis, verify it, then fix.
+
+## What the panel asked for
+
+Ahead of the session, Nubank's recruiter sent six recommendations on top of the preparation guide. Section 0 of the playbook holds them, and the rest of the playbook now follows them.
+
+1. **Decompose before you prompt.** Agree the breakdown with the interviewer before Claude Code writes a line. Ask for a minute of silence if you need it.
+2. **Bring the tests yourself.** Name TDD and do it: the test first, then the code. Add at least one integration test without being asked. Say what each test protects against.
+3. **Steer, don't follow.** Read every output. Reject buggy or overcomplicated code out loud, with the reason.
+4. **Raise failure modes unprompted.** Name concurrency, retries and idempotency, error handling, and resource limits. Then name one log line and one metric for production.
+5. **Structure over volume.** A small, tested, well-layered solution beats a large one. Not finishing in 60 minutes is not penalised.
+6. **Narrate and manage the clock.** If one piece eats the session, name the trade-off, park it, and move on.
+
+They also recommend the video *AI Coding Interview w/ Meta* as a picture of the session. Any language is fine, and the environment is ready at the start of the call.
 
 ## How the hour runs
 
-1. **0–10: understand and plan.** Write no code. Ask 3–4 clarifying questions, write a plan of 3–5 testable steps in `NOTES.md`, and list the edge cases.
+1. **0–10: understand and plan.** Write no code. Ask 3–4 clarifying questions, write a plan of 3–5 testable steps, and list the edge cases. Name the failure modes, then agree the breakdown.
 2. **10–15: brief Claude Code.** Send the kickoff prompt, read its plan aloud, then say "go". Only the skeleton and a failing test land.
-3. **15–40: build in slices.** Send one plan step per prompt, under about 50 lines of change. Read each diff aloud before you accept it.
-4. **40–52: tests on the hard cases.** Ask for table-driven tests on the edge-case list. Delete the tests that check only the happy path.
-5. **52–60: final pass and handoff.** Walk the solution top to bottom, name what is fragile, and ask your questions.
+3. **15–40: build in slices, test first.** For each step, get the failing test first, then the code that makes it pass. Read each diff aloud.
+4. **40–52: integration test and the hard cases.** Add one integration test through the entry point. Then cover each edge case still without a test.
+5. **52–60: final pass and handoff.** Walk the solution top to bottom, name what is fragile and how you'd observe it, and ask your questions.
 
 > [!warning] What fails the round
-> Going quiet, accepting code you did not read, skipping tests, and getting stuck without asking for a hint. Re-prompting three times with different words and hoping is the debug behaviour the guide calls out by name.
+> Prompting before the problem is scoped, going quiet, accepting code you did not read, skipping tests, and getting stuck without asking for a hint. Re-prompting three times with different words and hoping is the debug behaviour the guide calls out by name.
 
-The interviewer works on reliability, so the follow-ups come from that side. Mention idempotency, the choice between fail-fast and skip on a malformed record, crash recovery, and one metric while you plan. The same ideas carry the payment designs in the system design notes, so you can reuse their wording.
+The interviewer works on reliability, so the follow-ups come from that side. Mention concurrency, idempotency, the choice between fail-fast and skip on a malformed record, and resource limits while you plan. Close with one log line and one metric. The same ideas carry the payment designs in the system design notes, so you can reuse their wording.
 
 ## The playbook
 
-The guide is the full script, in eleven sections:
+The guide is the full script, in twelve sections:
 
+- the panel's six asks, and the five failure modes to name before anyone asks
 - the four scored criteria, the setup before the call, and the opening
-- the 60-minute timeline and the six prompt templates
+- the 60-minute timeline and the test-first prompt templates
 - a narration bank, the review checklist for AI output, and the debug protocol
 - recovery moves, notes on the interviewer, and the questions to ask
 - a practice plan of four timed mocks: CSV reconciliation, a key-value store with TTL, a bill payment scheduler, and a token-bucket rate limiter
@@ -62,11 +76,11 @@ The companion guide teaches enough Go to read every line that Claude Code writes
 - money as `int64` cents, named types, time, and slices and maps without surprises
 - parsing input from an `io.Reader`, table-driven tests, and an injected clock
 - just enough concurrency, and the reliability patterns (idempotency, fail-fast or skip, atomic output)
-- worked code for duplicate detection, the TTL store, and the token bucket
+- worked code for duplicate detection with its integration test, the TTL store, and the token bucket
 - the mistakes that give you away, and the phrases that signal seniority
 
 > [!success] The code runs
-> The worked code (parsing, duplicate detection, the TTL store and the token bucket) was compiled and run on Go 1.24 with `go vet` and `go test -race`, on 14 October 2026. Two fixes came out of that run, and the guide now shows both.
+> The worked code (parsing, duplicate detection, the integration test, the TTL store and the token bucket) was compiled and run on Go 1.24 with `go vet` and `go test -race`, on 14 and 16 October 2026. Two fixes came out of that run, and the guide now shows both.
 
 `parseCents` now rejects `""`, `".5"` and `"--5"`. Before the fix, the empty string parsed as 0 with no error. So the guide's own `"empty"` test failed.
 

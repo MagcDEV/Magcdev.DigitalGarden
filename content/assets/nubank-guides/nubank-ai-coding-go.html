@@ -143,7 +143,7 @@
   <li><a href="#inject">Injecting time and I/O</a></li>
   <li><a href="#concurrency">Just enough concurrency</a></li>
   <li><a href="#reliability">Reliability patterns</a></li>
-  <li><a href="#worked1">Worked example: reconciliation</a></li>
+  <li><a href="#worked1">Worked example: reconciliation</a> (and <a href="#integration">the integration test</a>)</li>
   <li><a href="#worked2">Worked example: TTL store</a></li>
   <li><a href="#worked3">Sketch: token bucket</a></li>
   <li><a href="#mistakes">Mistakes that give you away</a></li>
@@ -465,6 +465,7 @@ out := make([]Transaction, 0, len(input))</pre>
 <!-- 7 -->
 <h2 id="tests">7. Table-driven tests</h2>
 <p>This is <em>the</em> idiomatic Go test shape. Interviewers recognize it instantly. No assertion library needed.</p>
+<p><strong>Write it first.</strong> The panel names TDD: for each step, the test comes first and fails, then the code makes it pass. Say what each case protects against as you read it. Unit tests cover each function; one integration test through <code>run()</code> covers the wiring (§11 has one).</p>
 
 <pre><span class="k">func</span> TestParseCents(t *testing.T) {
     tests := []<span class="k">struct</span> {
@@ -689,6 +690,90 @@ clock = clock.Add(time.Second)     <span class="c">// "time passes", determinist
 }</pre>
 <p>Look at the "chain of three" case. With a 1-minute window, b (at 40s) is a duplicate of a. Is c (at 80s) a duplicate? It's 80s after a, the last <em>unique</em>, so no. That's a design decision the test pins down. Either answer is defensible; the senior move is that you decided and wrote the test.</p>
 
+<h3 id="integration">The entry point and one integration test</h3>
+<p>The panel asks for at least one integration test, brought up without a prompt. The <code>run()</code> pattern from §3 makes it cheap: <code>main</code> only turns an error into an exit code, so the test calls <code>run</code> with a string for input and a buffer for output.</p>
+<pre><span class="c">// main.go</span>
+<span class="k">package</span> main
+
+<span class="k">import</span> (
+    <span class="s">"flag"</span>
+    <span class="s">"fmt"</span>
+    <span class="s">"io"</span>
+    <span class="s">"os"</span>
+    <span class="s">"time"</span>
+)
+
+<span class="k">func</span> main() {
+    <span class="k">if</span> err := run(os.Args[1:], os.Stdin, os.Stdout); err != nil {
+        fmt.Fprintln(os.Stderr, <span class="s">"error:"</span>, err)
+        os.Exit(1)
+    }
+}
+
+<span class="c">// run is the whole program minus the process: args, input and output come in</span>
+<span class="c">// as values, so the integration test can call it directly.</span>
+<span class="k">func</span> run(args []string, in io.Reader, out io.Writer) error {
+    fs := flag.NewFlagSet(<span class="s">"dedupe"</span>, flag.ContinueOnError)
+    window := fs.Duration(<span class="s">"window"</span>, time.Minute, <span class="s">"duplicate window"</span>)
+    <span class="k">if</span> err := fs.Parse(args); err != nil {
+        <span class="k">return</span> err
+    }
+    txs, err := ParseTransactions(in)
+    <span class="k">if</span> err != nil {
+        <span class="k">return</span> fmt.Errorf(<span class="s">"read transactions: %w"</span>, err)
+    }
+    rep := FindDuplicates(txs, *window)
+    _, err = fmt.Fprintf(out, <span class="s">"unique: %d\nduplicates: %d\n"</span>, len(rep.Unique), len(rep.Duplicates))
+    <span class="k">return</span> err
+}</pre>
+<pre><span class="c">// main_test.go</span>
+<span class="k">package</span> main
+
+<span class="k">import</span> (
+    <span class="s">"bytes"</span>
+    <span class="s">"errors"</span>
+    <span class="s">"strings"</span>
+    <span class="s">"testing"</span>
+)
+
+<span class="c">// Protects the wiring: parse, core and output agree on the format.</span>
+<span class="k">func</span> TestRunEndToEnd(t *testing.T) {
+    in := strings.NewReader(<span class="s">`id,account,amount,ts
+a,acc-1,10.00,2026-01-01T10:00:00Z
+b,acc-1,10.00,2026-01-01T10:00:30Z
+c,acc-2,5.50,2026-01-01T10:01:00Z
+`</span>)
+    <span class="k">var</span> out bytes.Buffer
+    <span class="k">if</span> err := run([]string{<span class="s">"-window"</span>, <span class="s">"1m"</span>}, in, &amp;out); err != nil {
+        t.Fatalf(<span class="s">"run: %v"</span>, err)
+    }
+    want := <span class="s">"unique: 2\nduplicates: 1\n"</span>
+    <span class="k">if</span> got := out.String(); got != want {
+        t.Errorf(<span class="s">"output:\n%s\nwant:\n%s"</span>, got, want)
+    }
+}
+
+<span class="c">// Protects against a bad line being dropped silently or crashing the run.</span>
+<span class="k">func</span> TestRunMalformedLine(t *testing.T) {
+    in := strings.NewReader(<span class="s">`id,account,amount,ts
+a,acc-1,10.00,2026-01-01T10:00:00Z
+b,acc-1,ten,2026-01-01T10:00:30Z
+`</span>)
+    <span class="k">var</span> out bytes.Buffer
+    err := run(nil, in, &amp;out)
+    <span class="k">if</span> !errors.Is(err, ErrMalformed) {
+        t.Fatalf(<span class="s">"err = %v, want ErrMalformed"</span>, err)
+    }
+    <span class="k">if</span> !strings.Contains(err.Error(), <span class="s">"line 3"</span>) {
+        t.Errorf(<span class="s">"error %q does not name line 3"</span>, err)
+    }
+    <span class="k">if</span> out.Len() != 0 {
+        t.Errorf(<span class="s">"wrote partial output: %q"</span>, out.String())
+    }
+}</pre>
+<div class="say">The unit tests pin each piece. This integration test protects the wiring: the parser, the core and the output agree on the format. The second case checks that a bad line fails loudly with its line number and writes no partial report.</div>
+<div class="why">Two integration cases, the happy path and one failure, are enough. They run in milliseconds because nothing touches disk, and they would catch a refactor that breaks the format between layers.</div>
+
 <!-- 12 -->
 <h2 id="worked2">12. Worked example: TTL key-value store</h2>
 <pre><span class="k">type</span> entry <span class="k">struct</span> {
@@ -829,6 +914,9 @@ clock = clock.Add(time.Second)     <span class="c">// "time passes", determinist
   <li>"The core takes an <code>io.Reader</code> so tests use a string and never touch disk."</li>
   <li>"Injecting the clock so the expiry test is deterministic."</li>
   <li>"Table-driven tests, one behavior per case, boundaries get their own row."</li>
+  <li>"Test first: here's the failing test for this step, now I'll ask for the code that makes it pass."</li>
+  <li>"This case protects against a retried transaction being counted twice."</li>
+  <li>"One integration test through <code>run()</code>, because no unit test checks that the layers agree on the format."</li>
   <li>"Keying on the transaction ID so a retry is a no-op, not a double charge."</li>
   <li>"Fail fast here because partial results would be worse than no results." (or the reverse, with the reason)</li>
   <li>"Cloning before sort so I don't reorder the caller's data."</li>
