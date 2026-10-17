@@ -9,7 +9,7 @@ tags:
   - interview
   - go
 date_created: 2026-10-14
-date_modified: 2026-10-16
+date_modified: 2026-10-17
 cssclasses:
   - nubank-guides
 ---
@@ -22,7 +22,7 @@ The **Open full page** button loads the guide as a standalone document. Keep tha
 > They do not grade the program. They grade the engineer who directed it. Each move in the playbook maps to one of four criteria: decomposition, AI steering, readable code, and communication.
 
 > [!tip] What to reread 20 minutes before the call
-> Section 0 is what the panel asked for. Section 3 is the opening script. Section 5 has the prompt templates, in test-first order. Section 8 is the debug protocol: read the error aloud, state a hypothesis, verify it, then fix.
+> Read the run sheet below once, top to bottom. Then, in the playbook, section 0 is what the panel asked for. Section 3 is the opening script. Section 5 has the prompt templates, in test-first order. Section 8 is the debug protocol: read the error aloud, state a hypothesis, verify it, then fix.
 
 ## What the panel asked for
 
@@ -49,6 +49,25 @@ They also recommend the video *AI Coding Interview w/ Meta* as a picture of the 
 > Prompting before the problem is scoped, going quiet, accepting code you did not read, skipping tests, and getting stuck without asking for a hint. Re-prompting three times with different words and hoping is the debug behaviour the guide calls out by name.
 
 The interviewer works on reliability, so the follow-ups come from that side. Mention concurrency, idempotency, the choice between fail-fast and skip on a malformed record, and resource limits while you plan. Close with one log line and one metric. The same ideas carry the payment designs in the system design notes, so you can reuse their wording.
+
+## The run sheet, step by step
+
+The run sheet turns the playbook into 38 numbered actions, from joining the call to your last question. Each step says what to open, type, prompt, run and say, and when the step is done. Tags on each step name the scored point that it shows. A table at the end maps every scored point to its steps, so a practice run can check that it covered each one.
+
+The phases follow the clock:
+
+- **0:00–0:02, orient.** Hands off the keyboard, say the opening line, and ask for a minute to read.
+- **0:02–0:10, scope in `NOTES.md`.** Type the skeleton, then fill the problem, questions, assumptions, plan, layout, edge cases and the five failure modes. Get the breakdown agreed before the first prompt.
+- **0:10–0:15, brief Claude Code.** Send the kickoff prompt, correct its plan, and get a skeleton with one failing test.
+- **0:15–0:40, the test-first loop.** For each plan step, announce the cases, get the test, read it, and see red. Then get the code, review the diff with six checks, see green, and tick the step with the time.
+- **0:40–0:52, integration test and edge cases.** Write the integration test without being asked, then fill the edge-case gaps and run the full check.
+- **0:52–1:00, review and handoff.** Get a read-only review, walk the code, say the logs and metrics for production, name what is not done, and ask your questions.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-ai-coding-run-sheet.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-ai-coding-run-sheet.html" type="text/html" title="Nubank AI Coding Interview: the run sheet">
 
 ## The playbook
 

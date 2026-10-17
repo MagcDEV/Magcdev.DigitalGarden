@@ -11,5 +11,6 @@ This area covers how to build software with an AI coding agent such as Claude Co
 
 ## Interview prep
 
+- [[wiki/ai-coding/nubank-ai-coding-interview#The run sheet, step by step|Nubank AI coding run sheet]]: 38 numbered steps for the hour, each mapped to the points they score
 - [[wiki/ai-coding/nubank-ai-coding-interview|Nubank AI coding interview playbook]]: the panel's six asks, the 60-minute timeline, test-first prompt templates, the debug protocol, and four timed mocks
 - [[wiki/ai-coding/nubank-ai-coding-interview#Go for the interview|Go for the Nubank AI coding interview]]: errors, money as cents, table-driven and integration tests, and worked code for the practice problems
