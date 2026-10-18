@@ -239,6 +239,7 @@
 </div>
 
 <h3>The five failure modes to name before anyone asks</h3>
+<p>Remember them as "<strong>C</strong>an <strong>R</strong>etries <strong>E</strong>ver <strong>L</strong>ose <strong>O</strong>rders?": concurrency, retries, errors, limits, observability. The run sheet's memory list explains each one for every likely problem, and defines terms such as "fail fast".</p>
 <ul class="check">
   <li><strong>Concurrency.</strong> Can two callers hit this at once? If yes: a mutex, and <code>go test -race</code> on camera.</li>
   <li><strong>Duplicates and retries.</strong> What if the same record arrives twice, or the job runs twice? Key on the ID so the second time is a no-op.</li>

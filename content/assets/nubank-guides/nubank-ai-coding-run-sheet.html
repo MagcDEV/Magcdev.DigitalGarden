@@ -183,7 +183,26 @@
   .setting { background: var(--panel); border-radius: 8px; padding: 10px 14px; font-weight: 500; }
   .ai-list { color: var(--ink-2); font-size: 0.95rem; }
   .ai-list::before { content: "AI: "; font-weight: 600; color: var(--ink); }
-  h3[id^="sc-"], h3[id^="own-"] { scroll-margin-top: 16px; margin-top: 34px; }
+  h3[id^="sc-"], h3[id^="own-"], h3[id^="mem-"] { scroll-margin-top: 16px; margin-top: 34px; }
+  .mnemonic { font-size: 1.25rem; font-weight: 600; text-align: center; background: var(--panel); border-radius: 10px; padding: 14px 12px 10px; margin: 6px 0 14px; }
+  .mnemonic span { color: var(--accent-ink); font-size: 1.5rem; font-weight: 700; }
+  .mnemonic small { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-top: 4px; font-family: "IBM Plex Mono", monospace; }
+  .fm, .explain { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px 4px; margin: 0 0 18px; background: var(--panel-2); scroll-margin-top: 16px; }
+  .fm h4, .explain h4 { font-size: 1.05rem; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; }
+  .fm-letter { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border-radius: 8px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 1.1rem; }
+  .fm p, .explain p { margin-bottom: 10px; }
+  .pp-label { font-size: 0.85rem; color: var(--muted); margin: 4px 0 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  ul.pp { padding-left: 18px; font-size: 0.95rem; }
+  ul.pp li { margin-bottom: 4px; }
+  .term-group { font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin: 24px 0 4px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  dl.terms { margin: 0 0 8px; }
+  dl.terms dt { font-weight: 600; margin-top: 12px; scroll-margin-top: 16px; }
+  dl.terms dd { margin: 2px 0 0; color: var(--ink-2); }
+  dl.terms .ex { display: block; font-size: 0.92rem; color: var(--muted); margin-top: 2px; }
+  table.cmp { table-layout: fixed; }
+  table.cmp th:first-child, table.cmp td:first-child { width: 22%; }
+  table.cmp code { word-break: break-all; }
+  .explain pre { white-space: pre; overflow-x: auto; word-break: normal; }
   @media (max-width: 560px) {
     .slot { white-space: normal; }
     .step { grid-template-columns: 28px 1fr; gap: 0 10px; }
@@ -247,6 +266,7 @@
   <li><a href="#integration">0:40 Integration and edge cases</a></li>
   <li><a href="#handoff">0:52 Review and handoff</a></li>
   <li><a href="#questions">0:58 Your questions</a></li>
+  <li><a href="#memory">The memory list: failure modes and terms</a></li>
   <li><a href="#own">Owning the plan: what to say</a></li>
   <li><a href="#scenarios">Five scenarios, said out loud</a></li>
   <li><a href="#rescue">If something goes wrong</a></li>
@@ -284,7 +304,7 @@
 </div></div>
 
 <div class="step" id="s-memorise"><div class="num">3</div><div class="sb">
-<p><strong>Read four things once more:</strong> the scribe prompt in step <a href="#s-skeleton">7</a>, the plan-review prompt in step <a href="#s-aireview">15</a>, the kickoff prompt in step <a href="#s-kickoff">17</a>, and the ownership formula in <a href="#own">Owning the plan</a>.</p>
+<p><strong>Read five things once more:</strong> the scribe prompt in step <a href="#s-skeleton">7</a>, the plan-review prompt in step <a href="#s-aireview">15</a>, the kickoff prompt in step <a href="#s-kickoff">17</a>, <a href="#memory">the memory list</a>, and <a href="#own">the ownership formula</a>.</p>
 <p class="done">you can say the ten parts of the formula in order without looking.</p>
 </div></div>
 
@@ -390,7 +410,7 @@ e.g. <span class="ph">A=100, B=0, transfer 30 A→B</span> → <span class="ph">
 </div></div>
 
 <div class="step" id="s-failures"><div class="num">14</div><div class="sb">
-<p><strong>Under <code>## Failure modes</code>, write the five. Say each one out loud now, before anyone asks.</strong> <span class="tag">Failure</span> <span class="tag">Observe</span></p>
+<p><strong>Under <code>## Failure modes</code>, write the five. Say each one out loud now, before anyone asks.</strong> Remember them as "<a href="#mem-fm">Can Retries Ever Lose Orders?</a>" <span class="tag">Failure</span> <span class="tag">Observe</span></p>
 <pre>## Failure modes
 - Concurrency: <span class="ph">shared state? → mutex + go test -race / not shared</span>
 - Retries: key on <span class="ph">ID</span> so a second run is a no-op (idempotent)
@@ -540,7 +560,7 @@ Add a test that calls <span class="ph">Method</span> from 50 goroutines. Show th
 <h2 id="integration">Integration test and edge cases <span class="clock">0:40–0:52</span></h2>
 
 <div class="step" id="s-d2"><div class="num">31</div><div class="sb">
-<p><strong>Announce the integration test before anyone asks, then prompt for it.</strong> <span class="tag">TDD</span> <span class="tag">Steer</span> <span class="tag">Talk</span></p>
+<p><strong>Announce the integration test before anyone asks, then prompt for it.</strong> What it is and why: <a href="#integration-explained">Integration test, explained</a>. <span class="tag">TDD</span> <span class="tag">Steer</span> <span class="tag">Talk</span></p>
 <div class="say">The unit tests pin each piece. Now one integration test through run(), because nothing yet checks that the layers agree on the format.</div>
 <pre>Write one integration test in main_test.go that calls run(args, in, out).
 Case 1: <span class="ph">3-5 input lines, including one duplicate</span>. Assert the exact output.
@@ -611,6 +631,231 @@ List the findings. Don't change anything yet.</pre>
   <li>How does your team handle reliability incidents that cross squad boundaries?</li>
 </ul>
 </div></div>
+
+<!-- ============================================================ -->
+<h2 id="memory">The memory list</h2>
+<p>Two lists to know by heart: the five failure modes, and the words that this sheet uses. Each entry says what it means, how to spot it, and what to say.</p>
+
+<h3 id="mem-fm">The five failure modes</h3>
+<div class="mnemonic"><span>C</span>an <span>R</span>etries <span>E</span>ver <span>L</span>ose <span>O</span>rders?<small>Concurrency · Retries · Errors · Limits · Observability</small></div>
+<p>Say all five in the scope phase (step <a href="#s-failures">14</a>), before anyone asks. One line each is enough. For each mode, the list under "In each problem" shows that it applies to almost any prompt you can get.</p>
+
+<div class="fm" id="fm-c">
+<h4><span class="fm-letter">C</span> Concurrency: two things at once</h4>
+<p><strong>What it is.</strong> Two callers use the same data at the same moment. Each one reads, decides, then writes. If both read before either writes, one write overwrites the other, or both pass a check that only one should pass. This bug is a <em>race condition</em>.</p>
+<p><strong>Ask yourself.</strong> Is there shared state, such as a map or a balance, that more than one caller can change?</p>
+<p><strong>What you do.</strong> Put a mutex on the shared data, lock in every method that touches it, and run <code>go test -race</code>. If nothing is shared, say so. That is also an answer.</p>
+<div class="say">Two transfers could hit the same account at once. Both would pass the balance check and overdraw it. One mutex on the bank makes the check and the debit happen together.</div>
+<p class="pp-label">In each problem</p>
+<ul class="pp">
+  <li><strong>Bank:</strong> two transfers on the same account. Lock the whole bank, or lock accounts in a fixed order.</li>
+  <li><strong>Key-value store:</strong> Go maps crash on concurrent writes. Use a mutex.</li>
+  <li><strong>CSV file:</strong> usually one pass, nothing shared. Say "no concurrency here, by design".</li>
+  <li><strong>Payment scheduler:</strong> two runs at the same time could both pay one bill. Lock, or mark "paid" in one step.</li>
+  <li><strong>Rate limiter:</strong> many requests take tokens at once. Lock the bucket.</li>
+  <li><strong>Existing code:</strong> look for shared maps or globals without a lock. Run <code>-race</code>.</li>
+</ul>
+</div>
+
+<div class="fm" id="fm-r">
+<h4><span class="fm-letter">R</span> Retries and duplicates: the same thing twice</h4>
+<p><strong>What it is.</strong> Networks fail, so callers retry. A job crashes and runs again. A file gets uploaded twice. If the second time changes the result again, a customer pays twice.</p>
+<p><strong>Ask yourself.</strong> What happens if this exact input arrives twice, or this job runs twice?</p>
+<p><strong>What you do.</strong> Make the operation <em>idempotent</em>: the second run changes nothing. Key on a unique ID and keep a set of the IDs that you already applied. Mark an ID only after the operation succeeds.</p>
+<div class="say">If this job gets retried, we'll see the same transactions again. I'm keying on the transaction ID, so a second run is a no-op, not a double charge.</div>
+<p class="pp-label">In each problem</p>
+<ul class="pp">
+  <li><strong>Bank:</strong> a retried transfer with the same operation ID must not move money twice.</li>
+  <li><strong>Key-value store:</strong> naturally safe. Set twice gives the same state, and deleting a missing key is a no-op. Say that.</li>
+  <li><strong>CSV file:</strong> the same file processed twice, or the same row twice. Dedupe on the transaction ID.</li>
+  <li><strong>Payment scheduler:</strong> the "run twice today" case. Paid bills are marked by ID, so the second run pays nothing.</li>
+  <li><strong>Rate limiter:</strong> a client retry is a new request and takes a token. That is usually correct. Say so.</li>
+  <li><strong>Existing code:</strong> look for writes that don't check whether the work is already done.</li>
+</ul>
+</div>
+
+<div class="fm" id="fm-e">
+<h4><span class="fm-letter">E</span> Errors and bad input: what breaks, and what then</h4>
+<p><strong>What it is.</strong> Input is malformed, a value is out of range, an account doesn't exist, or a step fails halfway. The question is what the program does next.</p>
+<p><strong>Ask yourself.</strong> On bad input, do I stop or continue? Can an operation stop halfway and leave the data wrong?</p>
+<p><strong>What you do.</strong> Choose between <em>fail fast</em> and <em>skip and report</em> (both are in the glossary below), and say why. Return errors with context, never panic on input, and never drop a line silently. Make each money operation all-or-nothing: check everything first, then write.</p>
+<div class="say">I'm failing fast on a malformed line, because with money, silent data loss is worse than a visible error. Happy to switch to skip-and-report if one bad row shouldn't block the rest.</div>
+<p class="pp-label">In each problem</p>
+<ul class="pp">
+  <li><strong>Bank:</strong> not enough funds, unknown account, amount ≤ 0, transfer to yourself. Check all of them before you change any balance.</li>
+  <li><strong>Key-value store:</strong> negative or zero TTL, empty key. Decide the rule and test it.</li>
+  <li><strong>CSV file:</strong> the malformed line. Fail fast with the line number, or skip it and report it.</li>
+  <li><strong>Payment scheduler:</strong> one payment fails. Skip and report, so one failure doesn't block the others.</li>
+  <li><strong>Rate limiter:</strong> zero capacity or a negative rate. Reject it when the limiter is created.</li>
+  <li><strong>Existing code:</strong> look for <code>_ =</code> on errors, <code>panic</code>, and errors logged then ignored.</li>
+</ul>
+</div>
+
+<div class="fm" id="fm-l">
+<h4><span class="fm-letter">L</span> Limits: what grows</h4>
+<p><strong>What it is.</strong> Memory, time and input size are finite. A map that only grows, a history that keeps every event, or a file read whole into memory works in the test and falls over in production.</p>
+<p><strong>Ask yourself.</strong> What grows with the input or with time? What happens at ten times the size?</p>
+<p><strong>What you do.</strong> Name the limit and what you'd do past it. You rarely build it in the hour, so say it: <em>stream</em> instead of load, evict old entries, keep running totals instead of full history.</p>
+<div class="say">Memory grows with the number of accounts, which is fine at this size. Past a few million, I'd keep running totals, not the full history, and page the rest out.</div>
+<p class="pp-label">In each problem</p>
+<ul class="pp">
+  <li><strong>Bank:</strong> transaction history grows forever. Keep running totals for the queries you need.</li>
+  <li><strong>Key-value store:</strong> expired keys that nobody reads stay in memory. Add a sweeper or a maximum size.</li>
+  <li><strong>CSV file:</strong> a file bigger than memory. Stream it record by record.</li>
+  <li><strong>Payment scheduler:</strong> the list of pending payments grows. Keep it sorted by time, so each run reads only the due ones.</li>
+  <li><strong>Rate limiter:</strong> one bucket per client, so the map grows with clients. Evict idle buckets.</li>
+  <li><strong>Existing code:</strong> look for slices that only grow, and for files read whole.</li>
+</ul>
+</div>
+
+<div class="fm" id="fm-o">
+<h4><span class="fm-letter">O</span> Observability: how you'd know it's broken</h4>
+<p><strong>What it is.</strong> In production nobody watches the code run. Logs and metrics tell you that something went wrong, where, and how often. The panel says that this is the piece candidates most often forget.</p>
+<p><strong>Ask yourself.</strong> If this broke at 3 a.m., what would tell me, and what would I need to find the cause?</p>
+<p><strong>What you do.</strong> Name one <em>structured log</em> line and one <em>metric</em> that you'd alert on. You don't build them in the hour. Say them in the plan and again at the end.</p>
+<div class="say">In production I'd log every rejected line with its line number and reason, and count rejections as a metric. A jump in that counter is what I'd alert on.</div>
+<p class="pp-label">In each problem</p>
+<ul class="pp">
+  <li><strong>Bank:</strong> log failed transfers with the operation ID and reason. Count them per reason.</li>
+  <li><strong>Key-value store:</strong> count hits, misses and expirations. Track the store size.</li>
+  <li><strong>CSV file:</strong> log the rejected lines with their line numbers. Count rows read, accepted and rejected.</li>
+  <li><strong>Payment scheduler:</strong> count payments made, held and failed on each run.</li>
+  <li><strong>Rate limiter:</strong> count denied requests per client, and alert on spikes.</li>
+  <li><strong>Existing code:</strong> find where errors surface, and say where you'd add the one log line.</li>
+</ul>
+</div>
+
+<h3 id="mem-terms">The words, explained</h3>
+<p>Every term that this sheet and the playbook use, in plain words. Each one has an example from the likely problems.</p>
+
+<p class="term-group">Errors and input</p>
+<dl class="terms">
+  <dt id="t-failfast">Fail fast</dt>
+  <dd>Stop at the first bad input and return an error that says exactly what and where. Nothing after it is processed. <span class="ex">Example: line 12 has the amount "12.3.4", so the run stops with "line 12: malformed amount". Use it when a partial result is dangerous, as with money and ledgers.</span></dd>
+  <dt>Skip and report</dt>
+  <dd>The opposite of fail fast. Skip the bad record, keep going, and return a list of what you skipped and why. <span class="ex">Example: a report of 10,000 rows with 3 bad ones still produces 9,997 rows, plus a list of the 3 lines. Use it when one bad row shouldn't block the rest, as with reports and analytics.</span></dd>
+  <dt>Validate at the edge</dt>
+  <dd>Check input once, where it enters the program, and turn it into typed values. Inside, the code trusts those values. <span class="ex">Example: the parser rejects "abc" as an amount, so the core never checks amounts again.</span></dd>
+  <dt>Return an error, don't panic</dt>
+  <dd>In Go, <code>panic</code> crashes the program. Use it only for programmer bugs. Bad input is expected, so return an error and let the caller decide.</dd>
+  <dt>Wrap an error (<code>%w</code>)</dt>
+  <dd>Add context as the error passes up each layer, and keep the original inside it. <span class="ex">Example: "parse input.csv: line 12: malformed amount". <code>errors.Is</code> can still find the original.</span></dd>
+  <dt>Sentinel error</dt>
+  <dd>A named error value that callers can check for. <span class="ex">Example: <code>ErrInsufficientFunds</code>. The caller checks it with <code>errors.Is(err, ErrInsufficientFunds)</code>, not by matching the message text.</span></dd>
+  <dt>All-or-nothing (atomic)</dt>
+  <dd>An operation either happens completely or not at all, and never stops halfway. <span class="ex">Example: a transfer checks both accounts and the balance first, and only then changes both balances.</span></dd>
+  <dt>Atomic write</dt>
+  <dd>Write to a temporary file, then rename it over the real one. A crash leaves the old file intact, never a half-written one.</dd>
+</dl>
+
+<p class="term-group">Duplicates and retries</p>
+<dl class="terms">
+  <dt>Idempotent</dt>
+  <dd>Doing it twice has the same effect as doing it once. <span class="ex">Example: "set the balance to 70" is idempotent. "Subtract 30" is not, so it needs an ID check.</span></dd>
+  <dt>Idempotency key (operation ID)</dt>
+  <dd>A unique ID that the caller sends with each operation. The server remembers the IDs that it applied and ignores repeats.</dd>
+  <dt>Dedupe</dt>
+  <dd>Remove duplicates, usually by keeping a set of the IDs already seen.</dd>
+  <dt>No-op</dt>
+  <dd>"No operation": the call succeeds and changes nothing. A good answer for a repeat.</dd>
+</dl>
+
+<p class="term-group">Concurrency</p>
+<dl class="terms">
+  <dt>Race condition</dt>
+  <dd>A bug where the result depends on which of two callers runs first. <span class="ex">Example: two withdrawals both read a balance of 100, and both take 80.</span></dd>
+  <dt>Mutex (lock)</dt>
+  <dd>Only one caller at a time may hold it. Lock, do the work, unlock. In Go: <code>mu.Lock()</code> then <code>defer mu.Unlock()</code>.</dd>
+  <dt>Critical section</dt>
+  <dd>The code between lock and unlock. Keep it small, and do no I/O inside it.</dd>
+  <dt>Race detector</dt>
+  <dd><code>go test -race</code>. It reports two goroutines that touch the same memory without a lock. Run it on camera when you use a mutex.</dd>
+  <dt>Deadlock and lock ordering</dt>
+  <dd>Two callers each hold one lock and wait for the other's, forever. You avoid it if everyone takes locks in the same order, for example by account ID. One big lock avoids it too.</dd>
+</dl>
+
+<p class="term-group">Limits and data</p>
+<dl class="terms">
+  <dt>Stream</dt>
+  <dd>Process input one record at a time, without loading it all. Memory stays flat, whatever the input size.</dd>
+  <dt>Unbounded growth</dt>
+  <dd>A structure that only grows, such as a map with no eviction. It is fine in a test and a crash in production.</dd>
+  <dt>Lazy expiry and sweeper</dt>
+  <dd>Lazy: check whether a key expired when someone reads it. Sweeper: a background job that deletes expired keys. Lazy is simpler. A sweeper frees memory for keys that nobody reads.</dd>
+  <dt>Running total</dt>
+  <dd>Update a total on every operation, so you never re-add the history. <span class="ex">Example: each account keeps its outgoing total, so "top N spenders" needs no replay.</span></dd>
+  <dt>O(1), O(log n), O(n)</dt>
+  <dd>How the cost grows with the data. O(1) is constant (a map lookup). O(log n) grows slowly (a binary search, a sorted tree). O(n) touches everything (a scan).</dd>
+  <dt>Integer cents</dt>
+  <dd>Store money as a whole number of cents in <code>int64</code>, never as a float. A float can't hold 0.1 exactly.</dd>
+</dl>
+
+<p class="term-group">Testing</p>
+<dl class="terms">
+  <dt>TDD (test-driven development)</dt>
+  <dd>Write the test first, see it fail, then write the code that makes it pass. The panel asks for this by name.</dd>
+  <dt>Red, green</dt>
+  <dd>Red: the new test fails, which proves that it tests something. Green: the code makes it pass.</dd>
+  <dt>Table-driven test</dt>
+  <dd>Go's usual test shape: a list of cases (name, input, expected), and one loop that runs each case.</dd>
+  <dt id="t-integration">Unit test and integration test</dt>
+  <dd>A unit test checks one function alone. An integration test runs the whole path, from input to output, through the entry point. The panel wants at least one integration test. The box below explains the difference with an example.</dd>
+</dl>
+
+<div class="explain" id="integration-explained">
+<h4>Integration test, explained</h4>
+<p><strong>The idea.</strong> Unit tests check each part alone. An integration test checks that the parts work <em>together</em>. Think of a car: unit tests check the engine, the gearbox and the wheels, each on a test bench. The integration test drives the car around the block.</p>
+<p><strong>In the interview.</strong> Your program has layers: the parser turns text into records, the core applies the rule, and <code>run()</code> writes the result. Each layer has unit tests. The integration test calls <code>run()</code> with real text in and checks the exact text out, so all three layers run together.</p>
+<div class="tablewrap">
+<table class="cmp">
+<tr><th></th><th>Unit test</th><th>Integration test</th></tr>
+<tr><td>Calls</td><td>One function: <code>parseCents("12.34")</code></td><td>The entry point: <code>run(args, in, out)</code></td></tr>
+<tr><td>Input</td><td>Go values made by hand</td><td>Real input, such as CSV text in a string</td></tr>
+<tr><td>Checks</td><td>That one result: <code>1234</code></td><td>The final output text, or the final error</td></tr>
+<tr><td>How many</td><td>Many: one per case, per function</td><td>One or two: the normal path and one failure</td></tr>
+<tr><td>Catches</td><td>A wrong rule inside one function</td><td>Parts that don't fit together</td></tr>
+</table>
+</div>
+<p><strong>What only it catches.</strong> Every unit test can pass while the program is still broken. For example, the parser can return amounts in cents while the output code prints them as if they were whole units. Or <code>run()</code> can forget to pass the window flag to the core. Each part is right alone, and the whole is wrong. Only the integration test sees that.</p>
+<p><strong>In Go, with no files.</strong> Give <code>run()</code> a <code>strings.NewReader</code> as input and a <code>bytes.Buffer</code> as output. The test runs in milliseconds and touches no disk.</p>
+<pre>func TestRunEndToEnd(t *testing.T) {
+    in := strings.NewReader("id,account,amount,ts\n" +
+        "a,acc-1,10.00,2026-01-01T10:00:00Z\n" +
+        "b,acc-1,10.00,2026-01-01T10:00:30Z\n")
+    var out bytes.Buffer
+    if err := run([]string{"-window", "1m"}, in, &amp;out); err != nil {
+        t.Fatalf("run: %v", err)
+    }
+    if got, want := out.String(), "unique: 1\nduplicates: 1\n"; got != want {
+        t.Errorf("got %q, want %q", got, want)
+    }
+}</pre>
+<p>Add a second case with one malformed line. It checks that the error names the line and that nothing was written. The Go guide (§11) has both cases, compiled and tested.</p>
+<div class="say">The unit tests pin each piece. This integration test protects the wiring: the parser, the core and the output agree on the format, which no unit test checks.</div>
+</div>
+
+<dl class="terms">
+  <dt>Edge case and boundary</dt>
+  <dd>An input at the limit of the rules: empty, one item, a duplicate, exactly at a deadline. A boundary is <em>inclusive</em> when the limit counts (≤) and <em>exclusive</em> when it doesn't (&lt;).</dd>
+  <dt>Off-by-one</dt>
+  <dd>The classic boundary bug: <code>&lt;</code> where it should be <code>≤</code>. The "exactly at the boundary" test catches it.</dd>
+  <dt>Injected clock</dt>
+  <dd>Pass "what time is it" in as a value or a function, so a test can set the time. There are no sleeps in tests, and the results are the same on every run.</dd>
+</dl>
+
+<p class="term-group">Production and process</p>
+<dl class="terms">
+  <dt>Observability</dt>
+  <dd>Being able to tell, from outside, what the system is doing and why. In practice: logs, metrics and traces.</dd>
+  <dt>Structured log</dt>
+  <dd>A log line made of named fields, not free text, so it can be searched. <span class="ex">Example: <code>level=warn msg="rejected line" line=12 reason="bad amount"</code>.</span></dd>
+  <dt>Metric and alert</dt>
+  <dd>A number tracked over time, such as a counter of rejected records. An alert fires when it crosses a threshold or jumps.</dd>
+  <dt>Scope cut</dt>
+  <dd>Drop a step on purpose to protect the quality of the rest, and say so early (by 0:45).</dd>
+  <dt>Park</dt>
+  <dd>Write a stuck item under <code>## Parked</code>, say the trade-off, and move on. Come back if there's time.</dd>
+</dl>
 
 <!-- ============================================================ -->
 <h2 id="own">Owning the plan: what to say</h2>

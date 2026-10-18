@@ -57,8 +57,9 @@ The run sheet turns the playbook into 39 numbered actions, from joining the call
 > [!tip] The plan is yours, and Claude Code is the scribe
 > Claude Code types the empty `NOTES.md` headings, and later it looks for gaps in your plan. It never writes the plan. You type the decisions in shorthand while you talk. Then you accept, reject or park each of its suggestions out loud, with a reason.
 
-Two sections after the steps show how to say it:
+Three sections after the steps help you remember and say it:
 
+- **The memory list.** The five failure modes, remembered as "Can Retries Ever Lose Orders?" (concurrency, retries, errors, limits, observability). Each one has what it is, the question to ask, the fix, a line to say, and what it means in six likely problems. A glossary explains every term, such as fail fast, idempotent and race condition. A worked box explains the integration test.
 - **Owning the plan.** A ten-part formula to say in order, from "restate it" and "one example by hand" to "what could go wrong" and "agree". It also has the lines for each AI moment and the lines that give the plan away.
 - **Five scenarios.** Each one shows the full scope phase, typed and said. The five are a banking system that grows in levels, a key-value store with expiry, existing code with a bug, a new requirement at minute 30, and a vague prompt.
 
