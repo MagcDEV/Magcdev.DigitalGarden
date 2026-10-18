@@ -9,7 +9,7 @@ tags:
   - interview
   - go
 date_created: 2026-10-14
-date_modified: 2026-10-17
+date_modified: 2026-10-18
 cssclasses:
   - nubank-guides
 ---
@@ -39,7 +39,7 @@ They also recommend the video *AI Coding Interview w/ Meta* as a picture of the 
 
 ## How the hour runs
 
-1. **0–10: understand and plan.** Write no code. Ask 3–4 clarifying questions, write a plan of 3–5 testable steps, and list the edge cases. Name the failure modes, then agree the breakdown.
+1. **0–10: understand and plan.** Write no code. Ask 3–4 clarifying questions, type a plan of 3–5 testable steps, and list the edge cases. Name the failure modes, let Claude Code look for gaps, then agree the breakdown.
 2. **10–15: brief Claude Code.** Send the kickoff prompt, read its plan aloud, then say "go". Only the skeleton and a failing test land.
 3. **15–40: build in slices, test first.** For each step, get the failing test first, then the code that makes it pass. Read each diff aloud.
 4. **40–52: integration test and the hard cases.** Add one integration test through the entry point. Then cover each edge case still without a test.
@@ -52,12 +52,20 @@ The interviewer works on reliability, so the follow-ups come from that side. Men
 
 ## The run sheet, step by step
 
-The run sheet turns the playbook into 38 numbered actions, from joining the call to your last question. Each step says what to open, type, prompt, run and say, and when the step is done. Tags on each step name the scored point that it shows. A table at the end maps every scored point to its steps, so a practice run can check that it covered each one.
+The run sheet turns the playbook into 39 numbered actions, from joining the call to your last question. Each step says what to open, type, prompt, run and say, and when the step is done. Tags on each step name the scored point that it shows. A table at the end maps every scored point to its steps, so a practice run can check that it covered each one.
+
+> [!tip] The plan is yours, and Claude Code is the scribe
+> Claude Code types the empty `NOTES.md` headings, and later it looks for gaps in your plan. It never writes the plan. You type the decisions in shorthand while you talk. Then you accept, reject or park each of its suggestions out loud, with a reason.
+
+Two sections after the steps show how to say it:
+
+- **Owning the plan.** A ten-part formula to say in order, from "restate it" and "one example by hand" to "what could go wrong" and "agree". It also has the lines for each AI moment and the lines that give the plan away.
+- **Five scenarios.** Each one shows the full scope phase, typed and said. The five are a banking system that grows in levels, a key-value store with expiry, existing code with a bug, a new requirement at minute 30, and a vague prompt.
 
 The phases follow the clock:
 
 - **0:00–0:02, orient.** Hands off the keyboard, say the opening line, and ask for a minute to read.
-- **0:02–0:10, scope in `NOTES.md`.** Type the skeleton, then fill the problem, questions, assumptions, plan, layout, edge cases and the five failure modes. Get the breakdown agreed before the first prompt.
+- **0:02–0:10, scope in `NOTES.md`.** Let Claude Code type the empty headings. Then type the problem, questions, assumptions, plan, layout, edge cases and the five failure modes yourself. Ask Claude Code for gaps, decide on each one out loud, and get the breakdown agreed.
 - **0:10–0:15, brief Claude Code.** Send the kickoff prompt, correct its plan, and get a skeleton with one failing test.
 - **0:15–0:40, the test-first loop.** For each plan step, announce the cases, get the test, read it, and see red. Then get the code, review the diff with six checks, see green, and tick the step with the time.
 - **0:40–0:52, integration test and edge cases.** Write the integration test without being asked, then fill the edge-case gaps and run the full check.

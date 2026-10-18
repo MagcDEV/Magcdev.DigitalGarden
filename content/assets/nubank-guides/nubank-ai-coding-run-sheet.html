@@ -177,7 +177,15 @@
   td.say-cell { color: var(--say); font-style: italic; }
   table.coverage td:last-child { font-family: "IBM Plex Mono", monospace; font-size: 0.88rem; }
   table.coverage a { text-decoration: none; }
+  .slot { font-style: normal; font-family: "IBM Plex Mono", monospace; font-size: 0.86em; color: var(--accent-ink); background: var(--bg); border: 1px dashed var(--accent); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+  .part { font-weight: 600; margin: 18px 0 2px; }
+  .part-n { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--accent); color: var(--accent-ink); font-size: 0.78rem; font-weight: 700; margin-right: 8px; vertical-align: 1px; }
+  .setting { background: var(--panel); border-radius: 8px; padding: 10px 14px; font-weight: 500; }
+  .ai-list { color: var(--ink-2); font-size: 0.95rem; }
+  .ai-list::before { content: "AI: "; font-weight: 600; color: var(--ink); }
+  h3[id^="sc-"], h3[id^="own-"] { scroll-margin-top: 16px; margin-top: 34px; }
   @media (max-width: 560px) {
+    .slot { white-space: normal; }
     .step { grid-template-columns: 28px 1fr; gap: 0 10px; }
     .step .num { width: 26px; height: 26px; font-size: 0.8rem; }
   }
@@ -226,7 +234,7 @@
 <h1>Nubank AI Coding Interview<br>The run sheet</h1>
 <p class="lede">Every action in the hour, in order: what to open, what to type, what to prompt, what to run, and what to say. It works for any problem. Fill the <span class="ph-inline">yellow</span> parts live.</p>
 
-<div class="frame">Nothing is generated before the plan is agreed. Every step starts with a failing test. Every diff is read out loud.</div>
+<div class="frame">The plan is yours: Claude Code types the headings and checks for gaps, but writes no plan and no code before you and the interviewer agree. Every step starts with a failing test. Every diff is read out loud.</div>
 
 <nav class="toc" aria-label="Phases">
 <ol>
@@ -239,6 +247,8 @@
   <li><a href="#integration">0:40 Integration and edge cases</a></li>
   <li><a href="#handoff">0:52 Review and handoff</a></li>
   <li><a href="#questions">0:58 Your questions</a></li>
+  <li><a href="#own">Owning the plan: what to say</a></li>
+  <li><a href="#scenarios">Five scenarios, said out loud</a></li>
   <li><a href="#rescue">If something goes wrong</a></li>
   <li><a href="#coverage">What each step proves</a></li>
 </ol>
@@ -274,8 +284,8 @@
 </div></div>
 
 <div class="step" id="s-memorise"><div class="num">3</div><div class="sb">
-<p><strong>Read three things once more:</strong> the <code>NOTES.md</code> skeleton in step <a href="#s-skeleton">6</a>, the kickoff prompt in step <a href="#s-kickoff">16</a>, and the review checklist in step <a href="#s-review">25</a>.</p>
-<p class="done">you can type the skeleton without looking.</p>
+<p><strong>Read four things once more:</strong> the scribe prompt in step <a href="#s-skeleton">7</a>, the plan-review prompt in step <a href="#s-aireview">15</a>, the kickoff prompt in step <a href="#s-kickoff">17</a>, and the ownership formula in <a href="#own">Owning the plan</a>.</p>
+<p class="done">you can say the ten parts of the formula in order without looking.</p>
 </div></div>
 
 <!-- ============================================================ -->
@@ -295,47 +305,36 @@
 
 <!-- ============================================================ -->
 <h2 id="scope">Scope in NOTES.md <span class="clock">0:02–0:10</span></h2>
-<p class="note">No prompt to Claude Code in this phase. This phase is the "decompose before you prompt" ask, done where the interviewer can see it.</p>
+<p class="note">Claude Code gets two prompts in this phase, and neither one plans. The first types empty headings. The second looks for gaps in a plan that you already wrote and said. Every decision in <code>NOTES.md</code> is typed by you, in shorthand, while you talk. This is the "decompose before you prompt" ask, done where the interviewer can see it.</p>
 
-<div class="step" id="s-skeleton"><div class="num">6</div><div class="sb">
-<p><strong>Create <code>NOTES.md</code> at the project root and type this skeleton.</strong> Say why the file exists. <span class="tag">Decompose</span> <span class="tag">Talk</span></p>
-<pre># Problem
-<span class="ph">one sentence</span>
-
-## Questions
--
-
-## Assumptions
--
-
-## Plan (each step starts with a failing test)
-1. [ ]
-
-## Layout
--
-
-## Edge cases
--
-
-## Failure modes
--
-
-## Parked
--
-
-## Next (with another hour)
--</pre>
-<div class="say">I'll keep the plan in this file so you can see it, and I'll tick steps off as we go.</div>
+<div class="step" id="s-look"><div class="num">6</div><div class="sb">
+<p><strong>In the terminal, look at what is already there.</strong> Say what you find. If there is existing code, go to <a href="#sc-existing">scenario C</a> first. <span class="tag">Talk</span></p>
+<pre>ls -la
+cat go.mod 2>/dev/null || go mod init interview
+go test ./... 2>&amp;1 | tail -5</pre>
 </div></div>
 
-<div class="step" id="s-restate"><div class="num">7</div><div class="sb">
-<p><strong>Under <code># Problem</code>, write the problem in one sentence.</strong> Read it out loud and wait for a nod. <span class="tag">Decompose</span> <span class="tag">Talk</span></p>
-<pre>Given <span class="ph">input</span>, produce <span class="ph">output</span>, so that <span class="ph">rule</span>.</pre>
-<p class="done">the interviewer agrees with the sentence.</p>
+<div class="step" id="s-skeleton"><div class="num">7</div><div class="sb">
+<p><strong>Start Claude Code (<code>claude</code>) and let it type the empty skeleton.</strong> Say first that it is a scribe, not a planner. <span class="tag">Steer</span> <span class="tag">Talk</span></p>
+<div class="say">I'll use Claude Code as a scribe for the empty headings. The plan itself comes from me.</div>
+<pre>Create NOTES.md with these empty headings: Problem, Questions, Assumptions,
+Plan, Layout, Edge cases, Failure modes, Parked, Next.
+Don't read any other file and don't fill anything in.</pre>
+<p>If Claude Code is slow to start, don't wait. Type <code># Problem</code> yourself and go on. You only need the headings that you fill.</p>
+<p class="done"><code>NOTES.md</code> is open with empty headings.</p>
 </div></div>
 
-<div class="step" id="s-questions"><div class="num">8</div><div class="sb">
-<p><strong>Under <code>## Questions</code>, write 3–4 questions. Then ask them out loud.</strong> Write each answer after an arrow. <span class="tag">Decompose</span> <span class="tag">Failure</span> <span class="tag">Talk</span></p>
+<div class="step" id="s-restate"><div class="num">8</div><div class="sb">
+<p><strong>Under <code># Problem</code>, type the problem in one sentence. Then walk one example by hand, out loud.</strong> The example becomes your first test. <span class="tag">Decompose</span> <span class="tag">Talk</span></p>
+<pre>Given <span class="ph">input</span>, produce <span class="ph">output</span>, so that <span class="ph">rule</span>.
+e.g. <span class="ph">A=100, B=0, transfer 30 A→B</span> → <span class="ph">A=70, B=30</span></pre>
+<div class="say">So the core of this is <span class="slot">one sentence</span>. Let me run one example by hand: <span class="slot">input</span> should give <span class="slot">output</span>, because <span class="slot">rule</span>. That example becomes my first test.</div>
+<p>More lines like this one: <a href="#own">Owning the plan</a>, parts 1–3.</p>
+<p class="done">the interviewer agrees with the sentence and the example.</p>
+</div></div>
+
+<div class="step" id="s-questions"><div class="num">9</div><div class="sb">
+<p><strong>Under <code>## Questions</code>, type 3–4 questions in shorthand while you ask them out loud.</strong> Type each answer after an arrow. <span class="tag">Decompose</span> <span class="tag">Failure</span> <span class="tag">Talk</span></p>
 <pre>## Questions
 - Input size: fits in memory, or stream it? → <span class="ph">answer</span>
 - Bad records: fail fast, or skip and report? → <span class="ph">answer</span>
@@ -343,10 +342,10 @@
 - Called by many callers at once? → <span class="ph">answer</span>
 - Does output order matter? → <span class="ph">answer</span>
 - "Done" for this hour: CLI, library + tests, both? → <span class="ph">answer</span></pre>
-<p>Pick the 3–4 that matter for this problem. Each one either changes the design or becomes a test.</p>
+<p>Pick the 3–4 that matter for this problem. Each one either changes the design or becomes a test. Say why you ask: "One question changes the design: …" (<a href="#own">part 4</a>).</p>
 </div></div>
 
-<div class="step" id="s-assume"><div class="num">9</div><div class="sb">
+<div class="step" id="s-assume"><div class="num">10</div><div class="sb">
 <p><strong>Under <code>## Assumptions</code>, write a default for each question still open.</strong> Say each one, and offer to change it. <span class="tag">Talk</span></p>
 <pre>## Assumptions
 - Input fits in memory (under ~1M records). Streaming is a later change.
@@ -355,8 +354,9 @@
 <div class="say">I'll assume fail-fast on a bad line, because silent data loss is worse than a visible error with money involved. Happy to flip that.</div>
 </div></div>
 
-<div class="step" id="s-plan"><div class="num">10</div><div class="sb">
-<p><strong>Under <code>## Plan</code>, write 3–5 steps. Give each step the test that proves it.</strong> Make the last step the integration test. <span class="tag">Decompose</span> <span class="tag">TDD</span></p>
+<div class="step" id="s-plan"><div class="num">11</div><div class="sb">
+<p><strong>Under <code>## Plan</code>, type 3–5 steps. Give each step the test that proves it. Say the approach, the alternative you rejected, and the order.</strong> Make the last step the integration test. <span class="tag">Decompose</span> <span class="tag">TDD</span> <span class="tag">Talk</span></p>
+<div class="say">I'll use <span class="slot">approach</span> because <span class="slot">reason</span>. I considered <span class="slot">alternative</span>; it buys <span class="slot">benefit</span> but costs <span class="slot">cost</span>, which we don't need here. I'll build <span class="slot">step 1</span> first, because everything else depends on it.</div>
 <pre>## Plan (each step starts with a failing test)
 1. [ ] Model + parse one record → TestParseRecord: valid / empty field / bad number
 2. [ ] Parse a stream, line numbers → TestParse: header, empty input, error names line N
@@ -366,7 +366,7 @@
 <p class="done">each step is small enough for one prompt and has its own test.</p>
 </div></div>
 
-<div class="step" id="s-layout"><div class="num">11</div><div class="sb">
+<div class="step" id="s-layout"><div class="num">12</div><div class="sb">
 <p><strong>Under <code>## Layout</code>, write one line per file.</strong> Say why the layers are split. <span class="tag">Readable</span></p>
 <pre>## Layout
 - model.go: types, sentinel errors
@@ -377,7 +377,7 @@
 <div class="say">The core takes plain values and knows nothing about files, so it's trivially testable. main only turns an error into an exit code.</div>
 </div></div>
 
-<div class="step" id="s-edges"><div class="num">12</div><div class="sb">
+<div class="step" id="s-edges"><div class="num">13</div><div class="sb">
 <p><strong>Under <code>## Edge cases</code>, list the cases that each need a test.</strong> <span class="tag">Decompose</span> <span class="tag">TDD</span></p>
 <pre>## Edge cases
 - [ ] empty input
@@ -389,7 +389,7 @@
 - [ ] runs twice on the same data</pre>
 </div></div>
 
-<div class="step" id="s-failures"><div class="num">13</div><div class="sb">
+<div class="step" id="s-failures"><div class="num">14</div><div class="sb">
 <p><strong>Under <code>## Failure modes</code>, write the five. Say each one out loud now, before anyone asks.</strong> <span class="tag">Failure</span> <span class="tag">Observe</span></p>
 <pre>## Failure modes
 - Concurrency: <span class="ph">shared state? → mutex + go test -race / not shared</span>
@@ -400,24 +400,29 @@
 <div class="say">The failure modes I'm keeping in mind: retries, so I'll key on the ID; malformed lines, which fail fast; memory, which is fine at this size; and in production I'd log every rejected line and count them as a metric.</div>
 </div></div>
 
-<div class="step" id="s-agree"><div class="num">14</div><div class="sb">
+<div class="step" id="s-aireview"><div class="num">15</div><div class="sb">
+<p><strong>Ask Claude Code to look for gaps in your plan, not to change it. Then decide on each suggestion out loud.</strong> Move the ones you accept into your lists. <span class="tag">Steer</span> <span class="tag">Decompose</span> <span class="tag">Talk</span></p>
+<div class="say">My plan is written. I'll ask Claude Code to look for gaps, not to replace it.</div>
+<pre>Read the problem and NOTES.md. Don't change my plan.
+Under "## Suggestions", list up to 5 edge cases or failure modes I missed.
+No code.</pre>
+<div class="say">Good catch: <span class="slot">case</span>. Adding it to the edge cases, because <span class="slot">reason</span>.</div>
+<div class="say">I'll skip <span class="slot">suggestion</span>: <span class="slot">the spec rules it out / not in scope for the hour</span>.</div>
+<p>Accept at least one and reject at least one, each with a reason. All the accept, reject and defer lines are in <a href="#own-ai">Using the AI on your plan</a>.</p>
+<p class="done">every suggestion has a yes, a no or a "parked", said with a reason.</p>
+</div></div>
+
+<div class="step" id="s-agree"><div class="num">16</div><div class="sb">
 <p><strong>Ask for agreement, then wait for the answer.</strong> If they push back, change <code>NOTES.md</code> while they watch. <span class="tag">Decompose</span> <span class="tag">Talk</span> <span class="tag">Clock</span></p>
-<div class="say">That's the plan: four steps, each starting with a failing test, and an integration test at the end. Does that breakdown match what you'd expect before I start prompting? I'm about ten minutes in.</div>
-<p class="done">they said yes. Only now does Claude Code get a prompt.</p>
+<div class="say">That's my plan: four steps, each starting with a failing test, and an integration test at the end. Does that match what you'd expect, or would you weight something differently? I'm about ten minutes in.</div>
+<p class="done">they said yes. Only now does Claude Code get a prompt to build.</p>
 </div></div>
 
 <!-- ============================================================ -->
 <h2 id="brief">Brief Claude Code <span class="clock">0:10–0:15</span></h2>
 
-<div class="step" id="s-look"><div class="num">15</div><div class="sb">
-<p><strong>In the terminal, look at what is already there.</strong> Say what you find. <span class="tag">Talk</span></p>
-<pre>ls -la
-cat go.mod 2>/dev/null || go mod init interview
-go version</pre>
-</div></div>
-
-<div class="step" id="s-kickoff"><div class="num">16</div><div class="sb">
-<p><strong>Start Claude Code (<code>claude</code>) and send the kickoff prompt.</strong> <span class="tag">Steer</span> <span class="tag">TDD</span></p>
+<div class="step" id="s-kickoff"><div class="num">17</div><div class="sb">
+<p><strong>Send the kickoff prompt.</strong> <span class="tag">Steer</span> <span class="tag">TDD</span></p>
 <pre>Read NOTES.md: it has the problem, my plan, the layout and the edge cases.
 We solve it in Go, standard library only, no external deps.
 Layout: model.go, parse.go, core.go, main.go, plus _test.go files.
@@ -428,12 +433,13 @@ First, tell me in 3-5 bullets how you'd structure it and which types you'd defin
 Then wait for my go.</pre>
 </div></div>
 
-<div class="step" id="s-readplan"><div class="num">17</div><div class="sb">
+<div class="step" id="s-readplan"><div class="num">18</div><div class="sb">
 <p><strong>Read its plan out loud. Accept, trim or correct at least one point, with the reason.</strong> <span class="tag">Steer</span> <span class="tag">Talk</span></p>
 <div class="say">Good, except I don't want an interface for the parser yet; one implementation doesn't need it. Plain functions.</div>
+<div class="say">Its plan merges parsing and the rule into one function. I'm keeping them apart, as in my layout, so the rule can be tested without I/O.</div>
 </div></div>
 
-<div class="step" id="s-go"><div class="num">18</div><div class="sb">
+<div class="step" id="s-go"><div class="num">19</div><div class="sb">
 <p><strong>Send "go" for the skeleton and the first failing test only.</strong> <span class="tag">Steer</span> <span class="tag">TDD</span></p>
 <pre>Go. Create the files with the types and function stubs only (return zero values).
 Then write the test for plan step 1 in parse_test.go: <span class="ph">cases from NOTES.md</span>.
@@ -441,7 +447,7 @@ Don't implement anything. Stop when it compiles and the test fails.</pre>
 <p>When Claude Code asks to edit a file, read the diff in the prompt before you accept it.</p>
 </div></div>
 
-<div class="step" id="s-red"><div class="num">19</div><div class="sb">
+<div class="step" id="s-red"><div class="num">20</div><div class="sb">
 <p><strong>Check the skeleton against <code>## Layout</code>, then run the tests and see red.</strong> <span class="tag">Steer</span> <span class="tag">TDD</span></p>
 <pre>go build ./... &amp;&amp; go test ./...</pre>
 <div class="say">It compiles and step 1's test fails, for the right reason: the parser is a stub. That's our red.</div>
@@ -450,14 +456,14 @@ Don't implement anything. Stop when it compiles and the test fails.</pre>
 
 <!-- ============================================================ -->
 <h2 id="loop">The test-first loop <span class="clock">0:15–0:40</span></h2>
-<div class="loop-banner">Repeat steps <a href="#s-announce">20</a>–<a href="#s-tick">27</a> for each plan step. Targets: step 1 done by 0:22, step 2 by 0:30, step 3 by 0:40. Keep each change under about 50 lines.</div>
+<div class="loop-banner">Repeat steps <a href="#s-announce">21</a>–<a href="#s-tick">28</a> for each plan step. Targets: step 1 done by 0:22, step 2 by 0:30, step 3 by 0:40. Keep each change under about 50 lines.</div>
 
-<div class="step" id="s-announce"><div class="num">20</div><div class="sb">
+<div class="step" id="s-announce"><div class="num">21</div><div class="sb">
 <p><strong>Say which plan step is next, its test cases, and what each case protects against.</strong> <span class="tag">Talk</span> <span class="tag">TDD</span></p>
 <div class="say">Step 3 is the core rule. Three cases: the normal one; exactly at the boundary, which protects against an off-by-one; and a duplicate, which protects against counting a retried record twice.</div>
 </div></div>
 
-<div class="step" id="s-b0"><div class="num">21</div><div class="sb">
+<div class="step" id="s-b0"><div class="num">22</div><div class="sb">
 <p><strong>Prompt for the test only.</strong> <span class="tag">Steer</span> <span class="tag">TDD</span></p>
 <pre>Step <span class="ph">N</span>: <span class="ph">what this step does</span>.
 Write a table-driven test for <span class="ph">Function</span> in <span class="ph">file</span>_test.go only. Cases:
@@ -466,7 +472,7 @@ Write a table-driven test for <span class="ph">Function</span> in <span class="p
 Don't write the implementation. Show me the test and stop.</pre>
 </div></div>
 
-<div class="step" id="s-readtest"><div class="num">22</div><div class="sb">
+<div class="step" id="s-readtest"><div class="num">23</div><div class="sb">
 <p><strong>Read the test out loud before you run it.</strong> Check three things, and fix one out loud if you need to. <span class="tag">Steer</span> <span class="tag">TDD</span> <span class="tag">Readable</span></p>
 <ul class="check">
   <li>The cases match <code>NOTES.md</code>, and each boundary has its own row.</li>
@@ -476,13 +482,13 @@ Don't write the implementation. Show me the test and stop.</pre>
 <div class="say">This row expects the wrong thing: at exactly one minute it should count as a duplicate. I'll fix the expectation by hand.</div>
 </div></div>
 
-<div class="step" id="s-runred"><div class="num">23</div><div class="sb">
+<div class="step" id="s-runred"><div class="num">24</div><div class="sb">
 <p><strong>Run only this test and watch it fail.</strong> Say why it fails. <span class="tag">TDD</span></p>
 <pre>go test ./... -run <span class="ph">TestName</span> -v</pre>
 <p class="done">it fails for the reason you expected, not for a compile error.</p>
 </div></div>
 
-<div class="step" id="s-b"><div class="num">24</div><div class="sb">
+<div class="step" id="s-b"><div class="num">25</div><div class="sb">
 <p><strong>Prompt for the code that makes it pass.</strong> <span class="tag">Steer</span></p>
 <pre>Make <span class="ph">TestName</span> pass.
 Expected behavior: <span class="ph">input → output, including this step's edge case</span>.
@@ -491,7 +497,7 @@ Show me the diff and stop.</pre>
 <p>While it works, say what you expect to see: "a loop over the records and a map keyed by ID; anything more, I'll trim."</p>
 </div></div>
 
-<div class="step" id="s-review"><div class="num">25</div><div class="sb">
+<div class="step" id="s-review"><div class="num">26</div><div class="sb">
 <p><strong>Review the diff out loud with the six checks.</strong> Accept, correct or reject, and say why. <span class="tag">Steer</span> <span class="tag">Readable</span> <span class="tag">Talk</span></p>
 <ol class="tight">
   <li><strong>Only what I asked?</strong> Cut extra files, features and dependencies.</li>
@@ -505,18 +511,18 @@ Show me the diff and stop.</pre>
 <div class="say">Rejecting this part: it swallows the parse error. I want it returned with the line number, so the caller decides.</div>
 </div></div>
 
-<div class="step" id="s-green"><div class="num">26</div><div class="sb">
+<div class="step" id="s-green"><div class="num">27</div><div class="sb">
 <p><strong>Run everything and see green.</strong> If it stays red, use the debug protocol in <a href="#rescue">If something goes wrong</a>. <span class="tag">TDD</span> <span class="tag">Readable</span></p>
 <pre>go test ./... &amp;&amp; go vet ./...</pre>
 </div></div>
 
-<div class="step" id="s-tick"><div class="num">27</div><div class="sb">
+<div class="step" id="s-tick"><div class="num">28</div><div class="sb">
 <p><strong>Tick the step in <code>NOTES.md</code> (<code>[x]</code>) and say the checkpoint with the time.</strong> <span class="tag">Clock</span> <span class="tag">Talk</span></p>
 <div class="say">Step 2 done, 28 minutes in, on plan. The parser handles empty input and names the bad line. Next is the core rule. Any concerns before I go on?</div>
 <p class="done">the step is ticked, the tests are green, and you said the time.</p>
 </div></div>
 
-<div class="step" id="s-concurrency"><div class="num">28</div><div class="sb">
+<div class="step" id="s-concurrency"><div class="num">29</div><div class="sb">
 <p><strong>If state is shared between callers, add the lock as its own slice, then run the race detector.</strong> <span class="tag">Failure</span> <span class="tag">TDD</span></p>
 <pre>Add a sync.Mutex to <span class="ph">Type</span>, directly above the fields it guards.
 Lock and defer Unlock in every method that touches them. No I/O while holding it.
@@ -525,7 +531,7 @@ Add a test that calls <span class="ph">Method</span> from 50 goroutines. Show th
 <div class="say">Two callers could hit this map at once, so it needs a mutex. The race detector is clean.</div>
 </div></div>
 
-<div class="step" id="s-park"><div class="num">29</div><div class="sb">
+<div class="step" id="s-park"><div class="num">30</div><div class="sb">
 <p><strong>If one step passes ten minutes, park it.</strong> Write it under <code>## Parked</code>, say the trade-off, and move to the next step. <span class="tag">Clock</span> <span class="tag">Talk</span></p>
 <div class="say">This date-format corner is eating the clock. I'll support one format for now, note the rest under Parked, and come back if there's time.</div>
 </div></div>
@@ -533,7 +539,7 @@ Add a test that calls <span class="ph">Method</span> from 50 goroutines. Show th
 <!-- ============================================================ -->
 <h2 id="integration">Integration test and edge cases <span class="clock">0:40–0:52</span></h2>
 
-<div class="step" id="s-d2"><div class="num">30</div><div class="sb">
+<div class="step" id="s-d2"><div class="num">31</div><div class="sb">
 <p><strong>Announce the integration test before anyone asks, then prompt for it.</strong> <span class="tag">TDD</span> <span class="tag">Steer</span> <span class="tag">Talk</span></p>
 <div class="say">The unit tests pin each piece. Now one integration test through run(), because nothing yet checks that the layers agree on the format.</div>
 <pre>Write one integration test in main_test.go that calls run(args, in, out).
@@ -544,7 +550,7 @@ Use strings.NewReader and bytes.Buffer. No files, no network.</pre>
 <p class="done">both cases pass, and you said what each one protects against.</p>
 </div></div>
 
-<div class="step" id="s-sweep"><div class="num">31</div><div class="sb">
+<div class="step" id="s-sweep"><div class="num">32</div><div class="sb">
 <p><strong>Go down <code>## Edge cases</code> and tick each case that a test covers.</strong> For each gap, prompt for a row. <span class="tag">TDD</span> <span class="tag">Decompose</span></p>
 <pre>Add table rows to <span class="ph">TestName</span> for exactly these cases:
 - <span class="ph">case</span>
@@ -553,13 +559,13 @@ One behavior per row, names that describe the behavior. Don't change the code.</
 <p>If a new row fails, good: that's a real bug, found on camera. Use the debug protocol.</p>
 </div></div>
 
-<div class="step" id="s-fullcheck"><div class="num">32</div><div class="sb">
+<div class="step" id="s-fullcheck"><div class="num">33</div><div class="sb">
 <p><strong>Run the full check and read the result out loud.</strong> <span class="tag">TDD</span> <span class="tag">Readable</span></p>
 <pre>go test -race ./... &amp;&amp; go vet ./... &amp;&amp; gofmt -l .</pre>
 <div class="say">All green, the race detector is clean, vet is clean, and gofmt lists nothing.</div>
 </div></div>
 
-<div class="step" id="s-demo"><div class="num">33</div><div class="sb">
+<div class="step" id="s-demo"><div class="num">34</div><div class="sb">
 <p><strong>Run the program once by hand, with real input.</strong> <span class="tag">Talk</span></p>
 <pre>printf '<span class="ph">header\nline 1\nline 2\n</span>' | go run .</pre>
 </div></div>
@@ -567,19 +573,19 @@ One behavior per row, names that describe the behavior. Don't change the code.</
 <!-- ============================================================ -->
 <h2 id="handoff">Review and handoff <span class="clock">0:52–0:58</span></h2>
 
-<div class="step" id="s-f"><div class="num">34</div><div class="sb">
+<div class="step" id="s-f"><div class="num">35</div><div class="sb">
 <p><strong>Ask Claude Code for a review that changes nothing.</strong> Fix one small finding, and park the rest out loud. <span class="tag">Steer</span> <span class="tag">Readable</span></p>
 <pre>Review the full solution for: unhandled errors, unclear names, functions doing
 more than one thing, and edge cases from NOTES.md with no test.
 List the findings. Don't change anything yet.</pre>
 </div></div>
 
-<div class="step" id="s-walk"><div class="num">35</div><div class="sb">
+<div class="step" id="s-walk"><div class="num">36</div><div class="sb">
 <p><strong>Walk the code top to bottom, as if you hand it to a teammate.</strong> Follow the data: <code>main</code> → <code>run</code> → parse → core → output. Say where each error comes out. <span class="tag">Readable</span> <span class="tag">Talk</span></p>
 <div class="say">Entry point is run: it parses, applies the rule, writes the report. A bad line stops the run with its line number. The core never touches I/O, which is why its tests are plain tables.</div>
 </div></div>
 
-<div class="step" id="s-prod"><div class="num">36</div><div class="sb">
+<div class="step" id="s-prod"><div class="num">37</div><div class="sb">
 <p><strong>Fill <code>## Next</code> and say it: observability first, then reliability.</strong> <span class="tag">Observe</span> <span class="tag">Failure</span></p>
 <pre>## Next (with another hour)
 - Log each rejected line: line number + reason (structured)
@@ -589,7 +595,7 @@ List the findings. Don't change anything yet.</pre>
 <div class="say">In production I'd log each rejected line with its number and reason, and count rejections as a metric. That's what I'd alert on.</div>
 </div></div>
 
-<div class="step" id="s-honest"><div class="num">37</div><div class="sb">
+<div class="step" id="s-honest"><div class="num">38</div><div class="sb">
 <p><strong>Say what is fragile and what is not done.</strong> A small, tested solution is the goal. Say that you chose it. <span class="tag">Readable</span> <span class="tag">Clock</span> <span class="tag">Talk</span></p>
 <div class="say">Step 5 isn't done; it would slot into the core as one more rule with its own test. I kept the scope small so that what's here is layered and tested.</div>
 </div></div>
@@ -597,7 +603,7 @@ List the findings. Don't change anything yet.</pre>
 <!-- ============================================================ -->
 <h2 id="questions">Your questions <span class="clock">0:58–1:00</span></h2>
 
-<div class="step" id="s-ask"><div class="num">38</div><div class="sb">
+<div class="step" id="s-ask"><div class="num">39</div><div class="sb">
 <p><strong>Ask one or two questions.</strong> <span class="tag">Talk</span></p>
 <ul>
   <li>How are teams at Nu using AI coding tools day to day, and what changed in code review?</li>
@@ -605,6 +611,203 @@ List the findings. Don't change anything yet.</pre>
   <li>How does your team handle reliability incidents that cross squad boundaries?</li>
 </ul>
 </div></div>
+
+<!-- ============================================================ -->
+<h2 id="own">Owning the plan: what to say</h2>
+<p>The interviewer can't see inside your head. They see that the plan is yours when it arrives before any planning prompt, when it carries reasons, and when you overrule the AI with a reason. Six signals show it:</p>
+<ul class="check">
+  <li>You walk an example by hand before you design anything.</li>
+  <li>You name the hard part, and it is not the obvious part.</li>
+  <li>Each decision has a "because".</li>
+  <li>You name one alternative that you rejected, and its cost.</li>
+  <li>You say why the steps come in this order.</li>
+  <li>You change the plan when you learn something, and you say what changed.</li>
+</ul>
+
+<h3 id="own-formula">The formula: ten parts, in the order you say them</h3>
+<p>Say these in the scope phase, in about two minutes in total. Skip a part when the problem doesn't need it. The <span class="slot">slots</span> change with the problem.</p>
+
+<p class="part"><span class="part-n">1</span> Understand: restate it</p>
+<div class="say">So the core of this is <span class="slot">one sentence</span>. The input is <span class="slot">X</span>, the output is <span class="slot">Y</span>, and the rule that matters is <span class="slot">Z</span>.</div>
+
+<p class="part"><span class="part-n">2</span> Prove it: one example by hand</p>
+<div class="say">Let me run one example by hand: <span class="slot">input</span> should give <span class="slot">output</span>, because <span class="slot">rule</span>. That example becomes my first test.</div>
+
+<p class="part"><span class="part-n">3</span> The hard part</p>
+<div class="say">The hard part isn't <span class="slot">the obvious bit</span>. It's <span class="slot">the edge</span>. That's where the bugs will be, so that's where the tests go.</div>
+
+<p class="part"><span class="part-n">4</span> The question that changes the design</p>
+<div class="say">One question changes the design: <span class="slot">question</span>? If yes, I'd <span class="slot">A</span>. If no, <span class="slot">B</span>.</div>
+
+<p class="part"><span class="part-n">5</span> Approach, and the alternative you rejected</p>
+<div class="say">I'll use <span class="slot">approach</span> because <span class="slot">reason</span>. I considered <span class="slot">alternative</span>. It buys <span class="slot">benefit</span>, but it costs <span class="slot">cost</span>, which we don't need here.</div>
+
+<p class="part"><span class="part-n">6</span> The data model</p>
+<div class="say">The core data is <span class="slot">a map / a sorted list / a queue</span> keyed by <span class="slot">key</span>, because the main operation is <span class="slot">operation</span>, and that makes it <span class="slot">O(1) / O(log n)</span>.</div>
+
+<p class="part"><span class="part-n">7</span> The order, and why</p>
+<div class="say">I'll build it in this order: <span class="slot">step 1</span> first, because everything else depends on it. Then <span class="slot">step 2</span>, then <span class="slot">step 3</span>. After step 1 we have something runnable and tested.</div>
+
+<p class="part"><span class="part-n">8</span> What "done" means</p>
+<div class="say">Done for this hour is <span class="slot">scope</span>, with tests. <span class="slot">Extra</span> is a stretch. If we get there, it slots in as <span class="slot">where</span>.</div>
+
+<p class="part"><span class="part-n">9</span> What could go wrong</p>
+<div class="say">What could go wrong: <span class="slot">failure mode</span>, so I'll <span class="slot">mitigation</span>. And in production I'd watch <span class="slot">log / metric</span>.</div>
+
+<p class="part"><span class="part-n">10</span> Agree</p>
+<div class="say">That's my plan. Does it match what you'd expect, or would you weight something differently?</div>
+
+<h3 id="own-ai">Using the AI on your plan</h3>
+<p>The AI may find gaps, and it may be right. Owning the plan means that you decide, out loud, with a reason, every time.</p>
+<div class="tablewrap">
+<table>
+<tr><th>Moment</th><th>Say</th></tr>
+<tr><td>Before the review prompt</td><td class="say-cell">"My plan is written. I'll ask Claude Code to look for gaps, not to replace it."</td></tr>
+<tr><td>Accept a suggestion</td><td class="say-cell">"Good catch: <span class="slot">case</span>. I'm adding it to the edge cases, because <span class="slot">reason</span>."</td></tr>
+<tr><td>Reject a suggestion</td><td class="say-cell">"I'll skip <span class="slot">suggestion</span>. <span class="slot">The spec rules it out / it can't happen because …</span>"</td></tr>
+<tr><td>Defer a suggestion</td><td class="say-cell">"<span class="slot">Suggestion</span> is real, but not for this hour. Parking it under Next."</td></tr>
+<tr><td>Its plan differs from yours</td><td class="say-cell">"Its plan merges <span class="slot">A</span> and <span class="slot">B</span>. I'm keeping them apart, because <span class="slot">reason</span>. We follow my layout."</td></tr>
+<tr><td>It adds structure you didn't ask for</td><td class="say-cell">"It added <span class="slot">an interface / a package / a dependency</span>. That's not in the plan, and we have one implementation, so I'm removing it."</td></tr>
+<tr><td>It's right and you were wrong</td><td class="say-cell">"It's right: my plan missed <span class="slot">X</span>. I'm updating NOTES.md, so step <span class="slot">N</span> now covers <span class="slot">X</span>."</td></tr>
+<tr><td>The interviewer asks why you didn't let it plan</td><td class="say-cell">"The plan has to come from the requirements I just heard and the questions you answered. The AI didn't hear those. I use it to check my plan and to type, not to decide."</td></tr>
+</table>
+</div>
+
+<h3 id="own-never">Lines that give the plan away</h3>
+<p>Each of these hands ownership to the AI. Say the line on the right.</p>
+<div class="tablewrap">
+<table>
+<tr><th>Don't say</th><th>Say instead</th></tr>
+<tr><td>"Let's see what Claude comes up with."</td><td class="say-cell">"Here's what I expect it to produce. Anything more, I'll trim."</td></tr>
+<tr><td>"Claude, how should I solve this?" / "Break this down for me."</td><td class="say-cell">"Here's my plan. Look for gaps in it."</td></tr>
+<tr><td>"I'll let it write the whole thing, then check."</td><td class="say-cell">"One step at a time: the test first, then the code, then I read the diff."</td></tr>
+<tr><td>"Looks fine, I guess."</td><td class="say-cell">"I accept this because <span class="slot">reason</span>. I'm changing <span class="slot">line</span> because <span class="slot">reason</span>."</td></tr>
+<tr><td>"I'm not sure, let me ask the AI."</td><td class="say-cell">"I see two options, A and B. I lean A because <span class="slot">reason</span>. Let me check that with a test."</td></tr>
+</table>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="scenarios">Five scenarios, said out loud</h2>
+<p>Each scenario shows the full scope phase for one kind of problem: what you type, what you say, how you answer the AI's gaps, and the likely follow-up. Scenario A is the most likely shape: Nubank candidates in 2026 report small banking and in-memory database tasks that grow in levels.</p>
+
+<!-- A -->
+<h3 id="sc-bank">A. A banking system that grows in levels</h3>
+<p class="setting">"Implement an in-memory bank: create accounts, deposit, transfer. Timestamps are passed in. More levels follow."</p>
+<p class="prompt-label">In NOTES.md (you type, in shorthand)</p>
+<pre># Problem
+In-memory bank: create, deposit, transfer. More levels later.
+e.g. A=100, B=0, transfer 30 A→B → A=70, B=30, A.out=30
+
+## Questions
+- timestamps passed in? → yes, as args
+- overdraft? → no: transfer fails
+- transfer to same account? → fails
+- amounts? → int cents
+- operation IDs for retries? → <span class="ph">answer</span>
+
+## Plan (each step starts with a failing test)
+1. [ ] Create + Deposit → new, duplicate ID, unknown acct, amount ≤ 0
+2. [ ] Transfer → ok, insufficient, same acct, unknown src/dst
+3. [ ] TopSpenders(n) → by outgoing, ties by ID, n > count
+4. [ ] run(): commands in → results out → integration
+
+## Failure modes
+- concurrency: one mutex on Bank (a transfer touches 2 accounts)
+- retries: dedupe on operation ID, if they give one
+- errors: returned; a transfer never half-applies</pre>
+<p class="prompt-label">Say (about 90 seconds)</p>
+<div class="say">So this is an in-memory bank: accounts with balances, and operations that move money between them. One example by hand: A has 100, B has 0, transfer 30 from A to B. A ends at 70, B at 30, and A has 30 going out. That's my first transfer test.</div>
+<div class="say">The hard part isn't the arithmetic. It's the rules around moving money: not enough funds, sending to yourself, unknown accounts, and a transfer must never half-happen.</div>
+<div class="say">One question changes the design: will operations carry an ID that can be retried? If yes, I keep a set of applied IDs, so a retry is a no-op instead of a double charge.</div>
+<div class="say">Data: a map from account ID to an account with a balance in cents and a running outgoing total. I update that total on every transfer, because a later level will probably rank by it, and updating is cheaper than replaying history. I considered storing every transaction and deriving balances. That's the right model for a real ledger, but it's more code than this hour needs. I'll mention it at the end.</div>
+<div class="say">Order: create and deposit first, because everything uses them. Then transfer with its four failure cases, then ranking. Concurrency: one mutex on the whole bank. Per-account locks would need a fixed lock order to avoid deadlocks, and we don't need that throughput. Done is steps 1 to 3 tested, plus one integration test. Does that match what you'd expect?</div>
+<p class="prompt-label">Claude Code's gaps, and your answers</p>
+<p class="ai-list">It suggests: negative amounts, int64 overflow, account IDs in different case, concurrent transfers, deposits to closed accounts.</p>
+<div class="say">Negative amounts: yes, that's money created from nothing. Adding it to step 1. Concurrency is already in my failure modes. Overflow: int64 cents goes past 92 quadrillion, so I'll skip it and say why. Case of IDs: the spec says IDs are strings, so exact match. Closed accounts aren't in this spec, so no.</div>
+<p class="prompt-label">Likely follow-up</p>
+<div class="say">Q: What if two transfers hit the same account at once? A: With the one mutex they run one after the other, so the balance check and the debit happen together. Without it, both could pass the check and overdraw. I'll add a test with goroutines and run the race detector.</div>
+
+<!-- B -->
+<h3 id="sc-ttl">B. A key-value store with expiry</h3>
+<p class="setting">"Build a key-value store with set, get and delete, and a time-to-live for each key."</p>
+<p class="prompt-label">In NOTES.md (you type)</p>
+<pre># Problem
+KV store; each key expires after its TTL.
+e.g. set k ttl=1s at 10:00:00 → get at 10:00:00.5 = v; at 10:00:01 = gone
+
+## Plan (each step starts with a failing test)
+1. [ ] Set/Get/Delete → missing key, overwrite, delete missing = no-op
+2. [ ] TTL → before expiry, exactly at expiry, overwrite resets TTL, ttl=0
+3. [ ] Lock → 50 goroutines + go test -race
+4. [ ] run() → integration
+
+## Decisions
+- expiry: lazy, on read (sweeper → Next)
+- boundary: now ≥ expiresAt → expired
+- clock: injected func() time.Time, no sleeps in tests</pre>
+<p class="prompt-label">Say</p>
+<div class="say">It's a map where entries go stale. Example: set k with a one-second TTL at 10:00:00. At half a second I get it back. At exactly one second it's gone. That boundary is the interesting part, so I'm deciding it now: expired at exactly the deadline, and a test pins it.</div>
+<div class="say">Two designs for expiry: check on read, or a background sweeper. On read is simpler and always correct for get. The cost is memory held by keys that nobody reads again. I'll do on-read now and name the sweeper as the production step.</div>
+<div class="say">Time is the hard part to test, so I'll inject the clock: no sleeps in tests. Order: plain set, get and delete, then TTL, then the lock, then the integration test. Done is all four.</div>
+<p class="prompt-label">Claude Code's gaps, and your answers</p>
+<p class="ai-list">It suggests: zero or negative TTL, very large values, eviction when memory is full, returning an error instead of a bool.</p>
+<div class="say">Zero TTL: good, I'll decide it means "expires at once" and add a row. Eviction by memory: real, but not in the spec, so it goes under Next. Error or bool: bool, because a missing key isn't an error here.</div>
+
+<!-- C -->
+<h3 id="sc-existing">C. Existing code: a bug to fix, then a feature</h3>
+<p class="setting">"Here's a small service. Some tests fail. Fix them, then add <span class="slot">feature</span>."</p>
+<p>Here the plan starts from reading, not from a blank page. Take about three minutes. You form the hypothesis before Claude Code sees the bug.</p>
+<p class="prompt-label">In NOTES.md (you type)</p>
+<pre># What's here
+main.go → service.go → store.go
+2 failing: TestTransferLimit, TestHistory
+
+# Hypotheses
+- TestTransferLimit: limit check uses > not ≥ ? (service.go:42)
+- TestHistory: <span class="ph">after reading the assertion</span>
+
+## Plan
+1. [ ] Run each failing test alone, read the assertion
+2. [ ] Fix by hand if one line; else prompt with my hypothesis
+3. [ ] Feature: the test first, then the code
+4. [ ] Integration test through the entry point</pre>
+<p class="prompt-label">Say</p>
+<div class="say">Before I plan, I'll take three minutes to read. I'll run the tests first, so I know what's red.</div>
+<div class="say">Here's what I understand: requests come in through main, the service applies the rules, and the store holds the data. Two tests fail. For the transfer limit, the failing case is exactly at the limit, so my hypothesis is that the check at line 42 uses greater-than where it should be greater-or-equal. I'll confirm it by running only that test.</div>
+<p class="prompt-label">Using Claude Code without giving it the plan</p>
+<div class="say">I'll ask Claude Code to explain this module in five bullets. Then I'll check its summary against what I read. Where it disagrees with me, I'll look at the code, not take its word.</div>
+<pre>TestTransferLimit fails: transfer of exactly the limit is rejected.
+I think the cause is the comparison at service.go:42 (> instead of >=).
+Confirm or correct that, and change only that line.</pre>
+
+<!-- D -->
+<h3 id="sc-newlevel">D. A new requirement arrives halfway</h3>
+<p class="setting">At minute 30: "Now support scheduled payments that run at a timestamp and can be cancelled."</p>
+<p>Don't prompt yet. Re-plan out loud first: what changes, what stays, and which tests protect you.</p>
+<pre>## Plan
+1. [x] Create + Deposit
+2. [x] Transfer
+4. [ ] Schedule/Cancel/ProcessDue → due exactly at ts, cancel after it ran,
+       two at the same ts (order by ID), insufficient funds when it runs
+3. [ ] (stretch) TopSpenders  ← moved down</pre>
+<div class="say">Let me fit that into the plan before I prompt anything. What changes: a new list of pending payments, ordered by time, and every operation first runs the payments that are due. What stays the same: the account map and the transfer rules. Their tests protect us while I add this.</div>
+<div class="say">New step: schedule, cancel and process-due, test first. Edge cases: cancel after it already ran, two payments at the same timestamp, and a due payment with not enough money. That pushes ranking to a stretch. OK with you?</div>
+
+<!-- E -->
+<h3 id="sc-vague">E. The prompt is vague</h3>
+<p class="setting">"Build something that decides which bill payments run today."</p>
+<p>When the prompt is open, examples are how you show that you understand it. Propose each example as a question, and let the answers become the rules.</p>
+<pre># Problem
+Pick today's bill payments under a daily cap.
+
+## Examples → rules
+- bills 50 + 80 due today, cap 100 → pay 50, hold 80? → <span class="ph">answer</span>
+- a bill past due → goes first? → <span class="ph">answer</span>
+- run twice today → second run pays nothing new
+## Rule (from the answers)
+past-due first, then by due date, then by ID; stop before the cap</pre>
+<div class="say">This is open, so let me pin it with examples. Two bills due today, 50 and 80, and a daily cap of 100. Do I pay the 50 and hold the 80, or the 80 first because it's bigger? And a bill that's already past due: does it go first?</div>
+<div class="say">From your answers, the rule is: past-due first, then by due date, then by ID, and stop before the cap. Running twice in one day pays nothing new, because paid bills are marked by ID. Now I'll turn that into steps.</div>
 
 <!-- ============================================================ -->
 <h2 id="rescue">If something goes wrong</h2>
@@ -626,19 +829,20 @@ List the findings. Don't change anything yet.</pre>
 <div class="tablewrap">
 <table class="coverage">
 <tr><th>Scored point</th><th>Steps</th></tr>
-<tr><td><strong>Decomposition</strong>: testable steps before code</td><td><a href="#s-read">5</a>, <a href="#s-skeleton">6</a>–<a href="#s-agree">14</a>, <a href="#s-sweep">31</a></td></tr>
-<tr><td><strong>Decompose before you prompt</strong></td><td>No prompt before step <a href="#s-kickoff">16</a>; agreement in step <a href="#s-agree">14</a></td></tr>
-<tr><td><strong>AI steering</strong>: briefs, slices, reading, rejecting</td><td><a href="#s-kickoff">16</a>–<a href="#s-red">19</a>, <a href="#s-b0">21</a>, <a href="#s-readtest">22</a>, <a href="#s-b">24</a>, <a href="#s-review">25</a>, <a href="#s-d2">30</a>, <a href="#s-f">34</a></td></tr>
-<tr><td><strong>Readable code</strong>: layers, names, small functions</td><td><a href="#s-layout">11</a>, <a href="#s-readtest">22</a>, <a href="#s-review">25</a>, <a href="#s-fullcheck">32</a>, <a href="#s-f">34</a>, <a href="#s-walk">35</a></td></tr>
-<tr><td><strong>Communication</strong>: assumptions and trade-offs out loud</td><td><a href="#s-hands">4</a>, <a href="#s-read">5</a>, <a href="#s-assume">9</a>, <a href="#s-agree">14</a>, <a href="#s-readplan">17</a>, <a href="#s-announce">20</a>, <a href="#s-tick">27</a>, <a href="#s-walk">35</a>, <a href="#s-honest">37</a></td></tr>
-<tr><td><strong>TDD</strong>: the test first, by name</td><td><a href="#s-plan">10</a>, <a href="#s-go">18</a>, <a href="#s-red">19</a>, <a href="#s-b0">21</a>–<a href="#s-runred">23</a></td></tr>
-<tr><td><strong>Integration test</strong>, unprompted</td><td><a href="#s-plan">10</a> (planned), <a href="#s-d2">30</a> (written)</td></tr>
-<tr><td><strong>What each test protects against</strong></td><td><a href="#s-announce">20</a>, <a href="#s-d2">30</a></td></tr>
-<tr><td><strong>Failure modes</strong>, before anyone asks</td><td><a href="#s-questions">8</a>, <a href="#s-failures">13</a>, <a href="#s-concurrency">28</a>, <a href="#s-prod">36</a></td></tr>
-<tr><td><strong>Observability</strong>: logs and metrics</td><td><a href="#s-failures">13</a>, <a href="#s-prod">36</a></td></tr>
-<tr><td><strong>Structure over volume</strong></td><td><a href="#s-layout">11</a>, <a href="#s-walk">35</a>, <a href="#s-honest">37</a></td></tr>
-<tr><td><strong>Clock</strong>: checkpoints, parking</td><td><a href="#s-agree">14</a>, <a href="#s-tick">27</a>, <a href="#s-park">29</a>, <a href="#s-honest">37</a></td></tr>
-<tr><td><strong>Never silent, never unread, never untested</strong></td><td>Every green box; <a href="#s-review">25</a>; <a href="#s-runred">23</a> and <a href="#s-green">26</a></td></tr>
+<tr><td><strong>Decomposition</strong>: testable steps before code</td><td><a href="#s-read">5</a>, <a href="#s-restate">8</a>–<a href="#s-agree">16</a>, <a href="#s-sweep">32</a></td></tr>
+<tr><td><strong>Decompose before you prompt</strong></td><td>Only a scribe prompt (<a href="#s-skeleton">7</a>) before your plan; the AI reviews it in <a href="#s-aireview">15</a>; no build prompt before <a href="#s-kickoff">17</a></td></tr>
+<tr><td><strong>The plan is yours</strong></td><td><a href="#s-restate">8</a>, <a href="#s-plan">11</a>, <a href="#s-aireview">15</a>, <a href="#s-readplan">18</a>; <a href="#own">Owning the plan</a></td></tr>
+<tr><td><strong>AI steering</strong>: briefs, slices, reading, rejecting</td><td><a href="#s-skeleton">7</a>, <a href="#s-aireview">15</a>, <a href="#s-kickoff">17</a>–<a href="#s-red">20</a>, <a href="#s-b0">22</a>, <a href="#s-readtest">23</a>, <a href="#s-b">25</a>, <a href="#s-review">26</a>, <a href="#s-d2">31</a>, <a href="#s-f">35</a></td></tr>
+<tr><td><strong>Readable code</strong>: layers, names, small functions</td><td><a href="#s-layout">12</a>, <a href="#s-readtest">23</a>, <a href="#s-review">26</a>, <a href="#s-fullcheck">33</a>, <a href="#s-f">35</a>, <a href="#s-walk">36</a></td></tr>
+<tr><td><strong>Communication</strong>: assumptions and trade-offs out loud</td><td><a href="#s-hands">4</a>, <a href="#s-read">5</a>, <a href="#s-restate">8</a>, <a href="#s-assume">10</a>, <a href="#s-plan">11</a>, <a href="#s-aireview">15</a>, <a href="#s-agree">16</a>, <a href="#s-readplan">18</a>, <a href="#s-announce">21</a>, <a href="#s-tick">28</a>, <a href="#s-walk">36</a>, <a href="#s-honest">38</a></td></tr>
+<tr><td><strong>TDD</strong>: the test first, by name</td><td><a href="#s-plan">11</a>, <a href="#s-go">19</a>, <a href="#s-red">20</a>, <a href="#s-b0">22</a>–<a href="#s-runred">24</a></td></tr>
+<tr><td><strong>Integration test</strong>, unprompted</td><td><a href="#s-plan">11</a> (planned), <a href="#s-d2">31</a> (written)</td></tr>
+<tr><td><strong>What each test protects against</strong></td><td><a href="#s-announce">21</a>, <a href="#s-d2">31</a></td></tr>
+<tr><td><strong>Failure modes</strong>, before anyone asks</td><td><a href="#s-questions">9</a>, <a href="#s-failures">14</a>, <a href="#s-concurrency">29</a>, <a href="#s-prod">37</a></td></tr>
+<tr><td><strong>Observability</strong>: logs and metrics</td><td><a href="#s-failures">14</a>, <a href="#s-prod">37</a></td></tr>
+<tr><td><strong>Structure over volume</strong></td><td><a href="#s-layout">12</a>, <a href="#s-walk">36</a>, <a href="#s-honest">38</a></td></tr>
+<tr><td><strong>Clock</strong>: checkpoints, parking</td><td><a href="#s-agree">16</a>, <a href="#s-tick">28</a>, <a href="#s-park">30</a>, <a href="#s-honest">38</a></td></tr>
+<tr><td><strong>Never silent, never unread, never untested</strong></td><td>Every green box; <a href="#s-review">26</a>; <a href="#s-runred">24</a> and <a href="#s-green">27</a></td></tr>
 </table>
 </div>
 

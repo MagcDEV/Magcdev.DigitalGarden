@@ -229,7 +229,7 @@
 <div class="tablewrap">
 <table class="asks">
 <tr><th>Ask</th><th>What to do</th><th>Where</th></tr>
-<tr><td><span class="ask-n">1</span><strong>Decompose before you prompt</strong></td><td>Read, ask your questions, and agree the breakdown with the interviewer before Claude Code generates one line. If you need a minute of silence to think, say so. Prompting before the problem is scoped is the most common way these sessions fail.</td><td class="where">§3, §4 0–10</td></tr>
+<tr><td><span class="ask-n">1</span><strong>Decompose before you prompt</strong></td><td>Read, ask your questions, and agree the breakdown with the interviewer before Claude Code generates one line of plan or code. It may type empty headings (S1). If you need a minute of silence to think, say so. Prompting before the problem is scoped is the most common way these sessions fail.</td><td class="where">§3, §4 0–10</td></tr>
 <tr><td><span class="ask-n">2</span><strong>Testing is central, and you bring it</strong></td><td>Name TDD and do it: the test first, then the code. Unit tests for each step, and at least one integration test without being asked. Say out loud what each test protects against.</td><td class="where">§4 15–52, §5 B0 B D2</td></tr>
 <tr><td><span class="ask-n">3</span><strong>Steer, don't follow</strong></td><td>You are the engineer; Claude Code is the pair. Give it structural direction and read every output. If it is buggy or overcomplicated, take control and say why you reject it. They don't expect perfect prompts.</td><td class="where">§5, §7</td></tr>
 <tr><td><span class="ask-n">4</span><strong>Raise failure modes unprompted</strong></td><td>Concurrency and races, duplicate or retried input, idempotency, error handling, resource limits. Then how you'd observe it in production: logs and metrics. Observability is the piece most often missing.</td><td class="where">§4 0–10, §6, §10</td></tr>
@@ -297,13 +297,15 @@
     <h3>Understand and plan. No code.</h3>
     <div class="goal">Scores: decomposition, communication</div>
     <ul>
-      <li>Restate the problem in one sentence. Get a nod.</li>
+      <li>Let Claude Code type the empty <code>NOTES.md</code> headings (template S1). Say it's a scribe, not a planner.</li>
+      <li>Restate the problem in one sentence, and walk one example by hand. Get a nod.</li>
       <li>Ask 3–4 clarifying questions (see bank in §6). Input size, format guarantees, what to do on bad input, what "done" means.</li>
-      <li>Write the plan in <code>NOTES.md</code> on screen: 3–5 steps, each with a verifiable result.</li>
+      <li>Type the plan yourself, in shorthand: 3–5 steps, each with a verifiable result. Say the approach, the alternative you rejected, and the order.</li>
       <li>List edge cases under the plan: empty input, duplicates, malformed lines, boundaries, concurrency if relevant, "what if it runs twice".</li>
       <li>Name the five failure modes from §0 out loud, before anyone asks.</li>
       <li>State your data model and the main trade-off you're taking.</li>
-      <li><strong>Agree the breakdown with Andrey before the first prompt.</strong></li>
+      <li>Ask Claude Code for gaps in your plan (template S2). Accept, reject or park each one out loud, with a reason.</li>
+      <li><strong>Agree the breakdown with Andrey before the first build prompt.</strong></li>
     </ul>
     <div class="say">Plan is set. Step 1 is the parser, step 2 the core logic, step 3 the output, and each one starts with a failing test. At the end, one integration test through the entry point. Does that breakdown match what you'd expect before I start prompting?</div>
   </div>
@@ -373,7 +375,18 @@
 <h2 id="prompts">5. Prompt templates</h2>
 <p>Claude Code reads plain technical language. Brief it like a strong teammate who has never seen the task: context, constraints, expected behavior, stop condition. Fill the <span style="color:#b8860b;font-family:'IBM Plex Mono',monospace;font-size:0.9em">yellow</span> parts live.</p>
 
-<p class="prompt-label">A. Kickoff (once, after your plan is written)</p>
+<p class="prompt-label">S1. Scribe: the empty skeleton (minute 2, before your plan) <span class="new">New</span></p>
+<pre>Create NOTES.md with these empty headings: Problem, Questions, Assumptions,
+Plan, Layout, Edge cases, Failure modes, Parked, Next.
+Don't read any other file and don't fill anything in.</pre>
+
+<p class="prompt-label">S2. Review my plan (after you've typed and said it) <span class="new">New</span></p>
+<pre>Read the problem and NOTES.md. Don't change my plan.
+Under "## Suggestions", list up to 5 edge cases or failure modes I missed.
+No code.</pre>
+<p>Never prompt "plan this" or "break this down". The AI types and checks. The plan is yours. The run sheet's "Owning the plan" section has the lines to say, and five worked scenarios.</p>
+
+<p class="prompt-label">A. Kickoff (once, after your plan is agreed)</p>
 <pre>We're solving this in Go. Problem: <span class="ph">one-sentence restatement</span>.
 
 Constraints:
@@ -454,6 +467,12 @@ Use strings.NewReader and bytes.Buffer. No files, no network.</pre>
 <h3>Trade-offs</h3>
 <div class="say">I'm going with a map keyed by ID for O(1) lookup. Memory is fine at this size; if we were streaming millions I'd rethink.</div>
 <div class="say">I'm choosing to fail fast on a malformed line instead of skipping, because silent data loss is worse than a visible failure in a payments context. Happy to flip that if the requirement is different.</div>
+
+<h3>The plan is yours</h3>
+<div class="say">I'll use Claude Code as a scribe for the empty headings. The plan itself comes from me.</div>
+<div class="say">Let me run one example by hand first: A has 100, B has 0, transfer 30. A ends at 70 and B at 30. That example is my first test.</div>
+<div class="say">I considered storing every transaction and deriving balances. It's the right model for a real ledger, but it's more code than this hour needs.</div>
+<div class="say">Good catch on negative amounts; adding it. I'll skip the overflow one: int64 cents goes past 92 quadrillion.</div>
 
 <h3>What each test protects against</h3>
 <div class="say">This case protects against counting a retried transaction twice.</div>
