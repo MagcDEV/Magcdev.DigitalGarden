@@ -9,7 +9,7 @@ tags:
   - interview
   - go
 date_created: 2026-10-14
-date_modified: 2026-10-18
+date_modified: 2026-10-19
 cssclasses:
   - nubank-guides
 ---
@@ -23,6 +23,16 @@ The **Open full page** button loads the guide as a standalone document. Keep tha
 
 > [!tip] What to reread 20 minutes before the call
 > Read the run sheet below once, top to bottom. Then, in the playbook, section 0 is what the panel asked for. Section 3 is the opening script. Section 5 has the prompt templates, in test-first order. Section 8 is the debug protocol: read the error aloud, state a hypothesis, verify it, then fix.
+
+## The cheat sheet, for a second screen
+
+Everything to remember, on one dense page, in cards that fill the width of a landscape screen. It holds the hour with its times, the key lines, the ten parts of the plan, the five failure modes and every prompt. It also has the `NOTES.md` shorthand, the diff checks, the debug order, tests and Go idioms. The last cards are the glossary, the rescue moves, the likely banking problem and the close. Keep it off the screen that you share. Glance at it, and don't read from it.
+
+<form class="guide-open" action="../../assets/nubank-guides/nubank-ai-coding-cheat-sheet.html" method="get" target="_blank">
+<button type="submit">Open full page</button>
+</form>
+
+<embed class="guide-frame" src="../../assets/nubank-guides/nubank-ai-coding-cheat-sheet.html" type="text/html" title="Nubank AI Coding: cheat sheet">
 
 ## What the panel asked for
 
@@ -61,7 +71,7 @@ Three sections after the steps help you remember and say it:
 
 - **The memory list.** The five failure modes, remembered as "Can Retries Ever Lose Orders?" (concurrency, retries, errors, limits, observability). Each one has what it is, the question to ask, the fix, a line to say, and what it means in six likely problems. A glossary explains every term, such as fail fast, idempotent and race condition. A worked box explains the integration test.
 - **Owning the plan.** A ten-part formula to say in order, from "restate it" and "one example by hand" to "what could go wrong" and "agree". It also has the lines for each AI moment and the lines that give the plan away.
-- **Five scenarios.** Each one shows the full scope phase, typed and said. The five are a banking system that grows in levels, a key-value store with expiry, existing code with a bug, a new requirement at minute 30, and a vague prompt.
+- **Five scenarios.** Each one shows the full scope phase, typed and said. They cover a banking system that grows in levels, a key-value store with expiry and existing code with a bug. The last two are a new requirement at minute 30 and a vague prompt.
 
 The phases follow the clock:
 

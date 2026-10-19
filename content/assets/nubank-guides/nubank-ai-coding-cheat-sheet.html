@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nubank AI Coding — Cheat Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #ffffff; --panel: #f3f0fa; --panel-2: #fbf9ff;
+    --ink: #1c1a2e; --ink-2: #4a4664; --muted: #7a7692; --line: #dcd7ea;
+    --accent: #6b2fd6; --accent-ink: #4b1fa3;
+    --say: #0f6e56; --say-bg: #e6f4ef;
+    --warn: #a3421a; --warn-bg: #fbeee6;
+    --code-bg: #1e1b2e; --code-ink: #e9e4f7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #141222; --panel: #1e1b30; --panel-2: #191731; --ink: #ece9f6; --ink-2: #c3bedb;
+      --muted: #8d88a8; --line: #322e4b; --accent: #a985f0; --accent-ink: #c2a6ff;
+      --say: #6fd3b2; --say-bg: #16302a; --warn: #f0a07a; --warn-bg: #3a2318; --code-bg: #0e0c1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #141222; --panel: #1e1b30; --panel-2: #191731; --ink: #ece9f6; --ink-2: #c3bedb;
+    --muted: #8d88a8; --line: #322e4b; --accent: #a985f0; --accent-ink: #c2a6ff;
+    --say: #6fd3b2; --say-bg: #16302a; --warn: #f0a07a; --warn-bg: #3a2318; --code-bg: #0e0c1a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 12.8px; line-height: 1.36; -webkit-font-smoothing: antialiased; }
+  header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; padding: 8px 60px 6px 14px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 1.05rem; margin: 0; letter-spacing: -0.01em; }
+  header .motto { color: var(--ink-2); font-weight: 500; }
+  main { columns: 292px; column-gap: 10px; padding: 10px 14px 32px; }
+  .card { break-inside: avoid; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px 4px; margin: 0 0 10px; }
+  .crelo code, .nw { white-space: nowrap; }
+  .card h2 { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .card h2 small { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--muted); }
+  p { margin: 0 0 6px; }
+  ul, ol { margin: 0 0 6px; padding-left: 18px; }
+  li { margin-bottom: 2px; }
+  li::marker { color: var(--accent); }
+  strong { font-weight: 600; }
+  code { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.88em; background: var(--panel); padding: 0 4px; border-radius: 3px; }
+  pre { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.8rem; line-height: 1.4; background: var(--code-bg); color: var(--code-ink); border-radius: 7px; padding: 7px 9px; margin: 2px 0 7px; white-space: pre-wrap; word-break: break-word; }
+  .say { background: var(--say-bg); color: var(--say); border-radius: 6px; padding: 4px 7px; margin: 2px 0 5px; font-style: italic; }
+  .no { background: var(--warn-bg); color: var(--warn); border-radius: 6px; padding: 4px 7px; margin: 2px 0 5px; }
+  p.muted { margin-bottom: 1px; font-size: 0.85rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 6px; }
+  td { padding: 2px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td:first-child { white-space: nowrap; font-family: "IBM Plex Mono", monospace; font-size: 0.82rem; color: var(--accent-ink); font-weight: 500; padding-right: 8px; }
+  tr:last-child td { border-bottom: 0; }
+  table.wrap1 td:first-child { white-space: normal; width: 30%; }
+  .k { display: inline-block; min-width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 5px; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 0.8rem; margin-right: 6px; padding: 0 4px; }
+  .crelo li { list-style: none; margin-left: -18px; margin-bottom: 5px; }
+  .mn { font-weight: 600; text-align: center; background: var(--panel); border-radius: 6px; padding: 4px; margin-bottom: 7px; }
+  .mn b { color: var(--accent-ink); font-size: 1.1em; }
+  .muted { color: var(--muted); }
+  .theme-toggle { position: fixed; top: 8px; right: 12px; z-index: 10; width: 34px; height: 34px; padding: 0; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-moon, :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+  :root:not([data-theme]) .theme-toggle { display: none; }
+  @media (max-width: 420px) { main { padding: 10px 10px 32px; } header { padding-left: 10px; } }
+  @media print { .theme-toggle { display: none; } body { font-size: 11px; } main { columns: 3; } }
+</style>
+<script>
+  // Theme: reads the garden's saved "theme" preference (the Quartz toggle
+  // writes the same key), falls back to the system setting, and keeps the
+  // embedded guide in step with the host page.
+  (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia("(prefers-color-scheme: dark)");
+    function saved() { try { return localStorage.getItem("theme"); } catch (e) { return null; } }
+    function current() { var s = saved(); return s === "dark" || s === "light" ? s : (media.matches ? "dark" : "light"); }
+    function apply(theme) {
+      root.setAttribute("data-theme", theme);
+      var button = document.querySelector(".theme-toggle");
+      if (button) {
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+        button.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      }
+    }
+    apply(current());
+    document.addEventListener("DOMContentLoaded", function () {
+      apply(current());
+      var button = document.querySelector(".theme-toggle");
+      if (!button) return;
+      button.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        try { localStorage.setItem("theme", next); } catch (e) {}
+        apply(next);
+        try { if (window.parent !== window) window.parent.document.documentElement.setAttribute("saved-theme", next); } catch (e) {}
+      });
+    });
+    window.addEventListener("storage", function (e) { if (e.key === "theme" || e.key === null) apply(current()); });
+    media.addEventListener("change", function () { if (!saved()) apply(current()); });
+  })();
+</script>
+</head>
+<body>
+<button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+</button>
+
+<header>
+  <h1>AI Coding — Cheat Sheet</h1>
+  <span class="motto">The plan is mine. Test first. Read every diff out loud. Never silent.</span>
+</header>
+
+<main>
+
+<!-- 1. The hour -->
+<section class="card">
+<h2>The hour</h2>
+<table>
+<tr><td>0:00</td><td>Hands off the keyboard. Opening line. "Give me a minute to read."</td></tr>
+<tr><td>0:02</td><td><code>ls</code>, <code>go test ./...</code> · S1 scribe → I type: problem + example, questions, assumptions, plan, layout, edges, CRELO</td></tr>
+<tr><td>0:08</td><td>S2 gaps → accept 1, reject 1, out loud, with reasons</td></tr>
+<tr><td>0:10</td><td><strong>Agree the breakdown.</strong> → A kickoff → correct 1 point → "go": stubs + 1 red test</td></tr>
+<tr><td>0:15</td><td><strong>Loop per step:</strong> say cases → B0 test → read it → red → B code → 6 checks → green → tick + say the time. Step 1 by 0:22, 2 by 0:30, 3 by 0:40.</td></tr>
+<tr><td>0:40</td><td>D2 integration test, unprompted → fill edge gaps → full check → <code>go run</code> once</td></tr>
+<tr><td>0:45</td><td>Behind? Cut scope <strong>now</strong>, not at 0:58</td></tr>
+<tr><td>0:52</td><td>F review (no changes) → walk main → run → parse → core → logs + metric → what's not done</td></tr>
+<tr><td>0:58</td><td>My questions</td></tr>
+</table>
+</section>
+
+<!-- 2. Lines -->
+<section class="card">
+<h2>Key lines</h2>
+<p class="muted">Open</p>
+<div class="say">I'll take a couple of minutes to understand it, plan and list edge cases in NOTES.md, and agree the breakdown with you before I prompt. Then test-first, small slices, each reviewed out loud.</div>
+<p class="muted">Scribe (S1)</p>
+<div class="say">Claude Code types the empty headings. The plan comes from me.</div>
+<p class="muted">Before S2</p>
+<div class="say">My plan is written. I'll ask it to look for gaps, not to replace it.</div>
+<p class="muted">Agree</p>
+<div class="say">That's my plan: N steps, each starting with a failing test, plus one integration test. Does it match what you'd expect?</div>
+<p class="muted">Checkpoint</p>
+<div class="say">Step 2 done, 28 minutes in, on plan. Any concerns?</div>
+</section>
+
+<!-- 3. Own the plan -->
+<section class="card">
+<h2>Own the plan: 10 parts, in order</h2>
+<ol>
+  <li><strong>Restate</strong> — "The core of this is…"</li>
+  <li><strong>Example by hand</strong> — "X should give Y, because Z. That's my first test."</li>
+  <li><strong>Hard part</strong> — "The hard part isn't…, it's…"</li>
+  <li><strong>Design question</strong> — "One question changes the design: …? If yes A, if no B."</li>
+  <li><strong>Approach + rejected</strong> — "I'll use… because… I considered…, it costs…"</li>
+  <li><strong>Data</strong> — "A map keyed by… → O(1)."</li>
+  <li><strong>Order</strong> — "…first, because everything depends on it."</li>
+  <li><strong>Done</strong> — "Done is… tested. Stretch is…"</li>
+  <li><strong>Risks</strong> — CRELO, one line each</li>
+  <li><strong>Agree</strong> — "Does it match what you'd expect?"</li>
+</ol>
+<p class="muted">On AI suggestions: accept / reject / park — always with "because". When it's right: "It's right, my plan missed X. Updating NOTES.md."</p>
+</section>
+
+<!-- 4. CRELO -->
+<section class="card">
+<h2>Failure modes — say before asked</h2>
+<div class="mn"><b>C</b>an <b>R</b>etries <b>E</b>ver <b>L</b>ose <b>O</b>rders?</div>
+<ul class="crelo">
+  <li><span class="k">C</span><strong>Concurrency</strong> — shared state? → mutex + <code>go test -race</code>. "The check and the write happen together." None shared? Say so.</li>
+  <li><span class="k">R</span><strong>Retries</strong> — runs twice? → idempotent: key on ID, mark only after success. "Second run is a no-op, not a double charge."</li>
+  <li><span class="k">E</span><strong>Errors</strong> — fail fast (money) or skip &amp; report (reports). No panic. All-or-nothing: check everything, then write.</li>
+  <li><span class="k">L</span><strong>Limits</strong> — what grows? → stream, evict, running totals. Name the limit.</li>
+  <li><span class="k">O</span><strong>Observe</strong> — 1 structured log (what + where) + 1 metric to alert on.</li>
+</ul>
+</section>
+
+<!-- 5. Prompts -->
+<section class="card">
+<h2>Prompts</h2>
+<table>
+<tr><td>S1</td><td>Create NOTES.md with empty headings: Problem, Questions, Assumptions, Plan, Layout, Edge cases, Failure modes, Parked, Next. Don't read other files. Don't fill anything in.</td></tr>
+<tr><td>S2</td><td>Read the problem and NOTES.md. Don't change my plan. Under ## Suggestions list ≤5 edge cases or failure modes I missed. No code.</td></tr>
+<tr><td>A</td><td>Read NOTES.md. Go, stdlib only. Files: model/parse/core/main + _test. <code>run(args, in, out) error</code>. Wrap errors with %w, no panics. Test-first. 3–5 bullets on structure and types, then wait for my go.</td></tr>
+<tr><td>go</td><td>Stubs only + the step-1 test. Don't implement. Stop when it compiles and fails.</td></tr>
+<tr><td>B0</td><td>Step N: … Table-driven test for F in f_test.go only. Cases: … No implementation. Show the test, stop.</td></tr>
+<tr><td>B</td><td>Make TestX pass. Change only f.go. Don't touch the test. Show the diff, stop.</td></tr>
+<tr><td>C</td><td>Not quite: … Change only …: … Leave the rest.</td></tr>
+<tr><td>D2</td><td>Integration test: <code>run()</code> with strings.NewReader + bytes.Buffer. Case 1: exact output. Case 2: malformed line → errors.Is + names the line + no output.</td></tr>
+<tr><td>E</td><td>TestX fails: got/want. I think the cause is H. Confirm or correct, fix only that.</td></tr>
+<tr><td>F</td><td>Review: unhandled errors, names, functions doing 2 jobs, untested edge cases. List only, change nothing.</td></tr>
+</table>
+</section>
+
+<!-- 6. NOTES.md -->
+<section class="card">
+<h2>NOTES.md <small>I type in shorthand</small></h2>
+<table>
+<tr><td>Problem</td><td>1 sentence + e.g. in → out</td></tr>
+<tr><td>Questions</td><td>size? bad input? twice? concurrent? done?</td></tr>
+<tr><td>Assumptions</td><td>fail fast · int cents · fits in memory</td></tr>
+<tr><td>Plan</td><td><code>1. [ ] step → TestX: cases</code> · last = integration</td></tr>
+<tr><td>Layout</td><td>model · parse · core · main(run)</td></tr>
+<tr><td>Edge cases</td><td>empty · one · dup · = limit · malformed · twice</td></tr>
+<tr><td>Failure modes</td><td>C R E L O</td></tr>
+<tr><td>+</td><td>Suggestions · Parked · Next</td></tr>
+</table>
+</section>
+
+<!-- 7. Review + debug -->
+<section class="card">
+<h2>Every diff: 6 checks</h2>
+<ol>
+  <li>Only what I asked?</li>
+  <li>Errors returned + wrapped? No panic?</li>
+  <li>Edge cases from NOTES.md?</li>
+  <li>Clear names, one job per function?</li>
+  <li>Can I explain every line?</li>
+  <li>Simpler? → "Rejecting this because…"</li>
+</ol>
+<h2>Debug</h2>
+<p>Read the error aloud → <strong>hypothesis first</strong> → open the line → fix by hand if small → else E → re-run → name the root cause.</p>
+<div class="no">Never "it's broken, fix it". Never re-prompt 3× hoping.</div>
+</section>
+
+<!-- 8. Tests -->
+<section class="card">
+<h2>Tests</h2>
+<ul>
+  <li><strong>TDD:</strong> test first → <strong>red</strong> (fails, so it tests something) → code → <strong>green</strong>.</li>
+  <li><strong>Unit:</strong> one function alone. Many.</li>
+  <li><strong>Integration:</strong> <code>run()</code> end to end, real text in, exact text out. 1–2. Checks the <em>wiring</em>.</li>
+  <li><strong>Table-driven:</strong> {name, in, want} + <code>t.Run</code> loop. Names = behaviour.</li>
+  <li>One row each: empty · one · dup · exactly at limit · malformed · runs twice.</li>
+  <li>Expected values must be <em>right</em>, not copied from the code.</li>
+</ul>
+<div class="say">This case protects against… / The integration test protects the wiring.</div>
+</section>
+
+<!-- 9. Go -->
+<section class="card">
+<h2>Go quick</h2>
+<pre>go test ./...   ·  go vet ./...
+go test -race ./...
+go test -run TestX -v
+gofmt -l .  ·  go mod init x</pre>
+<table>
+<tr><td>money</td><td><code>AmountCents int64</code> — never float</td></tr>
+<tr><td>wrap</td><td><code>fmt.Errorf("parse %s: %w", p, err)</code></td></tr>
+<tr><td>check</td><td><code>errors.Is(err, ErrX)</code> · <code>var ErrX = errors.New("…")</code></td></tr>
+<tr><td>lock</td><td><code>mu.Lock(); defer mu.Unlock()</code> — mutex above its fields</td></tr>
+<tr><td>entry</td><td><code>func run(args []string, in io.Reader, out io.Writer) error</code></td></tr>
+<tr><td>clock</td><td><code>now func() time.Time</code> — tests set it, no sleeps</td></tr>
+<tr><td>map</td><td><code>v, ok := m[k]</code> · nil map write panics → <code>make</code></td></tr>
+<tr><td>time</td><td><code>a.Before(b)</code> · <code>b.Sub(a) &lt;= w</code> · never <code>==</code></td></tr>
+<tr><td>range</td><td>copies elements → mutate with <code>xs[i].F = …</code></td></tr>
+<tr><td>order</td><td>map order is random → sort keys</td></tr>
+</table>
+</section>
+
+<!-- 10. Terms -->
+<section class="card">
+<h2>Words</h2>
+<table>
+<tr><td>fail fast</td><td>stop at first bad input; error says what + where</td></tr>
+<tr><td>skip &amp; report</td><td>keep going; return the list of rejects</td></tr>
+<tr><td>idempotent</td><td>twice = once</td></tr>
+<tr><td>race</td><td>result depends on who runs first</td></tr>
+<tr><td>mutex</td><td>one goroutine at a time</td></tr>
+<tr><td>goroutine</td><td><code>go f()</code> — runs concurrently, cheap, no async/await</td></tr>
+<tr><td>deadlock</td><td>two locks wait on each other → lock in one order</td></tr>
+<tr><td>atomic</td><td>all or nothing</td></tr>
+<tr><td>stream</td><td>one record at a time, flat memory</td></tr>
+<tr><td>lazy expiry</td><td>check on read; sweeper = background cleanup</td></tr>
+<tr><td>off-by-one</td><td><code>&lt;</code> vs <code>&lt;=</code> → boundary test</td></tr>
+<tr><td>observability</td><td>logs + metrics: know it broke, and where</td></tr>
+</table>
+</section>
+
+<!-- 11. Rescue -->
+<section class="card">
+<h2>If it goes wrong</h2>
+<table class="wrap1">
+<tr><td>stuck</td><td>"Two options, A or B — which would you expect?"</td></tr>
+<tr><td>AI runs away</td><td>Esc → "More than I asked. Re-briefing tighter."</td></tr>
+<tr><td>behind</td><td>"Dropping step 4, keeping 1–3 solid and tested."</td></tr>
+<tr><td>one piece eats time</td><td>Park it in NOTES.md, say the trade-off, move on</td></tr>
+<tr><td>pushback</td><td>Ask what they optimise for → adapt, or defend with a reason</td></tr>
+<tr><td>slow env</td><td>Keep talking; type the next signature</td></tr>
+<tr><td>new level</td><td>Re-plan out loud first: what changes, what stays, which tests protect us</td></tr>
+</table>
+<div class="no">Never: "Let's see what Claude comes up with" · "Break this down for me" · "Looks fine, I guess" · silence</div>
+</section>
+
+<!-- 12. Likely problem -->
+<section class="card">
+<h2>Likely: bank in levels</h2>
+<p>L1 create/deposit/withdraw · L2 transfer, top-N spenders · L3 scheduled payments · L4 merge, balance at time</p>
+<ul>
+  <li>Map ID → {balanceCents, outgoing}; running totals</li>
+  <li>Fail: insufficient, same account, unknown, amount ≤ 0 — check all, then write</li>
+  <li>One mutex on the bank (per-account locks need a fixed order)</li>
+  <li>Retries: op ID set · ties: sort by ID</li>
+</ul>
+<p class="muted">KV + TTL: lazy expiry, <code>now ≥ expiresAt</code> = expired, injected clock, overwrite resets TTL.</p>
+</section>
+
+<!-- 13. Close -->
+<section class="card">
+<h2>Close (0:52)</h2>
+<div class="say">In production I'd log each rejected line with its number and reason, count rejections as a metric and alert on jumps. Writes idempotent on the ID, output atomic. Not done: step N — it slots in as…</div>
+<p class="muted">Ask</p>
+<ul>
+  <li>AI tools at Nu: what changed in code review?</li>
+  <li>Strong vs average session in this round?</li>
+  <li>Incidents that cross squads?</li>
+</ul>
+</section>
+
+</main>
+</body>
+</html>
