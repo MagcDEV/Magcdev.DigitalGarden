@@ -10,7 +10,7 @@ date_modified: 2026-10-31
 
 # AI coding round: the practice plan
 
-The AI-assisted coding round is the main gap in 2026 interviews. Recruiter screens and system design rounds go well. The AI coding round is where an offer was lost. More companies now use this round, so it is worth four weeks of practice.
+The AI-assisted coding round is the main gap in 2026 interviews. Many senior engineers pass the recruiter screen and the system design round, and then lose the offer in the AI coding round. More companies now use this round, so it is worth four weeks of practice.
 
 The method already exists in [[wiki/ai-coding/nubank-ai-coding-interview|the Nubank AI coding playbook]]: run sheet, cheat sheet, prompt templates and the Go guide. The gap is not knowledge. The gap is **reps under time pressure.**
 

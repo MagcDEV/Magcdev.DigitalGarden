@@ -40,11 +40,11 @@ Applied AI and FDE score best. Both pay well from Argentina, and both build on w
 
 | Direction | Pay ceiling from Argentina | Fit | Time to get there | Verdict |
 |---|---|---|---|---|
-| **Quant developer or researcher** | High, but mostly on-site abroad | Low: no degree, no C++ or Python numerics, no derivatives experience. Economics helps a little. | 12–24+ months, with a degree filter | **No, not as the main path.** Take quant-adjacent roles (asset-management software, brokers, exchanges) when they appear. |
-| **Applied AI on top of backend** (LLM features, agents, evals, in production) | USD 85–120k/yr remote | **High.** Existing AI work: an LLM metadata pipeline, orchestrated Claude Code agents, AI-readiness checks. The market now tests AI-assisted coding anyway. | 3–6 months to have proof | **Yes, the main direction.** |
-| **Forward deployed engineer** | Highest: 30–50% over backend | **High.** Consulting background, C2 English, economics, and a habit of explaining trade-offs. | 3–6 months (the same proof, plus customer stories) | **Yes, the high-pay option.** |
+| **Quant developer or researcher** | High, but mostly on-site abroad | Low without a quantitative degree, C++ or Python numerics, or derivatives experience. | 12–24+ months, with a degree filter | **No, not as the main path.** Take quant-adjacent roles (asset-management software, brokers, exchanges) when they appear. |
+| **Applied AI on top of backend** (LLM features, agents, evals, in production) | USD 85–120k/yr remote | **High.** AI features are mostly backend work: APIs, queues, data and tests. The market now tests AI-assisted coding anyway. | 3–6 months to have proof | **Yes, the main direction.** |
+| **Forward deployed engineer** | Highest: 30–50% over backend | **High** for engineers with consulting experience, strong English and a habit of explaining trade-offs. | 3–6 months (the same proof, plus customer stories) | **Yes, the high-pay option.** |
 | **Senior .NET/Azure, as now** | Lower in Argentina (most .NET jobs are at consultancies) | Exact fit | Now | **Keep it as the base.** |
-| **Go or Java fintech backend** | USD 80–100k (Go) | Medium: Go is side projects only | 6–12 months | **Secondary.** Keep Go warm for interviews. Don't make it the identity. |
+| **Go or Java fintech backend** | USD 80–100k (Go) | Medium, when Go is side-project experience only | 6–12 months | **Secondary.** Keep Go warm for interviews. Don't make it the identity. |
 
 > [!tip] The positioning, in one line
 > *Senior backend engineer (.NET/Azure) who ships AI features in financial systems.*
@@ -56,37 +56,23 @@ An **applied AI engineer** builds product features on top of language models. Th
 
 A **forward deployed engineer** builds the same kind of system, but inside a customer's environment. About half of the job is with the customer. So the role rewards consulting experience and clear English as much as code.
 
-## The 90-day plan
+## How to get there
 
-*What do you do this quarter, in order?*
+*Which steps, in order?*
 
-The plan has four tracks. They overlap, but the first track comes first, because it fixes the step where offers are lost.
+The steps overlap, but the first one comes first, because it fixes the round where offers are lost.
 
-### Weeks 1–4: fix the conversion
-
-1. **Drill the AI coding round.** Follow [[wiki/career/ai-coding-practice-plan|the practice plan]]: three timed mocks a week, recorded, mostly in C#. A better CV does not help if the last round fails.
-2. **Push for the Senior title** where you work now. The title raises the band of every later offer.
-3. **Keep applying:** five to eight applications a week.
-
-### Weeks 2–8: get AI work in production
-
-4. Ask to work on the LLM features of your current product, or propose the next one. Good candidates: plain-language explanations of a score, LLM search over a catalog, evals for generated text. One production AI bullet on a CV is worth more than five side projects.
-
-### Weeks 4–12: one public proof project
-
-5. Build **one** serious project, not many. A suggestion: **an AI agent for card disputes (chargebacks), in .NET.**
-   - A tool-calling agent (Anthropic or Azure OpenAI) reads a transaction history and drafts a dispute decision.
+1. **Drill the AI coding round.** Follow [[wiki/career/ai-coding-practice-plan|the practice plan]]: three timed mocks a week, recorded. A better CV does not help if the last round fails.
+2. **Get AI work in production.** In your current job, work on an LLM feature, or propose one. One production AI bullet on a CV is worth more than five side projects.
+3. **Build one public proof project**, not many. A suggestion: **an AI agent for card disputes (chargebacks), in .NET.**
+   - A tool-calling agent reads a transaction history and drafts a dispute decision.
    - An idempotent API, event-driven steps on a queue, and an audit trail.
    - **Evals:** a test set with expected decisions, plus accuracy, cost and latency per case.
    - Observability: one dashboard and a log line per agent step.
-   - A README with the architecture, trade-offs and numbers. Then a LinkedIn post and a note in this garden.
+   - A README with the architecture, trade-offs and numbers.
 
    This one project is proof for AI engineer, FDE and fintech backend roles at the same time.
-
-### Ongoing: visibility
-
-6. Post on LinkedIn once a month about real work: an architecture decision, the AI coding drill, the dispute agent.
-7. Keep job alerts on for "AI Engineer" and "Forward Deployed Engineer", in Argentina and in Latin America remote.
+4. **Stay visible.** Post about real work once a month. Keep job alerts on for "AI Engineer" and "Forward Deployed Engineer", in Argentina and in Latin America remote.
 
 ## What not to do
 

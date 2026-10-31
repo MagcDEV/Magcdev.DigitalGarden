@@ -13,7 +13,7 @@ date_modified: 2026-10-31
 These books support [[wiki/career/career-direction|the career direction]]: a senior backend engineer who ships AI features in financial systems. The list was checked on 2026-10-27.
 
 > [!tip] How to read them
-> Read one technical book at a time. Apply each chapter to the proof project or to your daily work. At 30 minutes a day, one book takes about four to six weeks. So the first two books fit inside the 90-day plan.
+> Read one technical book at a time. Apply each chapter to the proof project or to your daily work. At 30 minutes a day, one book takes about four to six weeks. So the first two books fit in one quarter.
 
 ## The core four, in order
 

@@ -1,5 +1,5 @@
 ---
-title: "Career Summary: What to Do Next"
+title: "Career Summary: Direction, Jobs, Books and Tips"
 tags:
   - wiki
   - career
@@ -7,9 +7,9 @@ date_created: 2026-10-31
 date_modified: 2026-10-31
 ---
 
-# Career summary: what to do next
+# Career summary: direction, jobs, books and tips
 
-This page is the one-screen version of the career plan. It says where to go, which jobs to chase, what to read, and what to do this week. The details live in [[wiki/career/career-direction|the career direction]].
+This page is the one-screen version of the career direction for a senior .NET/Azure backend engineer in Argentina. It says where to go, which jobs to chase, what to read, and how to start. The details live in [[wiki/career/career-direction|the career direction]].
 
 > [!abstract] The direction in three lines
 > 1. **Become a senior backend engineer who ships AI features in financial systems.** Keep .NET and Azure as the base.
@@ -35,36 +35,23 @@ Most salary data comes from hiring vendors. So treat each number as a range, not
 
 | Priority | Role | Why it fits | Search for |
 |---|---|---|---|
-| 1 | **Applied AI engineer** (AI product engineer) | Backend work plus LLM features, agents and evals. You already build LLM pipelines and orchestrate AI agents. | "AI Engineer", "AI Product Engineer", "LLM Engineer", Argentina and LatAm remote |
-| 2 | **Forward deployed engineer** | The highest pay: about 30–50% above backend. Consulting background, C2 English and clear trade-offs are the core of the job. | "Forward Deployed Engineer", "AI Solutions Engineer" |
-| 3 | **Senior .NET/Azure backend, with AI** | An exact fit today. Look for postings that add AI to .NET, for example "Senior .NET Developer – AI & Azure". | "Senior .NET", "C# Backend", "Azure" |
-| 4 | **Fintech backend** (Go or Java) | Banking background helps. Go is side-project experience only, so these roles come later. | "Senior Backend", fintech names |
+| 1 | **Applied AI engineer** (AI product engineer) | Backend work plus LLM features, agents and evals. Most of the job is backend work. | "AI Engineer", "AI Product Engineer", "LLM Engineer", Argentina and LatAm remote |
+| 2 | **Forward deployed engineer** | The highest pay: about 30–50% above backend. Consulting experience, strong English and clear trade-offs are the core of the job. | "Forward Deployed Engineer", "AI Solutions Engineer" |
+| 3 | **Senior .NET/Azure backend, with AI** | The safe fit for a .NET engineer. Look for postings that add AI to .NET, for example "Senior .NET Developer – AI & Azure". | "Senior .NET", "C# Backend", "Azure" |
+| 4 | **Fintech backend** (Go or Java) | A banking background helps. If Go is side-project experience only, these roles come later. | "Senior Backend", fintech names |
 
 > [!warning] Skip for now
 > **Quant roles.** The switch takes one to two years, most roles ask for a quantitative degree, and the best-paid quant jobs are on-site in the US or Europe. Take a quant-adjacent role only when one appears with a good fit.
 
-## Next steps
+## How to start
 
-### This week
+*What are the first moves?*
 
 1. Read Anthropic's short essay [Building effective agents](https://www.anthropic.com/research/building-effective-agents).
 2. Start *AI Engineering* by Chip Huyen: 30 minutes a day.
-3. Do the first AI coding mock: 60 minutes, recorded, out loud, in C#. Follow [[wiki/career/ai-coding-practice-plan|the practice plan]].
-4. Send five applications from the job alerts.
-
-### This month
-
-5. Finish weeks 1 to 4 of the AI coding drill: 11 mocks, with one or two in front of a human.
-6. Ask for the Senior title at your current job.
-7. Ask to work on an AI feature in production at your current job.
-8. Start the proof project: an AI agent for card disputes, in .NET.
-
-### This quarter
-
-9. Ship the proof project with evals, a dashboard and a README with numbers.
-10. Write one LinkedIn post a month about real work.
-11. Read books 1 and 2 from the reading list.
-12. Do one system design a week, out loud, with fintech prompts first.
+3. Do one AI coding mock: 60 minutes, recorded, out loud. Follow [[wiki/career/ai-coding-practice-plan|the practice plan]].
+4. Do one system design a week, out loud, with fintech prompts first.
+5. Start one proof project with evals. See the project ideas below.
 
 ## The books, in order
 
@@ -87,7 +74,7 @@ For the career side, read **The Staff Engineer's Path** (Tanya Reilly) and **Nev
 ### For FDE interviews
 
 - **Expect a case study.** The signature round gives you a vague customer problem. You scope it, ask questions, and split it into steps. Many candidates fail this round, because they prepare only for algorithms.
-- **Practise a customer conversation.** A strong backend engineer who freezes in front of a customer fails this job. Use consulting stories from client work.
+- **Practise a customer conversation.** A strong backend engineer who freezes in front of a customer fails this job. Prepare stories from client work.
 - **Some companies end with a paid trial sprint** of one to two weeks. Be ready to deliver fast in an unfamiliar codebase.
 
 ### For the portfolio
@@ -119,7 +106,7 @@ For the career side, read **The Staff Engineer's Path** (Tanya Reilly) and **Nev
 
 ### Network ideas
 
-- Ask former colleagues from consulting and banking for referrals. A referral moves a CV to the top of the pile.
+- Ask former colleagues for referrals. A referral moves a CV to the top of the pile.
 - Follow AI-first companies that hire FDEs in Buenos Aires, and connect with their engineers before you apply.
 
 ## Sources

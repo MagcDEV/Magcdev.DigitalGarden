@@ -11,8 +11,8 @@ This area holds the career plan: where the market pays, what to study next, and 
 
 ## Start here
 
-- [[wiki/career/summary|Career summary: what to do next]]: the direction, the jobs to pursue, next steps, books, tips and ideas on one page
-- [[wiki/career/career-direction|Career direction (October 2026)]]: market data, the options scored, the positioning line, and the 90-day plan
+- [[wiki/career/summary|Career summary]]: the direction, the jobs to pursue, how to start, books, tips and ideas on one page
+- [[wiki/career/career-direction|Career direction (October 2026)]]: market data, the options scored, the positioning line, and how to get there
 - [[wiki/career/reading-list|Reading list]]: four core books in order, plus optional and career books
 - [[wiki/career/ai-coding-practice-plan|AI coding round: the practice plan]]: a four-week drill, practice problems, and a mock log
 - [[wiki/career/questions-to-ask|Questions to ask the interviewer]]: for engineers, hiring managers and recruiters
