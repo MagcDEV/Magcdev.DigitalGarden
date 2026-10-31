@@ -30,3 +30,6 @@ Cross-cutting software engineering concepts: design patterns, clean code, testin
 
 ### [[wiki/ai-coding/index|AI-Assisted Coding]]
 Working with an AI coding agent such as Claude Code: planning, prompting in small slices, reviewing output, debugging, and AI coding interview rounds.
+
+### [[wiki/career/index|Career]]
+Where the market pays and what to study next: the career direction, the reading list, the AI coding practice plan, and questions to ask in interviews.
