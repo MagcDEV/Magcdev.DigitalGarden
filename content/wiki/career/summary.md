@@ -94,7 +94,7 @@ For the career side, read **The Staff Engineer's Path** (Tanya Reilly) and **Nev
 
 ### Project ideas (pick one)
 
-- **Card-dispute agent in .NET** (the main pick). A tool-calling agent drafts a chargeback decision from a transaction history. Add an idempotent API, a queue, an audit trail and an eval set.
+- **Card-dispute agent in Go** (the main pick). A tool-calling agent drafts a chargeback decision from a transaction history. Add an idempotent API, a queue, an audit trail and an eval set.
 - **An eval harness for .NET LLM apps.** A small library that runs a test set against a prompt and reports accuracy, cost and latency. It is useful to other .NET developers, so it can grow stars.
 - **An MCP server for a banking-style API.** It exposes accounts and transfers as tools for an agent, with permission checks. MCP (Model Context Protocol) is the standard way to give agents tools.
 

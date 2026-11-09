@@ -44,7 +44,7 @@ Applied AI and FDE score best. Both pay well from Argentina, and both build on w
 | **Applied AI on top of backend** (LLM features, agents, evals, in production) | USD 85–120k/yr remote | **High.** AI features are mostly backend work: APIs, queues, data and tests. The market now tests AI-assisted coding anyway. | 3–6 months to have proof | **Yes, the main direction.** |
 | **Forward deployed engineer** | Highest: 30–50% over backend | **High** for engineers with consulting experience, strong English and a habit of explaining trade-offs. | 3–6 months (the same proof, plus customer stories) | **Yes, the high-pay option.** |
 | **Senior .NET/Azure, as now** | Lower in Argentina (most .NET jobs are at consultancies) | Exact fit | Now | **Keep it as the base.** |
-| **Go or Java fintech backend** | USD 80–100k (Go) | Medium, when Go is side-project experience only | 6–12 months | **Secondary.** Keep Go warm for interviews. Don't make it the identity. |
+| **Go or Java fintech backend** | USD 80–100k (Go) | Medium, when Go is side-project experience only | 6–12 months | **Secondary.** Keep Go warm for interviews. Don't make it the identity. A proof project in Go turns side-project Go into one serious public repo. |
 
 > [!tip] The positioning, in one line
 > *Senior backend engineer (.NET/Azure) who ships AI features in financial systems.*
@@ -64,20 +64,20 @@ The steps overlap, but the first one comes first, because it fixes the round whe
 
 1. **Drill the AI coding round.** Follow [[wiki/career/ai-coding-practice-plan|the practice plan]]: three timed mocks a week, recorded. A better CV does not help if the last round fails.
 2. **Get AI work in production.** In your current job, work on an LLM feature, or propose one. One production AI bullet on a CV is worth more than five side projects.
-3. **Build one public proof project**, not many. A suggestion: **an AI agent for card disputes (chargebacks), in .NET.**
+3. **Build one public proof project**, not many. A suggestion: **an AI agent for card disputes (chargebacks), in Go.**
    - A tool-calling agent reads a transaction history and drafts a dispute decision.
    - An idempotent API, event-driven steps on a queue, and an audit trail.
    - **Evals:** a test set with expected decisions, plus accuracy, cost and latency per case.
    - Observability: one dashboard and a log line per agent step.
    - A README with the architecture, trade-offs and numbers.
 
-   This one project is proof for AI engineer, FDE and fintech backend roles at the same time.
+   This one project is proof for AI engineer, FDE and fintech backend roles at the same time. Built in Go, it also turns side-project Go into one serious public repo for Go fintech roles.
 4. **Stay visible.** Post about real work once a month. Keep job alerts on for "AI Engineer" and "Forward Deployed Engineer", in Argentina and in Latin America remote.
 
 ## What not to do
 
 - **Don't start a quant pivot now.** It costs one to two years and hits a degree filter. The best-paid quant jobs are not remote from Argentina. Come back to it only if derivatives maths becomes a passion, and then do a master's first.
-- **Don't spread across Go, Java, Python and Rust.** Depth in one language (C#) plus AI beats shallow coverage.
+- **Don't spread across more languages.** Two is the limit: C# at work, Go for the proof project and Go interviews. No Java, Python or Rust projects.
 - **Don't build five small demos.** Build one deep project with evals and numbers.
 
 ## Reading list

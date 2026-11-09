@@ -10,6 +10,9 @@ tags:
 
 Recurring algorithmic patterns for coding interviews, organized by technique. Each pattern page includes a Go template, recognition heuristics, and a curated problem set graded by difficulty.
 
+> [!tip] Learning Go at the same time?
+> [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]] pairs each pattern with the Go syntax it needs. Each stage has a template to memorize and solved problems with comments.
+
 ## Core Patterns
 
 | Pattern | Key Signal | Typical Complexity |

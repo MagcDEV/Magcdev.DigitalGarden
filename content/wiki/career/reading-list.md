@@ -22,7 +22,7 @@ These books support [[wiki/career/career-direction|the career direction]]: a sen
 | 1 | **AI Engineering**, Chip Huyen (O'Reilly, 2025) | The map of the whole field: prompting, RAG and fine-tuning, evals, agents, latency and cost. In 2026 it is the most-recommended book for engineers who move into AI. Read it first. |
 | 2 | **Evals for AI Engineers**, Shreya Shankar and Hamel Husain (O'Reilly, listed October 2026) | Evals separate AI engineers from demo builders. Use it for the evals of the dispute-agent project. The book is very new, so check that it is out, or read the early release. |
 | 3 | **Designing Data-Intensive Applications, 2nd edition**, Martin Kleppmann and Chris Riccomini (O'Reilly, early 2026) | The backbone for system design rounds and fintech work: consistency, idempotency, events and streams. The new edition refreshes the classic. |
-| 4 | **LLM Engineer's Handbook**, Paul Iusztin and Maxime Labonne (Packt, 2024) | A production LLM system from end to end. The code is Python. Read it for the architecture, and rebuild the ideas in .NET. |
+| 4 | **LLM Engineer's Handbook**, Paul Iusztin and Maxime Labonne (Packt, 2024) | A production LLM system from end to end. The code is Python. Read it for the architecture, and rebuild the ideas in Go. |
 
 ## Optional
 
