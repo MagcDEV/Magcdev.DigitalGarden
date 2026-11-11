@@ -14,7 +14,7 @@ date_modified: 2026-11-11
 
 # NeetCode 150 in Go: a learning path
 
-This path solves the 150 problems of the [NeetCode 150](https://neetcode.io/practice?tab=neetcode150) list in Go. It follows the same idea as [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]]: you memorize a small number of templates, and each problem is one more use of a template.
+This path solves the 150 problems of the [NeetCode 150](https://neetcode.io/practice?tab=neetcode150) list in Go. It follows the same idea as [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]]. You memorize a small number of templates, and each problem is one more use of a template.
 
 Each problem has the same five parts:
 
@@ -301,11 +301,14 @@ The **Go** column opens the commented solution. The **Template** column opens th
 
 ## How to use this path
 
+> [!tip] The method and the tracker
+> [[wiki/neetcode-150/study-method|LeetCode study method]] has the full method: the seven rules, the daily hour, the repeat schedule and the mistake list. [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]] has one row for each problem, for the dates of your four sessions.
+
 ### The order
 
 Follow the stages in order. Stage 1 to stage 7 are the base: each later stage uses them. In a stage, solve the problems in the order of the table. This order goes from the direct use of a template to the problems that combine two templates.
 
-Two problems for each day is a good speed. That speed completes the list in about 11 weeks, with one day each week to repeat the templates.
+One new problem for each day needs about one hour, with the repeats. Two new problems for each day need about two hours. That speed completes the list in about 11 weeks, with one day each week for the repeats and the templates.
 
 ### The loop for each stage
 
@@ -386,6 +389,8 @@ A stage is complete when these three things are true:
 
 ## Related
 
+- [[wiki/neetcode-150/study-method|LeetCode study method]]: how to practice so that the problems stay in memory.
+- [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]]: one row for each problem, with the dates of the four sessions.
 - [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode: a learning path]]: the Go syntax for each pattern, in 12 stages.
 - [[wiki/go/leetcode-snippets|Go LeetCode Snippets & Templates]]: short pieces of code to copy.
 - [[wiki/patterns/index|LeetCode Patterns]]: the pattern notes and the progress tracker.
