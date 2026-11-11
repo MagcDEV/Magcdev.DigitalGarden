@@ -1887,6 +1887,7 @@ Read the problem and look for these words first. This table is the first thing t
 ## Related
 
 - [[wiki/neetcode-150/index|NeetCode 150 in Go]]: the next step. All 150 problems, each with its pattern, its template and a commented Go solution.
+- [[wiki/neetcode-150/study-method|LeetCode study method]]: the seven rules, the daily hour and the repeat schedule, with a tracker.
 - [[wiki/go/index|Go Programming]]: the area this note belongs to.
 - [[wiki/go/leetcode-snippets|Go LeetCode Snippets & Templates]]: short pieces of code to copy.
 - [[wiki/patterns/index|LeetCode Patterns]]: the pattern notes and the progress tracker.
