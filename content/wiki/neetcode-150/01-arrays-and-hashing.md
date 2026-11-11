@@ -45,7 +45,8 @@ Garden notes: [[wiki/go/go-leetcode-learning-path#Stage 1: Slices and maps with 
 // TEMPLATE A: one pass with a "seen" set or map.
 // Ask at each item: "did I already see what I need?"
 func hasPairWithSum(nums []int, target int) bool {
-    seen := make(map[int]struct{}, len(nums)) // a set: the value type uses no memory
+    // a set: the value type uses no memory
+    seen := make(map[int]struct{}, len(nums))
     for _, x := range nums {
         if _, ok := seen[target-x]; ok { // 1. CHECK for the partner first
             return true
@@ -67,7 +68,8 @@ The moves are CHECK, then STORE. Do the check before the store, so an item is ne
 > The problem says anagram, frequency, "how many times" or "same letters". The order of the items does not matter, only the counts.
 
 ```go
-// TEMPLATE B: count the items, then compare the counts or use them as a key.
+// TEMPLATE B: count the items, then compare the counts or use them as a
+// key.
 func letterCount(s string) [26]int {
     var count [26]int // 26 zeros: one counter for each lower-case letter
     for i := 0; i < len(s); i++ {
@@ -97,18 +99,22 @@ The moves are COUNT, then COMPARE or USE AS A KEY. A `[26]int` array is faster t
 > The problem asks for the K most frequent items, and it wants better than O(n log n).
 
 ```go
-// TEMPLATE C: bucket by count. buckets[c] holds the values that appear c times.
+// TEMPLATE C: bucket by count. buckets[c] holds the values that appear c
+// times.
 func mostFrequentFirst(nums []int) []int {
     count := make(map[int]int)
     for _, x := range nums { // 1. COUNT
         count[x]++
     }
-    buckets := make([][]int, len(nums)+1) // a count is between 1 and len(nums)
-    for x, c := range count {             // 2. BUCKET: the count is the index
+    // a count is between 1 and len(nums)
+    buckets := make([][]int, len(nums)+1)
+    // 2. BUCKET: the count is the index
+    for x, c := range count {
         buckets[c] = append(buckets[c], x)
     }
     res := make([]int, 0, len(count))
-    for c := len(buckets) - 1; c >= 1; c-- { // 3. READ from the largest count down
+    // 3. READ from the largest count down
+    for c := len(buckets) - 1; c >= 1; c-- {
         res = append(res, buckets[c]...)
     }
     return res
@@ -126,7 +132,8 @@ The moves are COUNT, BUCKET, then READ FROM THE END. The bucket index is a count
 > The answer at index `i` needs all the items before `i` and all the items after `i`. The problem forbids division, or division does not help.
 
 ```go
-// TEMPLATE D: two passes. res[i] = (sum of the items before i) + (sum of the items after i).
+// TEMPLATE D: two passes. res[i] = (sum of the items before i) + (sum of
+// the items after i).
 // Change + to * (and the start value 0 to 1) for a product.
 func sumOfOthers(nums []int) []int {
     n := len(nums)
@@ -158,7 +165,8 @@ The moves are PASS LEFT TO RIGHT with a running value, then PASS RIGHT TO LEFT w
 ```go
 // TEMPLATE E: length prefix. "go" becomes "2#go".
 func encodeOne(s string) string {
-    return strconv.Itoa(len(s)) + "#" + s // WRITE the length, the marker, the text
+    // WRITE the length, the marker, the text
+    return strconv.Itoa(len(s)) + "#" + s
 }
 
 // decodeOne reads one string that starts at index i.
@@ -186,7 +194,7 @@ The moves are WRITE the length, a marker and the text. To read, FIND the marker,
 
 ## Solved with comments
 
-Each solution has the function name and the signature that LeetCode gives you. The imports and the given types (`ListNode`, `TreeNode`, `Node`) are not shown.
+Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 217. Contains Duplicate
 
@@ -204,9 +212,12 @@ Each solution has the function name and the signature that LeetCode gives you. T
 // containsDuplicate solves LC 217. Time O(n), space O(n).
 // It returns true when a value appears two or more times.
 func containsDuplicate(nums []int) bool {
-    seen := make(map[int]struct{}, len(nums)) // the size hint avoids regrowth
-    for _, x := range nums {                  // _ drops the index, x is the value
-        if _, ok := seen[x]; ok { // CHECK: ok is true when the key is in the map
+    // the size hint avoids regrowth
+    seen := make(map[int]struct{}, len(nums))
+    // _ drops the index, x is the value
+    for _, x := range nums {
+        // CHECK: ok is true when the key is in the map
+        if _, ok := seen[x]; ok {
             return true
         }
         seen[x] = struct{}{} // STORE: struct{}{} is the empty value
@@ -285,7 +296,8 @@ func twoSum(nums []int, target int) []int {
 ```go
 // groupAnagrams solves LC 49. Time O(n * k) for n words of length k.
 func groupAnagrams(strs []string) [][]string {
-    groups := make(map[[26]int][]string) // letter counts -> the words with those counts
+    // letter counts -> the words with those counts
+    groups := make(map[[26]int][]string)
     for _, s := range strs {
         var key [26]int               // COUNT: starts as 26 zeros
         for i := 0; i < len(s); i++ { // s[i] is a byte
@@ -296,8 +308,10 @@ func groupAnagrams(strs []string) [][]string {
         groups[key] = append(groups[key], s)
     }
 
-    res := make([][]string, 0, len(groups)) // length 0, capacity = number of groups
-    for _, g := range groups {              // the order of the groups is random
+    // length 0, capacity = number of groups
+    res := make([][]string, 0, len(groups))
+    // the order of the groups is random
+    for _, g := range groups {
         res = append(res, g)
     }
     return res
@@ -326,7 +340,8 @@ func topKFrequent(nums []int, k int) []int {
     }
 
     // 2. BUCKET: buckets[c] holds the values that appear exactly c times.
-    // A value appears at most len(nums) times, so len(nums)+1 buckets are enough.
+    // A value appears at most len(nums) times, so len(nums)+1 buckets are
+    // enough.
     buckets := make([][]int, len(nums)+1)
     for x, c := range count {
         buckets[c] = append(buckets[c], x)
@@ -337,7 +352,8 @@ func topKFrequent(nums []int, k int) []int {
     for c := len(buckets) - 1; c >= 1 && len(res) < k; c-- {
         res = append(res, buckets[c]...) // ... spreads the bucket
     }
-    return res[:k] // the answer is unique, so the last bucket never adds too many
+    // the answer is unique, so the last bucket never adds too many
+    return res[:k]
 }
 ```
 
@@ -348,6 +364,7 @@ func topKFrequent(nums []int, k int) []int {
 - **Pattern:** Length-prefix encoding
 - **Template:** [[#Template E: Length prefix|E: Length prefix]]
 - **Complexity:** time O(n) for n bytes in total, space O(n)
+- **Imports for a local file:** `strconv`, `strings`
 
 **Idea.** Write each string as its length, then `#`, then the text. The decoder reads the length and cuts exactly that many bytes, so the text can contain `#` or digits.
 
@@ -378,8 +395,9 @@ func (codec *Codec) Decode(strs string) []string {
         for strs[j] != '#' { // FIND the marker: the digits are strs[i:j]
             j++
         }
-        n, _ := strconv.Atoi(strs[i:j]) // PARSE the length (we wrote it, so it is valid)
-        start := j + 1                  // the text starts after the marker
+        // PARSE the length (we wrote it, so it is valid)
+        n, _ := strconv.Atoi(strs[i:j])
+        start := j + 1 // the text starts after the marker
         res = append(res, strs[start:start+n])
         i = start + n // CUT: the next length starts here
     }
@@ -400,7 +418,8 @@ func (codec *Codec) Decode(strs string) []string {
 **Go lesson.** `make([]int, n)` gives n zeros that you write by index. A loop can also run down, with `i--`.
 
 ```go
-// productExceptSelf solves LC 238 with no division. Time O(n), extra space O(1).
+// productExceptSelf solves LC 238 with no division. Time O(n), extra space
+// O(1).
 func productExceptSelf(nums []int) []int {
     n := len(nums)
     res := make([]int, n)
@@ -435,10 +454,13 @@ func productExceptSelf(nums []int) []int {
 **Go lesson.** A fixed 2D array such as `[9][9]bool` is a fast set when the keys are small numbers. The box of a cell is `(r/3)*3 + c/3`, because integer division drops the remainder.
 
 ```go
-// isValidSudoku solves LC 36. The board is 9 x 9, so time and space are O(1).
-// Only the filled cells are checked. The board does not have to be solvable.
+// isValidSudoku solves LC 36. The board is 9 x 9, so time and space are
+// O(1).
+// Only the filled cells are checked. The board does not have to be
+// solvable.
 func isValidSudoku(board [][]byte) bool {
-    // rows[r][d] is true when digit d is already in row r. Same for cols and boxes.
+    // rows[r][d] is true when digit d is already in row r. Same for cols
+    // and boxes.
     var rows, cols, boxes [9][9]bool
 
     for r := 0; r < 9; r++ {
@@ -446,13 +468,16 @@ func isValidSudoku(board [][]byte) bool {
             if board[r][c] == '.' {
                 continue // an empty cell has nothing to check
             }
-            d := board[r][c] - '1' // '1'..'9' -> 0..8: the index of the digit
-            b := (r/3)*3 + c/3     // boxes are numbered 0..8, row by row
+            // '1'..'9' -> 0..8: the index of the digit
+            d := board[r][c] - '1'
+            b := (r/3)*3 + c/3 // boxes are numbered 0..8, row by row
 
-            if rows[r][d] || cols[c][d] || boxes[b][d] { // CHECK the three sets
+            // CHECK the three sets
+            if rows[r][d] || cols[c][d] || boxes[b][d] {
                 return false
             }
-            rows[r][d], cols[c][d], boxes[b][d] = true, true, true // STORE in the three sets
+            // STORE in the three sets
+            rows[r][d], cols[c][d], boxes[b][d] = true, true, true
         }
     }
     return true
@@ -481,7 +506,8 @@ func longestConsecutive(nums []int) int {
 
     best := 0
     for x := range set { // range over the set, not nums: no duplicate work
-        if _, ok := set[x-1]; ok { // CHECK: x-1 exists, so x is not the start of a run
+        // CHECK: x-1 exists, so x is not the start of a run
+        if _, ok := set[x-1]; ok {
             continue
         }
         // x is the first number of a run. Count how far the run goes.
