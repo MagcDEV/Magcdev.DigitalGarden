@@ -22,6 +22,9 @@ Quartz → renders everything as a browsable site
 > [!abstract] [[wiki/patterns/index|LeetCode Patterns]]
 > 17 core patterns with Go templates, recognition heuristics, and graded problem sets.
 
+> [!abstract] [[wiki/neetcode-150/index|NeetCode 150 in Go]]
+> All 150 problems in 18 stages: the LeetCode link, the pattern, the template to memorize and a tested Go solution with comments.
+
 > [!abstract] [[wiki/system-design/index|System Design]]
 > Scalability, databases, caching, messaging — from fundamentals to classic interview problems.
 

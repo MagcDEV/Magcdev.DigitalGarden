@@ -13,6 +13,9 @@ Recurring algorithmic patterns for coding interviews, organized by technique. Ea
 > [!tip] Learning Go at the same time?
 > [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]] pairs each pattern with the Go syntax it needs. Each stage has a template to memorize and solved problems with comments.
 
+> [!tip] The full problem list
+> [[wiki/neetcode-150/index|NeetCode 150 in Go]] has all 150 problems. Each one names its pattern and its template, and has a tested Go solution with comments.
+
 ## Core Patterns
 
 | Pattern | Key Signal | Typical Complexity |
