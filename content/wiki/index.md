@@ -19,6 +19,9 @@ Core CS fundamentals, complexity analysis, and problem-solving techniques. The b
 ### [[wiki/patterns/index|LeetCode Patterns]]
 Recurring algorithmic patterns organized by technique. Each pattern includes template code in Go, when to recognize it, and curated problem sets.
 
+### [[wiki/neetcode-150/index|NeetCode 150 in Go]]
+The 150 problems of the NeetCode list, in 18 stages. Each problem has its LeetCode link, its pattern, the template to memorize and a tested Go solution with comments.
+
 ### [[wiki/system-design/index|System Design]]
 Distributed systems, scalability, databases, caching, messaging, and everything needed for system design interviews and real-world architecture.
 

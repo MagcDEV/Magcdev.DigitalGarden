@@ -15,6 +15,7 @@ content/
 ├── wiki/             ← THE NOTES (LLM writes, Manuel reads)
 │   ├── dsa/          ← Data structures & algorithms
 │   ├── patterns/     ← LeetCode patterns
+│   ├── neetcode-150/ ← The NeetCode 150 in Go: index + one page per category (18)
 │   ├── system-design/← System design concepts, problems, company-specific prep
 │   ├── go/           ← Go language
 │   ├── concepts/     ← Cross-cutting SWE concepts

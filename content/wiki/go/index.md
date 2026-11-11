@@ -56,5 +56,6 @@ tags:
 ## Go for LeetCode
 
 - [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode: a learning path]] (start here: 12 stages, each with Go syntax, a template to memorize and solved problems with comments)
+- [[wiki/neetcode-150/index|NeetCode 150 in Go: a learning path]] (then this: all 150 problems, each with its pattern, its template and a commented Go solution)
 - [[wiki/go/leetcode-snippets|Go LeetCode Snippets & Templates]]
 - [[wiki/go/go-vs-python-dsa|Go vs Python for DSA (trade-offs)]]

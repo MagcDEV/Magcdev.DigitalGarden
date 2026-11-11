@@ -8,7 +8,7 @@ tags:
   - patterns
   - templates
 date_created: 2026-11-09
-date_modified: 2026-11-09
+date_modified: 2026-11-11
 ---
 
 # Learn Go with LeetCode: a learning path
@@ -43,6 +43,8 @@ Each stage has the same four parts:
 | [11](#stage-11-tables-with-dynamic-programming) | `make` for tables, `math.MaxInt` | Dynamic programming | State, base case, transition, answer |
 
 One stage for each week is a good speed. That is one problem for each day, with two days to repeat the templates.
+
+After this path, continue with [[wiki/neetcode-150/index|NeetCode 150 in Go]]. It has the full list of 150 problems, with the pattern, the template and a commented Go solution for each one.
 
 ## How to use this path
 
@@ -1884,6 +1886,7 @@ Read the problem and look for these words first. This table is the first thing t
 
 ## Related
 
+- [[wiki/neetcode-150/index|NeetCode 150 in Go]]: the next step. All 150 problems, each with its pattern, its template and a commented Go solution.
 - [[wiki/go/index|Go Programming]]: the area this note belongs to.
 - [[wiki/go/leetcode-snippets|Go LeetCode Snippets & Templates]]: short pieces of code to copy.
 - [[wiki/patterns/index|LeetCode Patterns]]: the pattern notes and the progress tracker.
