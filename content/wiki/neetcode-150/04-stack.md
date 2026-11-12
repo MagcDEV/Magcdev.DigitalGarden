@@ -9,7 +9,7 @@ tags:
   - templates
   - stack
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 4: Stack
@@ -216,317 +216,379 @@ The moves are RESOLVE, then PUSH. The stack holds the indexes that wait for an a
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 20. Valid Parentheses
 
 [LeetCode 20](https://leetcode.com/problems/valid-parentheses/) · Easy
 
-- **Pattern:** Matching stack
-- **Template:** [[#Template A: Matching stack|A: Matching stack]]
-- **Complexity:** time O(n), space O(n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Matching stack
+> - **Template:** [[#Template A: Matching stack|A: Matching stack]]
 
-**Idea.** Push each opener. A closer must match the opener on the top, because the most recent opener closes first. At the end the stack must be empty.
+> [!tip]- Step 2: the idea
+> **Idea.** Push each opener. A closer must match the opener on the top, because the most recent opener closes first. At the end the stack must be empty.
+>
+> **Complexity.** Time O(n), space O(n).
+>
+> **Go lesson.** A `[]byte` slice is the stack. `append` pushes, and `stack[:len(stack)-1]` pops. A map lookup with two results tells if the key is in the map.
 
-**Go lesson.** A `[]byte` slice is the stack. `append` pushes, and `stack[:len(stack)-1]` pops. A map lookup with two results tells if the key is in the map.
-
-```go
-// isValid solves LC 20. Time O(n), space O(n).
-// The most recent opener must close first, and that is the top of a stack.
-func isValid(s string) bool {
-    // closer -> its opener
-    pairs := map[byte]byte{')': '(', ']': '[', '}': '{'}
-    // the openers that wait
-    stack := []byte{}
-    for i := 0; i < len(s); i++ {
-        c := s[i]
-        // isCloser is true when c is a key of the map
-        open, isCloser := pairs[c]
-        if !isCloser {
-            stack = append(stack, c) // PUSH an opener
-            continue
-        }
-        // MATCH: the top must be the opener of this closer.
-        // The len test comes first, so an empty stack causes no panic.
-        if len(stack) == 0 || stack[len(stack)-1] != open {
-            return false
-        }
-        stack = stack[:len(stack)-1] // POP the opener
-    }
-    return len(stack) == 0 // LEFTOVER openers make the string not valid
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // isValid solves LC 20. Time O(n), space O(n).
+> // The most recent opener must close first, and that is the top of a
+> // stack.
+> func isValid(s string) bool {
+>     // closer -> its opener
+>     pairs := map[byte]byte{')': '(', ']': '[', '}': '{'}
+>     // the openers that wait
+>     stack := []byte{}
+>     for i := 0; i < len(s); i++ {
+>         c := s[i]
+>         // isCloser is true when c is a key of the map
+>         open, isCloser := pairs[c]
+>         if !isCloser {
+>             stack = append(stack, c) // PUSH an opener
+>             continue
+>         }
+>         // MATCH: the top must be the opener of this closer.
+>         // The len test comes first, so an empty stack causes no
+>         // panic.
+>         if len(stack) == 0 || stack[len(stack)-1] != open {
+>             return false
+>         }
+>         stack = stack[:len(stack)-1] // POP the opener
+>     }
+>     // LEFTOVER openers make the string not valid
+>     return len(stack) == 0
+> }
+> ```
 
 ### 155. Min Stack
 
 [LeetCode 155](https://leetcode.com/problems/min-stack/) · Medium
 
-- **Pattern:** Paired stack
-- **Template:** [[#Template B: Paired stack|B: Paired stack]]
-- **Complexity:** time O(1) for each operation, space O(n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Paired stack
+> - **Template:** [[#Template B: Paired stack|B: Paired stack]]
 
-**Idea.** Keep a second stack with the same height. Its top is the minimum of all the values that are in the first stack now. A pop removes one item from each stack, so the minimum from before comes back with no search.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep a second stack with the same height. Its top is the minimum of all the values that are in the first stack now. A pop removes one item from each stack, so the minimum from before comes back with no search.
+>
+> **Complexity.** Time O(1) for each operation, space O(n).
+>
+> **Go lesson.** LeetCode names the receiver `this`. A pointer receiver, `*MinStack`, lets a method change the struct. `MinStack{}` is ready to use, because `append` works on a nil slice.
 
-**Go lesson.** LeetCode names the receiver `this`. A pointer receiver, `*MinStack`, lets a method change the struct. `MinStack{}` is ready to use, because `append` works on a nil slice.
-
-```go
-// MinStack solves LC 155. Time O(1) for each operation, space O(n).
-// mins[i] is the minimum of vals[0..i], so the two slices always have the
-// same length.
-type MinStack struct {
-    vals []int // the values
-    mins []int // mins[i]: the minimum of vals[0..i]
-}
-
-// Constructor returns an empty stack. The two slices start as nil.
-func Constructor() MinStack {
-    return MinStack{}
-}
-
-func (this *MinStack) Push(val int) {
-    low := val
-    if len(this.mins) > 0 {
-        // compare with the minimum below
-        low = min(low, this.mins[len(this.mins)-1])
-    }
-    this.vals = append(this.vals, val) // PUSH BOTH
-    this.mins = append(this.mins, low)
-}
-
-func (this *MinStack) Pop() {
-    // POP BOTH: the minimum from before is on top
-    this.vals = this.vals[:len(this.vals)-1]
-    this.mins = this.mins[:len(this.mins)-1]
-}
-
-func (this *MinStack) Top() int {
-    return this.vals[len(this.vals)-1]
-}
-
-func (this *MinStack) GetMin() int {
-    return this.mins[len(this.mins)-1] // READ THE TOP of the second stack
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // MinStack solves LC 155. Time O(1) for each operation, space O(n).
+> // mins[i] is the minimum of vals[0..i], so the two slices always
+> // have the
+> // same length.
+> type MinStack struct {
+>     vals []int // the values
+>     mins []int // mins[i]: the minimum of vals[0..i]
+> }
+>
+> // Constructor returns an empty stack. The two slices start as nil.
+> func Constructor() MinStack {
+>     return MinStack{}
+> }
+>
+> func (this *MinStack) Push(val int) {
+>     low := val
+>     if len(this.mins) > 0 {
+>         // compare with the minimum below
+>         low = min(low, this.mins[len(this.mins)-1])
+>     }
+>     this.vals = append(this.vals, val) // PUSH BOTH
+>     this.mins = append(this.mins, low)
+> }
+>
+> func (this *MinStack) Pop() {
+>     // POP BOTH: the minimum from before is on top
+>     this.vals = this.vals[:len(this.vals)-1]
+>     this.mins = this.mins[:len(this.mins)-1]
+> }
+>
+> func (this *MinStack) Top() int {
+>     return this.vals[len(this.vals)-1]
+> }
+>
+> func (this *MinStack) GetMin() int {
+>     // READ THE TOP of the second stack
+>     return this.mins[len(this.mins)-1]
+> }
+> ```
 
 ### 150. Evaluate Reverse Polish Notation
 
 [LeetCode 150](https://leetcode.com/problems/evaluate-reverse-polish-notation/) · Medium
 
-- **Pattern:** Stack as evaluator
-- **Template:** [[#Template C: Stack as evaluator|C: Stack as evaluator]]
-- **Complexity:** time O(n), space O(n)
-- **Imports for a local file:** `strconv`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Stack as evaluator
+> - **Template:** [[#Template C: Stack as evaluator|C: Stack as evaluator]]
 
-**Idea.** A number waits on the stack. An operator uses the two most recent results, so pop two values, apply the operator, and push the result. The last value on the stack is the answer.
+> [!tip]- Step 2: the idea
+> **Idea.** A number waits on the stack. An operator uses the two most recent results, so pop two values, apply the operator, and push the result. The last value on the stack is the answer.
+>
+> **Complexity.** Time O(n), space O(n).
+>
+> **Go lesson.** `strconv.Atoi` returns a value and an error. An error that is not nil means that the token is an operator. Integer division in Go truncates toward zero, which is the rule of this problem.
 
-**Go lesson.** `strconv.Atoi` returns a value and an error. An error that is not nil means that the token is an operator. Integer division in Go truncates toward zero, which is the rule of this problem.
-
-```go
-// evalRPN solves LC 150. Time O(n), space O(n).
-// In postfix notation an operator comes after its two operands.
-func evalRPN(tokens []string) int {
-    // the results that wait for an operator
-    stack := make([]int, 0, len(tokens))
-    for _, tok := range tokens {
-        // Atoi parses "-11" as a number. It fails on "-", so "-" is an
-        // operator.
-        if n, err := strconv.Atoi(tok); err == nil {
-            stack = append(stack, n) // PUSH a number
-            continue
-        }
-        b := stack[len(stack)-1] // POP TWO: the top is the RIGHT operand
-        a := stack[len(stack)-2] // the value below it is the left operand
-        stack = stack[:len(stack)-2]
-        var res int
-        switch tok { // APPLY the operator
-        case "+":
-            res = a + b
-        case "-":
-            res = a - b // the order matters: a - b, not b - a
-        case "*":
-            res = a * b
-        case "/":
-            res = a / b // integer division truncates toward zero
-        }
-        stack = append(stack, res) // PUSH the result
-    }
-    return stack[0] // a valid expression leaves one value
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `strconv`
+>
+> ```go
+> // evalRPN solves LC 150. Time O(n), space O(n).
+> // In postfix notation an operator comes after its two operands.
+> func evalRPN(tokens []string) int {
+>     // the results that wait for an operator
+>     stack := make([]int, 0, len(tokens))
+>     for _, tok := range tokens {
+>         // Atoi parses "-11" as a number. It fails on "-", so "-" is
+>         // an
+>         // operator.
+>         if n, err := strconv.Atoi(tok); err == nil {
+>             stack = append(stack, n) // PUSH a number
+>             continue
+>         }
+>         // POP TWO: the top is the RIGHT operand
+>         b := stack[len(stack)-1]
+>         // the value below it is the left operand
+>         a := stack[len(stack)-2]
+>         stack = stack[:len(stack)-2]
+>         var res int
+>         switch tok { // APPLY the operator
+>         case "+":
+>             res = a + b
+>         case "-":
+>             res = a - b // the order matters: a - b, not b - a
+>         case "*":
+>             res = a * b
+>         case "/":
+>             res = a / b // integer division truncates toward zero
+>         }
+>         stack = append(stack, res) // PUSH the result
+>     }
+>     return stack[0] // a valid expression leaves one value
+> }
+> ```
 
 ### 22. Generate Parentheses
 
 [LeetCode 22](https://leetcode.com/problems/generate-parentheses/) · Medium
 
-- **Pattern:** Backtracking with counters
-- **Template:** [[#Template D: Backtracking with counters|D: Backtracking with counters]]
-- **Complexity:** time O(4ⁿ / √n) strings, and each string costs O(n) to copy, space O(n) for the recursion, plus the output
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking with counters
+> - **Template:** [[#Template D: Backtracking with counters|D: Backtracking with counters]]
 
-**Idea.** Build the string one character at a time. Add `(` while fewer than n are open. Add `)` only while it has an opener to close. With these two rules, each string that reaches length 2n is valid.
+> [!tip]- Step 2: the idea
+> **Idea.** Build the string one character at a time. Add `(` while fewer than n are open. Add `)` only while it has an opener to close. With these two rules, each string that reaches length 2n is valid.
+>
+> **Complexity.** Time O(4ⁿ / √n) strings, and each string costs O(n) to copy, space O(n) for the recursion, plus the output.
+>
+> **Go lesson.** A function literal that calls itself needs a `var` declaration first. `string(path)` copies the bytes, so later changes to `path` do not change the result.
 
-**Go lesson.** A function literal that calls itself needs a `var` declaration first. `string(path)` copies the bytes, so later changes to `path` do not change the result.
-
-```go
-// generateParenthesis solves LC 22. Time O(4ⁿ / √n) strings, space O(n) for
-// the recursion.
-// Two counters keep each prefix valid, so no string needs a check at the
-// end.
-func generateParenthesis(n int) []string {
-    res := []string{}
-    path := make([]byte, 0, 2*n) // the string that the recursion builds
-
-    // Declare build first: the function body refers to its own name.
-    var build func(open, closed int)
-    // open and closed count the brackets in path
-    build = func(open, closed int) {
-        if len(path) == 2*n {
-            // RECORD: string(path) is a copy
-            res = append(res, string(path))
-            return
-        }
-        if open < n { // an opener is permitted while fewer than n are used
-            path = append(path, '(')  // CHOOSE
-            build(open+1, closed)     // EXPLORE
-            path = path[:len(path)-1] // UNDO
-        }
-        // a closer is permitted only when an opener waits
-        if closed < open {
-            path = append(path, ')')
-            build(open, closed+1)
-            path = path[:len(path)-1]
-        }
-    }
-    build(0, 0)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // generateParenthesis solves LC 22. Time O(4ⁿ / √n) strings, space
+> // O(n) for
+> // the recursion.
+> // Two counters keep each prefix valid, so no string needs a check
+> // at the
+> // end.
+> func generateParenthesis(n int) []string {
+>     res := []string{}
+>     // the string that the recursion builds
+>     path := make([]byte, 0, 2*n)
+>
+>     // Declare build first: the function body refers to its own
+>     // name.
+>     var build func(open, closed int)
+>     // open and closed count the brackets in path
+>     build = func(open, closed int) {
+>         if len(path) == 2*n {
+>             // RECORD: string(path) is a copy
+>             res = append(res, string(path))
+>             return
+>         }
+>         // an opener is permitted while fewer than n are used
+>         if open < n {
+>             path = append(path, '(')  // CHOOSE
+>             build(open+1, closed)     // EXPLORE
+>             path = path[:len(path)-1] // UNDO
+>         }
+>         // a closer is permitted only when an opener waits
+>         if closed < open {
+>             path = append(path, ')')
+>             build(open, closed+1)
+>             path = path[:len(path)-1]
+>         }
+>     }
+>     build(0, 0)
+>     return res
+> }
+> ```
 
 ### 739. Daily Temperatures
 
 [LeetCode 739](https://leetcode.com/problems/daily-temperatures/) · Medium
 
-- **Pattern:** Monotonic stack
-- **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
-- **Complexity:** time O(n), space O(n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Monotonic stack
+> - **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
 
-**Idea.** A day waits on the stack until a warmer day comes. Each new day resolves all the colder days on the top of the stack. The stack holds indexes, so the answer is the difference of two indexes.
+> [!tip]- Step 2: the idea
+> **Idea.** A day waits on the stack until a warmer day comes. Each new day resolves all the colder days on the top of the stack. The stack holds indexes, so the answer is the difference of two indexes.
+>
+> **Complexity.** Time O(n), space O(n).
+>
+> **Go lesson.** `make([]int, n)` gives n zeros. Zero is the answer for a day with no warmer day, so the days that stay on the stack need no work.
 
-**Go lesson.** `make([]int, n)` gives n zeros. Zero is the answer for a day with no warmer day, so the days that stay on the stack need no work.
-
-```go
-// dailyTemperatures solves LC 739. Time O(n), space O(n).
-// Each index enters the stack one time and leaves it one time at most.
-func dailyTemperatures(temperatures []int) []int {
-    // zeros: "no warmer day" is the default
-    res := make([]int, len(temperatures))
-    // indexes of the days that wait for a warmer day
-    stack := []int{}
-    for i, t := range temperatures {
-        // RESOLVE: day i is the first warmer day for each colder day on the
-        // top.
-        for len(stack) > 0 && temperatures[stack[len(stack)-1]] < t {
-            j := stack[len(stack)-1]
-            stack = stack[:len(stack)-1] // POP the day that has its answer
-            // the number of days between the two
-            res[j] = i - j
-        }
-        stack = append(stack, i) // PUSH: day i waits now
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // dailyTemperatures solves LC 739. Time O(n), space O(n).
+> // Each index enters the stack one time and leaves it one time at
+> // most.
+> func dailyTemperatures(temperatures []int) []int {
+>     // zeros: "no warmer day" is the default
+>     res := make([]int, len(temperatures))
+>     // indexes of the days that wait for a warmer day
+>     stack := []int{}
+>     for i, t := range temperatures {
+>         // RESOLVE: day i is the first warmer day for each colder
+>         // day on the
+>         // top.
+>         for len(stack) > 0 && temperatures[stack[len(stack)-1]] < t {
+>             j := stack[len(stack)-1]
+>             // POP the day that has its answer
+>             stack = stack[:len(stack)-1]
+>             // the number of days between the two
+>             res[j] = i - j
+>         }
+>         stack = append(stack, i) // PUSH: day i waits now
+>     }
+>     return res
+> }
+> ```
 
 ### 853. Car Fleet
 
 [LeetCode 853](https://leetcode.com/problems/car-fleet/) · Medium
 
-- **Pattern:** Sort, then monotonic stack
-- **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
-- **Complexity:** time O(n log n) for the sort, space O(n)
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort, then monotonic stack
+> - **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
 
-**Idea.** Find the time that each car needs to reach the target on an empty road. Sort the cars by position. A car that needs the same time or less than a car ahead of it catches that car and joins its fleet. The cars that stay on the stack lead the fleets.
+> [!tip]- Step 2: the idea
+> **Idea.** Find the time that each car needs to reach the target on an empty road. Sort the cars by position. A car that needs the same time or less than a car ahead of it catches that car and joins its fleet. The cars that stay on the stack lead the fleets.
+>
+> **Complexity.** Time O(n log n) for the sort, space O(n).
+>
+> **Go lesson.** `sort.Slice` sorts a slice of structs with a "less" function. `float64(x)` is necessary before the division, because the division of two ints drops the fraction.
 
-**Go lesson.** `sort.Slice` sorts a slice of structs with a "less" function. `float64(x)` is necessary before the division, because the division of two ints drops the fraction.
-
-```go
-// carFleet solves LC 853. Time O(n log n), space O(n).
-// A car on the stack waits for a slower car ahead. If one comes, the car
-// joins it.
-func carFleet(target int, position []int, speed []int) int {
-    type car struct {
-        pos  int
-        time float64 // hours to reach the target on an empty road
-    }
-    cars := make([]car, len(position))
-    for i := 0; i < len(position); i++ {
-        // Convert to float64 first: 7 / 2 is 3, and 7.0 / 2.0 is 3.5.
-        cars[i] = car{position[i], float64(target-position[i]) / float64(speed[i])}
-    }
-    // SORT by position: the car nearest to the start line comes first.
-    sort.Slice(cars, func(a, b int) bool { return cars[a].pos < cars[b].pos })
-
-    // times of the cars that wait: they decrease from the bottom up
-    stack := []float64{}
-    for _, c := range cars {
-        // RESOLVE: car c is ahead of the cars on the stack. A car behind
-        // that
-        // needs the same time or less catches c, so it joins the fleet of
-        // c.
-        for len(stack) > 0 && stack[len(stack)-1] <= c.time {
-            stack = stack[:len(stack)-1] // POP the car that joined
-        }
-        stack = append(stack, c.time) // PUSH: car c leads a fleet for now
-    }
-    return len(stack) // each car that stays leads one fleet
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // carFleet solves LC 853. Time O(n log n), space O(n).
+> // A car on the stack waits for a slower car ahead. If one comes,
+> // the car
+> // joins it.
+> func carFleet(target int, position []int, speed []int) int {
+>     type car struct {
+>         pos  int
+>         time float64 // hours to reach the target on an empty road
+>     }
+>     cars := make([]car, len(position))
+>     for i := 0; i < len(position); i++ {
+>         // Convert to float64 first: 7 / 2 is 3, and 7.0 / 2.0 is
+>         // 3.5.
+>         cars[i] = car{position[i], float64(target-position[i]) / float64(speed[i])}
+>     }
+>     // SORT by position: the car nearest to the start line comes
+>     // first.
+>     sort.Slice(cars, func(a, b int) bool { return cars[a].pos < cars[b].pos })
+>
+>     // times of the cars that wait: they decrease from the bottom up
+>     stack := []float64{}
+>     for _, c := range cars {
+>         // RESOLVE: car c is ahead of the cars on the stack. A car
+>         // behind
+>         // that
+>         // needs the same time or less catches c, so it joins the
+>         // fleet of
+>         // c.
+>         for len(stack) > 0 && stack[len(stack)-1] <= c.time {
+>             stack = stack[:len(stack)-1] // POP the car that joined
+>         }
+>         // PUSH: car c leads a fleet for now
+>         stack = append(stack, c.time)
+>     }
+>     return len(stack) // each car that stays leads one fleet
+> }
+> ```
 
 ### 84. Largest Rectangle in Histogram
 
 [LeetCode 84](https://leetcode.com/problems/largest-rectangle-in-histogram/) · Hard
 
-- **Pattern:** Monotonic stack
-- **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
-- **Complexity:** time O(n), space O(n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Monotonic stack
+> - **Template:** [[#Template E: Monotonic stack|E: Monotonic stack]]
 
-**Idea.** Each bar is the lowest bar of one largest rectangle. That rectangle goes from the first lower bar on the left to the first lower bar on the right. A lower bar on the right pops the bar, and the new top of the stack is the first lower bar on the left.
+> [!tip]- Step 2: the idea
+> **Idea.** Each bar is the lowest bar of one largest rectangle. That rectangle goes from the first lower bar on the left to the first lower bar on the right. A lower bar on the right pops the bar, and the new top of the stack is the first lower bar on the left.
+>
+> **Complexity.** Time O(n), space O(n).
+>
+> **Go lesson.** The loop runs to `i == len(heights)` with a height of 0. That extra step resolves each bar that still waits, so no second loop is necessary.
 
-**Go lesson.** The loop runs to `i == len(heights)` with a height of 0. That extra step resolves each bar that still waits, so no second loop is necessary.
-
-```go
-// largestRectangleArea solves LC 84. Time O(n), space O(n).
-// A bar waits on the stack until a lower bar comes on its right.
-func largestRectangleArea(heights []int) int {
-    best := 0
-    // indexes of the bars that wait: their heights increase from the bottom
-    // up
-    stack := []int{}
-    for i := 0; i <= len(heights); i++ {
-        // at i == len(heights): a bar of height 0 resolves all the bars
-        h := 0
-        if i < len(heights) {
-            h = heights[i]
-        }
-        // RESOLVE: bar i is the first lower bar on the right of the top.
-        for len(stack) > 0 && heights[stack[len(stack)-1]] > h {
-            top := stack[len(stack)-1]
-            // POP the bar that has its right border
-            stack = stack[:len(stack)-1]
-            // index of the first lower bar on the left
-            left := -1
-            if len(stack) > 0 {
-                left = stack[len(stack)-1] // the new top is that bar
-            }
-            // the bars between left and i, without the two
-            width := i - left - 1
-            best = max(best, heights[top]*width)
-        }
-        stack = append(stack, i) // PUSH: bar i waits now
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // largestRectangleArea solves LC 84. Time O(n), space O(n).
+> // A bar waits on the stack until a lower bar comes on its right.
+> func largestRectangleArea(heights []int) int {
+>     best := 0
+>     // indexes of the bars that wait: their heights increase from
+>     // the bottom
+>     // up
+>     stack := []int{}
+>     for i := 0; i <= len(heights); i++ {
+>         // at i == len(heights): a bar of height 0 resolves all the
+>         // bars
+>         h := 0
+>         if i < len(heights) {
+>             h = heights[i]
+>         }
+>         // RESOLVE: bar i is the first lower bar on the right of the
+>         // top.
+>         for len(stack) > 0 && heights[stack[len(stack)-1]] > h {
+>             top := stack[len(stack)-1]
+>             // POP the bar that has its right border
+>             stack = stack[:len(stack)-1]
+>             // index of the first lower bar on the left
+>             left := -1
+>             if len(stack) > 0 {
+>                 // the new top is that bar
+>                 left = stack[len(stack)-1]
+>             }
+>             // the bars between left and i, without the two
+>             width := i - left - 1
+>             best = max(best, heights[top]*width)
+>         }
+>         stack = append(stack, i) // PUSH: bar i waits now
+>     }
+>     return best
+> }
+> ```
 
 ---
 

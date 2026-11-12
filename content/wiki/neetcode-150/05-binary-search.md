@@ -9,7 +9,7 @@ tags:
   - templates
   - binary-search
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 5: Binary Search
@@ -171,312 +171,370 @@ The moves are CUT, DERIVE, CHECK, then MOVE. Search the cut in the shorter slice
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 704. Binary Search
 
 [LeetCode 704](https://leetcode.com/problems/binary-search/) · Easy
 
-- **Pattern:** Binary search, exact value
-- **Template:** [[#Template A: Exact value|A: Exact value]]
-- **Complexity:** time O(log n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Binary search, exact value
+> - **Template:** [[#Template A: Exact value|A: Exact value]]
 
-**Idea.** Compare the target with the middle item. The slice is sorted, so one comparison tells which half cannot contain the target. Drop that half and repeat.
+> [!tip]- Step 2: the idea
+> **Idea.** Compare the target with the middle item. The slice is sorted, so one comparison tells which half cannot contain the target. Drop that half and repeat.
+>
+> **Complexity.** Time O(log n), space O(1).
+>
+> **Go lesson.** `lo + (hi-lo)/2` is the middle with no overflow. Integer division rounds down, so `mid` is never larger than `hi`.
 
-**Go lesson.** `lo + (hi-lo)/2` is the middle with no overflow. Integer division rounds down, so `mid` is never larger than `hi`.
-
-```go
-// search solves LC 704. Time O(log n), space O(1).
-// The range lo..hi is inclusive, so the loop runs while lo <= hi.
-func search(nums []int, target int) int {
-    lo, hi := 0, len(nums)-1
-    for lo <= hi { // the range still has one item or more
-        mid := lo + (hi-lo)/2 // MIDDLE
-        switch {              // COMPARE
-        case nums[mid] == target:
-            return mid
-        case nums[mid] < target:
-            lo = mid + 1 // DROP HALF: the target is on the right of mid
-        default:
-            hi = mid - 1 // DROP HALF: the target is on the left of mid
-        }
-    }
-    return -1 // the range is empty
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // search solves LC 704. Time O(log n), space O(1).
+> // The range lo..hi is inclusive, so the loop runs while lo <= hi.
+> func search(nums []int, target int) int {
+>     lo, hi := 0, len(nums)-1
+>     for lo <= hi { // the range still has one item or more
+>         mid := lo + (hi-lo)/2 // MIDDLE
+>         switch {              // COMPARE
+>         case nums[mid] == target:
+>             return mid
+>         case nums[mid] < target:
+>             // DROP HALF: the target is on the right of mid
+>             lo = mid + 1
+>         default:
+>             // DROP HALF: the target is on the left of mid
+>             hi = mid - 1
+>         }
+>     }
+>     return -1 // the range is empty
+> }
+> ```
 
 ### 74. Search a 2D Matrix
 
 [LeetCode 74](https://leetcode.com/problems/search-a-2d-matrix/) · Medium
 
-- **Pattern:** Binary search, exact value
-- **Template:** [[#Template A: Exact value|A: Exact value]]
-- **Complexity:** time O(log(m * n)) for m rows and n columns, space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Binary search, exact value
+> - **Template:** [[#Template A: Exact value|A: Exact value]]
 
-**Idea.** Each row starts after the last value of the row before it. So the rows, read one after the other, are one sorted slice of m * n items. Run a binary search on that slice, and change the index to a row and a column.
+> [!tip]- Step 2: the idea
+> **Idea.** Each row starts after the last value of the row before it. So the rows, read one after the other, are one sorted slice of m * n items. Run a binary search on that slice, and change the index to a row and a column.
+>
+> **Complexity.** Time O(log(m * n)) for m rows and n columns, space O(1).
+>
+> **Go lesson.** Integer division and remainder change one index to two: `mid / cols` is the row and `mid % cols` is the column.
 
-**Go lesson.** Integer division and remainder change one index to two: `mid / cols` is the row and `mid % cols` is the column.
-
-```go
-// searchMatrix solves LC 74. Time O(log(m * n)), space O(1).
-// Index k of the virtual slice is the cell matrix[k/cols][k%cols].
-func searchMatrix(matrix [][]int, target int) bool {
-    if len(matrix) == 0 || len(matrix[0]) == 0 {
-        return false
-    }
-    rows, cols := len(matrix), len(matrix[0])
-    lo, hi := 0, rows*cols-1 // the indexes of the virtual slice
-    for lo <= hi {
-        mid := lo + (hi-lo)/2 // MIDDLE
-        // row = mid / cols, column = mid % cols
-        val := matrix[mid/cols][mid%cols]
-        switch { // COMPARE
-        case val == target:
-            return true
-        case val < target:
-            lo = mid + 1 // DROP HALF: the left part
-        default:
-            hi = mid - 1 // DROP HALF: the right part
-        }
-    }
-    return false
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // searchMatrix solves LC 74. Time O(log(m * n)), space O(1).
+> // Index k of the virtual slice is the cell matrix[k/cols][k%cols].
+> func searchMatrix(matrix [][]int, target int) bool {
+>     if len(matrix) == 0 || len(matrix[0]) == 0 {
+>         return false
+>     }
+>     rows, cols := len(matrix), len(matrix[0])
+>     lo, hi := 0, rows*cols-1 // the indexes of the virtual slice
+>     for lo <= hi {
+>         mid := lo + (hi-lo)/2 // MIDDLE
+>         // row = mid / cols, column = mid % cols
+>         val := matrix[mid/cols][mid%cols]
+>         switch { // COMPARE
+>         case val == target:
+>             return true
+>         case val < target:
+>             lo = mid + 1 // DROP HALF: the left part
+>         default:
+>             hi = mid - 1 // DROP HALF: the right part
+>         }
+>     }
+>     return false
+> }
+> ```
 
 ### 875. Koko Eating Bananas
 
 [LeetCode 875](https://leetcode.com/problems/koko-eating-bananas/) · Medium
 
-- **Pattern:** Binary search on the answer
-- **Template:** [[#Template B: First true|B: First true]]
-- **Complexity:** time O(n log m) for n piles and a largest pile of m, space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Binary search on the answer
+> - **Template:** [[#Template B: First true|B: First true]]
 
-**Idea.** Do not search the piles. Search the speed. If a speed is fast enough, each larger speed is fast enough too. So the speeds are false, false, ..., true, true, and the answer is the first true.
+> [!tip]- Step 2: the idea
+> **Idea.** Do not search the piles. Search the speed. If a speed is fast enough, each larger speed is fast enough too. So the speeds are false, false, ..., true, true, and the answer is the first true.
+>
+> **Complexity.** Time O(n log m) for n piles and a largest pile of m, space O(1).
+>
+> **Go lesson.** `(p + speed - 1) / speed` is the ceiling of `p / speed` with integer arithmetic only. No float conversion is necessary.
 
-**Go lesson.** `(p + speed - 1) / speed` is the ceiling of `p / speed` with integer arithmetic only. No float conversion is necessary.
-
-```go
-// minEatingSpeed solves LC 875. Time O(n log m), space O(1).
-// The candidates are the speeds 1..max(piles). It returns the first speed
-// that is fast enough.
-func minEatingSpeed(piles []int, h int) int {
-    lo, hi := 1, 1 // the range of speeds, not of indexes
-    for _, p := range piles {
-        // the largest pile as speed needs one hour for each pile
-        hi = max(hi, p)
-    }
-    for lo < hi { // two candidates or more
-        mid := lo + (hi-lo)/2         // MIDDLE
-        if hoursAt(piles, mid) <= h { // TEST: is the speed mid fast enough?
-            hi = mid // KEEP mid: it can be the answer
-        } else {
-            lo = mid + 1 // DROP mid and all the slower speeds
-        }
-    }
-    return lo // lo == hi: the first speed that is fast enough
-}
-
-// hoursAt returns the hours that Koko needs at the given speed.
-func hoursAt(piles []int, speed int) int {
-    hours := 0
-    for _, p := range piles {
-        hours += (p + speed - 1) / speed // the ceiling of p / speed
-    }
-    return hours
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // minEatingSpeed solves LC 875. Time O(n log m), space O(1).
+> // The candidates are the speeds 1..max(piles). It returns the first
+> // speed
+> // that is fast enough.
+> func minEatingSpeed(piles []int, h int) int {
+>     lo, hi := 1, 1 // the range of speeds, not of indexes
+>     for _, p := range piles {
+>         // the largest pile as speed needs one hour for each pile
+>         hi = max(hi, p)
+>     }
+>     for lo < hi { // two candidates or more
+>         mid := lo + (hi-lo)/2 // MIDDLE
+>         // TEST: is the speed mid fast enough?
+>         if hoursAt(piles, mid) <= h {
+>             hi = mid // KEEP mid: it can be the answer
+>         } else {
+>             lo = mid + 1 // DROP mid and all the slower speeds
+>         }
+>     }
+>     return lo // lo == hi: the first speed that is fast enough
+> }
+>
+> // hoursAt returns the hours that Koko needs at the given speed.
+> func hoursAt(piles []int, speed int) int {
+>     hours := 0
+>     for _, p := range piles {
+>         hours += (p + speed - 1) / speed // the ceiling of p / speed
+>     }
+>     return hours
+> }
+> ```
 
 ### 153. Find Minimum in Rotated Sorted Array
 
 [LeetCode 153](https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/) · Medium
 
-- **Pattern:** First true on a rotated slice
-- **Template:** [[#Template B: First true|B: First true]]
-- **Complexity:** time O(log n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** First true on a rotated slice
+> - **Template:** [[#Template B: First true|B: First true]]
 
-**Idea.** A rotation makes two sorted parts. Each item of the first part is larger than the last item of the slice. Each item of the second part is not. So the test "nums[i] <= last item" is false, then true, and the first true is the minimum.
+> [!tip]- Step 2: the idea
+> **Idea.** A rotation makes two sorted parts. Each item of the first part is larger than the last item of the slice. Each item of the second part is not. So the test "nums[i] <= last item" is false, then true, and the first true is the minimum.
+>
+> **Complexity.** Time O(log n), space O(1).
+>
+> **Go lesson.** The loop `for lo < hi` with `hi = mid` always ends, because integer division rounds down and `mid` is always less than `hi`.
 
-**Go lesson.** The loop `for lo < hi` with `hi = mid` always ends, because integer division rounds down and `mid` is always less than `hi`.
-
-```go
-// findMin solves LC 153. Time O(log n), space O(1).
-// The minimum is the first item that is not larger than the last item.
-func findMin(nums []int) int {
-    last := nums[len(nums)-1] // the fixed value for the test
-    lo, hi := 0, len(nums)-1  // the test is true at hi, so an answer exists
-    for lo < hi {             // two candidates or more
-        mid := lo + (hi-lo)/2 // MIDDLE
-        // TEST: mid is in the part that contains the minimum
-        if nums[mid] <= last {
-            hi = mid // KEEP mid: it can be the minimum
-        } else {
-            // DROP mid: it is in the first part, with the large values
-            lo = mid + 1
-        }
-    }
-    return nums[lo] // lo == hi: the first true
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // findMin solves LC 153. Time O(log n), space O(1).
+> // The minimum is the first item that is not larger than the last
+> // item.
+> func findMin(nums []int) int {
+>     last := nums[len(nums)-1] // the fixed value for the test
+>     // the test is true at hi, so an answer exists
+>     lo, hi := 0, len(nums)-1
+>     for lo < hi { // two candidates or more
+>         mid := lo + (hi-lo)/2 // MIDDLE
+>         // TEST: mid is in the part that contains the minimum
+>         if nums[mid] <= last {
+>             hi = mid // KEEP mid: it can be the minimum
+>         } else {
+>             // DROP mid: it is in the first part, with the large
+>             // values
+>             lo = mid + 1
+>         }
+>     }
+>     return nums[lo] // lo == hi: the first true
+> }
+> ```
 
 ### 33. Search in Rotated Sorted Array
 
 [LeetCode 33](https://leetcode.com/problems/search-in-rotated-sorted-array/) · Medium
 
-- **Pattern:** Binary search on a rotated slice
-- **Template:** [[#Template C: Rotated sorted slice|C: Rotated sorted slice]]
-- **Complexity:** time O(log n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Binary search on a rotated slice
+> - **Template:** [[#Template C: Rotated sorted slice|C: Rotated sorted slice]]
 
-**Idea.** Cut the range at the middle. One of the two halves is always sorted. A sorted half has a clear range of values, so one test tells if the target is in it. If it is not, the target can only be in the other half.
+> [!tip]- Step 2: the idea
+> **Idea.** Cut the range at the middle. One of the two halves is always sorted. A sorted half has a clear range of values, so one test tells if the target is in it. If it is not, the target can only be in the other half.
+>
+> **Complexity.** Time O(log n), space O(1).
+>
+> **Go lesson.** `a <= x && x < b` is how Go writes a range test. Go has no chained comparison such as `a <= x < b`.
 
-**Go lesson.** `a <= x && x < b` is how Go writes a range test. Go has no chained comparison such as `a <= x < b`.
-
-```go
-// search solves LC 33. Time O(log n), space O(1).
-// At each step one half of lo..hi is sorted. Test the target against that
-// half.
-func search(nums []int, target int) int {
-    lo, hi := 0, len(nums)-1
-    for lo <= hi {
-        mid := lo + (hi-lo)/2 // MIDDLE
-        if nums[mid] == target {
-            return mid
-        }
-        // FIND THE SORTED HALF. The <= is necessary: lo == mid when two
-        // items stay.
-        if nums[lo] <= nums[mid] { // lo..mid is sorted
-            if nums[lo] <= target && target < nums[mid] { // TEST ITS RANGE
-                hi = mid - 1 // DROP HALF: the target is in lo..mid-1
-            } else {
-                lo = mid + 1 // the target is not in the sorted half
-            }
-        } else { // mid..hi is sorted
-            if nums[mid] < target && target <= nums[hi] { // TEST ITS RANGE
-                lo = mid + 1 // DROP HALF: the target is in mid+1..hi
-            } else {
-                hi = mid - 1
-            }
-        }
-    }
-    return -1
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // search solves LC 33. Time O(log n), space O(1).
+> // At each step one half of lo..hi is sorted. Test the target
+> // against that
+> // half.
+> func search(nums []int, target int) int {
+>     lo, hi := 0, len(nums)-1
+>     for lo <= hi {
+>         mid := lo + (hi-lo)/2 // MIDDLE
+>         if nums[mid] == target {
+>             return mid
+>         }
+>         // FIND THE SORTED HALF. The <= is necessary: lo == mid when
+>         // two
+>         // items stay.
+>         if nums[lo] <= nums[mid] { // lo..mid is sorted
+>             // TEST ITS RANGE
+>             if nums[lo] <= target && target < nums[mid] {
+>                 // DROP HALF: the target is in lo..mid-1
+>                 hi = mid - 1
+>             } else {
+>                 lo = mid + 1 // the target is not in the sorted half
+>             }
+>         } else { // mid..hi is sorted
+>             // TEST ITS RANGE
+>             if nums[mid] < target && target <= nums[hi] {
+>                 // DROP HALF: the target is in mid+1..hi
+>                 lo = mid + 1
+>             } else {
+>                 hi = mid - 1
+>             }
+>         }
+>     }
+>     return -1
+> }
+> ```
 
 ### 981. Time Based Key-Value Store
 
 [LeetCode 981](https://leetcode.com/problems/time-based-key-value-store/) · Medium
 
-- **Pattern:** Map of sorted slices, first true
-- **Template:** [[#Template B: First true|B: First true]]
-- **Complexity:** time O(1) for Set, O(log n) for Get, for n values of one key, space O(n) for all the values
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Map of sorted slices, first true
+> - **Template:** [[#Template B: First true|B: First true]]
 
-**Idea.** The timestamps of one key only increase, so the slice of each key is sorted with no work. Get needs the last entry at or before the timestamp. Find the first entry that is after the timestamp, and step one back.
+> [!tip]- Step 2: the idea
+> **Idea.** The timestamps of one key only increase, so the slice of each key is sorted with no work. Get needs the last entry at or before the timestamp. Find the first entry that is after the timestamp, and step one back.
+>
+> **Complexity.** Time O(1) for Set, O(log n) for Get, for n values of one key, space O(n) for all the values.
+>
+> **Go lesson.** `sort.Search(n, f)` is Template B in the standard library. It returns the first index in 0..n-1 for which `f` is true, and it returns `n` when there is none.
 
-**Go lesson.** `sort.Search(n, f)` is Template B in the standard library. It returns the first index in 0..n-1 for which `f` is true, and it returns `n` when there is none.
-
-```go
-// TimeMap solves LC 981. Time O(1) for Set and O(log n) for Get, space
-// O(n).
-// Each key has a slice of entries, in the order of their timestamps.
-type TimeMap struct {
-    data map[string][]entry
-}
-
-// entry is one value with the time of its Set call.
-type entry struct {
-    time  int
-    value string
-}
-
-func Constructor() TimeMap {
-    // a nil map panics on a write
-    return TimeMap{data: make(map[string][]entry)}
-}
-
-func (this *TimeMap) Set(key string, value string, timestamp int) {
-    // The problem guarantees larger timestamps on each call,
-    // so append keeps the slice sorted.
-    this.data[key] = append(this.data[key], entry{timestamp, value})
-}
-
-func (this *TimeMap) Get(key string, timestamp int) string {
-    // a missing key gives a nil slice, with length 0
-    entries := this.data[key]
-    // TEST: "is this entry after the timestamp?" is false, ..., true, ...
-    // sort.Search does the MIDDLE, KEEP and DROP moves and returns the
-    // first true.
-    i := sort.Search(len(entries), func(i int) bool {
-        return entries[i].time > timestamp
-    })
-    if i == 0 {
-        return "" // no entry at or before the timestamp
-    }
-    // one step back: the last entry at or before it
-    return entries[i-1].value
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // TimeMap solves LC 981. Time O(1) for Set and O(log n) for Get,
+> // space
+> // O(n).
+> // Each key has a slice of entries, in the order of their
+> // timestamps.
+> type TimeMap struct {
+>     data map[string][]entry
+> }
+>
+> // entry is one value with the time of its Set call.
+> type entry struct {
+>     time  int
+>     value string
+> }
+>
+> func Constructor() TimeMap {
+>     // a nil map panics on a write
+>     return TimeMap{data: make(map[string][]entry)}
+> }
+>
+> func (this *TimeMap) Set(key string, value string, timestamp int) {
+>     // The problem guarantees larger timestamps on each call,
+>     // so append keeps the slice sorted.
+>     this.data[key] = append(this.data[key], entry{timestamp, value})
+> }
+>
+> func (this *TimeMap) Get(key string, timestamp int) string {
+>     // a missing key gives a nil slice, with length 0
+>     entries := this.data[key]
+>     // TEST: "is this entry after the timestamp?" is false, ...,
+>     // true, ...
+>     // sort.Search does the MIDDLE, KEEP and DROP moves and returns
+>     // the
+>     // first true.
+>     i := sort.Search(len(entries), func(i int) bool {
+>         return entries[i].time > timestamp
+>     })
+>     if i == 0 {
+>         return "" // no entry at or before the timestamp
+>     }
+>     // one step back: the last entry at or before it
+>     return entries[i-1].value
+> }
+> ```
 
 ### 4. Median of Two Sorted Arrays
 
 [LeetCode 4](https://leetcode.com/problems/median-of-two-sorted-arrays/) · Hard
 
-- **Pattern:** Binary search on a partition
-- **Template:** [[#Template D: Partition of two sorted slices|D: Partition of two sorted slices]]
-- **Complexity:** time O(log(min(m, n))), space O(1)
-- **Imports for a local file:** `math`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Binary search on a partition
+> - **Template:** [[#Template D: Partition of two sorted slices|D: Partition of two sorted slices]]
 
-**Idea.** Do not merge. Cut the two slices so that the left parts together contain half of all the items. The cut is correct when each left item is not larger than each right item. Then the median is at the borders of the cut. Search the cut position in the shorter slice only.
+> [!tip]- Step 2: the idea
+> **Idea.** Do not merge. Cut the two slices so that the left parts together contain half of all the items. The cut is correct when each left item is not larger than each right item. Then the median is at the borders of the cut. Search the cut position in the shorter slice only.
+>
+> **Complexity.** Time O(log(min(m, n))), space O(1).
+>
+> **Go lesson.** `nums1, nums2 = nums2, nums1` swaps two slices with no temporary variable. `float64(x)` converts an int, and the `/ 2` after it is then a float division.
 
-**Go lesson.** `nums1, nums2 = nums2, nums1` swaps two slices with no temporary variable. `float64(x)` converts an int, and the `/ 2` after it is then a float division.
-
-```go
-// findMedianSortedArrays solves LC 4. Time O(log(min(m, n))), space O(1).
-// Left half = nums1[:i] plus nums2[:j]. The search finds the i that makes
-// each left item <= each right item.
-func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
-    if len(nums1) > len(nums2) {
-        // search the shorter slice: j is then never negative
-        nums1, nums2 = nums2, nums1
-    }
-    m, n := len(nums1), len(nums2)
-    // the size of the left half (one more when the total is odd)
-    half := (m + n + 1) / 2
-    lo, hi := 0, m // i can be 0, 1, ..., m
-    for lo <= hi {
-        i := lo + (hi-lo)/2 // CUT nums1 after i items
-        j := half - i       // DERIVE the cut in nums2
-        // CHECK the two borders. The index tests come first.
-        switch {
-        case i > 0 && j < n && nums1[i-1] > nums2[j]:
-            hi = i - 1 // MOVE: nums1 gives too many items to the left half
-        case j > 0 && i < m && nums2[j-1] > nums1[i]:
-            lo = i + 1 // MOVE: nums1 gives too few items
-        default: // the cut is correct
-            maxLeft := math.MinInt // the largest item of the left half
-            if i > 0 {
-                maxLeft = nums1[i-1]
-            }
-            if j > 0 {
-                maxLeft = max(maxLeft, nums2[j-1])
-            }
-            if (m+n)%2 == 1 {
-                // odd total: the left half has the middle item
-                return float64(maxLeft)
-            }
-            minRight := math.MaxInt // the smallest item of the right half
-            if i < m {
-                minRight = nums1[i]
-            }
-            if j < n {
-                minRight = min(minRight, nums2[j])
-            }
-            // even total: the mean of the two
-            return float64(maxLeft+minRight) / 2
-        }
-    }
-    return 0 // not reached when the two slices are sorted
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `math`
+>
+> ```go
+> // findMedianSortedArrays solves LC 4. Time O(log(min(m, n))), space
+> // O(1).
+> // Left half = nums1[:i] plus nums2[:j]. The search finds the i that
+> // makes
+> // each left item <= each right item.
+> func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
+>     if len(nums1) > len(nums2) {
+>         // search the shorter slice: j is then never negative
+>         nums1, nums2 = nums2, nums1
+>     }
+>     m, n := len(nums1), len(nums2)
+>     // the size of the left half (one more when the total is odd)
+>     half := (m + n + 1) / 2
+>     lo, hi := 0, m // i can be 0, 1, ..., m
+>     for lo <= hi {
+>         i := lo + (hi-lo)/2 // CUT nums1 after i items
+>         j := half - i       // DERIVE the cut in nums2
+>         // CHECK the two borders. The index tests come first.
+>         switch {
+>         case i > 0 && j < n && nums1[i-1] > nums2[j]:
+>             // MOVE: nums1 gives too many items to the left half
+>             hi = i - 1
+>         case j > 0 && i < m && nums2[j-1] > nums1[i]:
+>             lo = i + 1 // MOVE: nums1 gives too few items
+>         default: // the cut is correct
+>             // the largest item of the left half
+>             maxLeft := math.MinInt
+>             if i > 0 {
+>                 maxLeft = nums1[i-1]
+>             }
+>             if j > 0 {
+>                 maxLeft = max(maxLeft, nums2[j-1])
+>             }
+>             if (m+n)%2 == 1 {
+>                 // odd total: the left half has the middle item
+>                 return float64(maxLeft)
+>             }
+>             // the smallest item of the right half
+>             minRight := math.MaxInt
+>             if i < m {
+>                 minRight = nums1[i]
+>             }
+>             if j < n {
+>                 minRight = min(minRight, nums2[j])
+>             }
+>             // even total: the mean of the two
+>             return float64(maxLeft+minRight) / 2
+>         }
+>     }
+>     return 0 // not reached when the two slices are sorted
+> }
+> ```
 
 ---
 

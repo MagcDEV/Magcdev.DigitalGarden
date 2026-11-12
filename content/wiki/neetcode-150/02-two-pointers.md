@@ -9,7 +9,7 @@ tags:
   - templates
   - two-pointers
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 2: Two Pointers
@@ -147,216 +147,256 @@ The moves are COMPARE THE ENDS, UPDATE THE MAXIMUM, ADD, then MOVE. All four mov
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 125. Valid Palindrome
 
 [LeetCode 125](https://leetcode.com/problems/valid-palindrome/) · Easy
 
-- **Pattern:** Converging pointers
-- **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Converging pointers
+> - **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
 
-**Idea.** Put one pointer at each end. Skip each byte that is not a letter or a digit, then compare the two bytes in lower case. One difference makes the answer false.
+> [!tip]- Step 2: the idea
+> **Idea.** Put one pointer at each end. Skip each byte that is not a letter or a digit, then compare the two bytes in lower case. One difference makes the answer false.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `s[i]` gives a byte, not a character. For ASCII text the byte is the character, so byte arithmetic is enough. A `switch` with no value is a clean if-else chain.
 
-**Go lesson.** `s[i]` gives a byte, not a character. For ASCII text the byte is the character, so byte arithmetic is enough. A `switch` with no value is a clean if-else chain.
-
-```go
-// isPalindrome solves LC 125. Time O(n), space O(1).
-// Two pointers move from the ends to the middle. They compare letters and
-// digits only.
-func isPalindrome(s string) bool {
-    left, right := 0, len(s)-1 // START at the two ends
-    for left < right {
-        // the first case that is true runs, and there is no fall-through
-        switch {
-        case !isAlnum(s[left]): // SKIP a byte that does not count
-            left++
-        case !isAlnum(s[right]):
-            right--
-        case lower(s[left]) != lower(s[right]): // COMPARE without the case
-            return false
-        default: // equal: MOVE the two pointers in
-            left++
-            right--
-        }
-    }
-    return true // the pointers met with no difference
-}
-
-// isAlnum reports whether c is an ASCII letter or digit.
-func isAlnum(c byte) bool {
-    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
-}
-
-// lower changes an upper-case ASCII letter to lower case.
-func lower(c byte) byte {
-    if c >= 'A' && c <= 'Z' {
-        return c + ('a' - 'A') // the two cases are 32 apart in ASCII
-    }
-    return c
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // isPalindrome solves LC 125. Time O(n), space O(1).
+> // Two pointers move from the ends to the middle. They compare
+> // letters and
+> // digits only.
+> func isPalindrome(s string) bool {
+>     left, right := 0, len(s)-1 // START at the two ends
+>     for left < right {
+>         // the first case that is true runs, and there is no
+>         // fall-through
+>         switch {
+>         case !isAlnum(s[left]): // SKIP a byte that does not count
+>             left++
+>         case !isAlnum(s[right]):
+>             right--
+>         // COMPARE without the case
+>         case lower(s[left]) != lower(s[right]):
+>             return false
+>         default: // equal: MOVE the two pointers in
+>             left++
+>             right--
+>         }
+>     }
+>     return true // the pointers met with no difference
+> }
+>
+> // isAlnum reports whether c is an ASCII letter or digit.
+> func isAlnum(c byte) bool {
+>     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+> }
+>
+> // lower changes an upper-case ASCII letter to lower case.
+> func lower(c byte) byte {
+>     if c >= 'A' && c <= 'Z' {
+>         // the two cases are 32 apart in ASCII
+>         return c + ('a' - 'A')
+>     }
+>     return c
+> }
+> ```
 
 ### 167. Two Sum II - Input Array Is Sorted
 
 [LeetCode 167](https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/) · Medium
 
-- **Pattern:** Converging pointers
-- **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Converging pointers
+> - **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
 
-**Idea.** The slice is sorted. If the sum of the two ends is too small, only a larger left value can help. If the sum is too large, only a smaller right value can help.
+> [!tip]- Step 2: the idea
+> **Idea.** The slice is sorted. If the sum of the two ends is too small, only a larger left value can help. If the sum is too large, only a smaller right value can help.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `[]int{left + 1, right + 1}` is a slice literal. It makes and fills the result in one expression.
 
-**Go lesson.** `[]int{left + 1, right + 1}` is a slice literal. It makes and fills the result in one expression.
-
-```go
-// twoSum solves LC 167. Time O(n), space O(1).
-// The input is sorted, so two pointers replace the hash map of LC 1.
-func twoSum(numbers []int, target int) []int {
-    left, right := 0, len(numbers)-1 // START at the two ends
-    // left < right: one item is never used two times
-    for left < right {
-        // COMPARE the sum with the target
-        sum := numbers[left] + numbers[right]
-        switch {
-        case sum == target:
-            // LeetCode wants 1-based indexes here
-            return []int{left + 1, right + 1}
-        case sum < target:
-            left++ // MOVE left: the sum must grow
-        default:
-            right-- // MOVE right: the sum must shrink
-        }
-    }
-    return nil // not reached: the problem guarantees one answer
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // twoSum solves LC 167. Time O(n), space O(1).
+> // The input is sorted, so two pointers replace the hash map of LC
+> // 1.
+> func twoSum(numbers []int, target int) []int {
+>     left, right := 0, len(numbers)-1 // START at the two ends
+>     // left < right: one item is never used two times
+>     for left < right {
+>         // COMPARE the sum with the target
+>         sum := numbers[left] + numbers[right]
+>         switch {
+>         case sum == target:
+>             // LeetCode wants 1-based indexes here
+>             return []int{left + 1, right + 1}
+>         case sum < target:
+>             left++ // MOVE left: the sum must grow
+>         default:
+>             right-- // MOVE right: the sum must shrink
+>         }
+>     }
+>     return nil // not reached: the problem guarantees one answer
+> }
+> ```
 
 ### 15. 3Sum
 
 [LeetCode 15](https://leetcode.com/problems/3sum/) · Medium
 
-- **Pattern:** Sort, then converging pointers
-- **Template:** [[#Template B: Sort, fix one, converge|B: Sort, fix one, converge]]
-- **Complexity:** time O(n²), space O(1) extra, plus the memory of the sort
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort, then converging pointers
+> - **Template:** [[#Template B: Sort, fix one, converge|B: Sort, fix one, converge]]
 
-**Idea.** Sort the slice. Fix each value as the first one, then find the other two with converging pointers. Equal values are neighbors after the sort, so you can skip them and get no duplicate triplet.
+> [!tip]- Step 2: the idea
+> **Idea.** Sort the slice. Fix each value as the first one, then find the other two with converging pointers. Equal values are neighbors after the sort, so you can skip them and get no duplicate triplet.
+>
+> **Complexity.** Time O(n²), space O(1) extra, plus the memory of the sort.
+>
+> **Go lesson.** `sort.Ints` sorts in place, so it changes the caller's slice. `[][]int{}` is an empty slice of slices that is not nil.
 
-**Go lesson.** `sort.Ints` sorts in place, so it changes the caller's slice. `[][]int{}` is an empty slice of slices that is not nil.
-
-```go
-// threeSum solves LC 15. Time O(n²), space O(1) extra.
-// After the sort, each first value needs one two-pointer pass on the items
-// after it.
-func threeSum(nums []int) [][]int {
-    sort.Ints(nums) // SORT: equal values are now neighbors
-    res := [][]int{}
-    for i := 0; i < len(nums)-2; i++ { // FIX nums[i] as the first value
-        if nums[i] > 0 {
-            break // three positive values cannot sum to 0
-        }
-        if i > 0 && nums[i] == nums[i-1] {
-            continue // SKIP: this first value already gave its triplets
-        }
-        left, right := i+1, len(nums)-1
-        for left < right { // CONVERGE on the items after i
-            sum := nums[i] + nums[left] + nums[right]
-            switch {
-            case sum < 0:
-                left++ // the sum must grow
-            case sum > 0:
-                right-- // the sum must shrink
-            default:
-                res = append(res, []int{nums[i], nums[left], nums[right]})
-                left++
-                right--
-                // SKIP an equal second value. The third value then changes
-                // too.
-                for left < right && nums[left] == nums[left-1] {
-                    left++
-                }
-            }
-        }
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // threeSum solves LC 15. Time O(n²), space O(1) extra.
+> // After the sort, each first value needs one two-pointer pass on
+> // the items
+> // after it.
+> func threeSum(nums []int) [][]int {
+>     sort.Ints(nums) // SORT: equal values are now neighbors
+>     res := [][]int{}
+>     // FIX nums[i] as the first value
+>     for i := 0; i < len(nums)-2; i++ {
+>         if nums[i] > 0 {
+>             break // three positive values cannot sum to 0
+>         }
+>         if i > 0 && nums[i] == nums[i-1] {
+>             // SKIP: this first value already gave its triplets
+>             continue
+>         }
+>         left, right := i+1, len(nums)-1
+>         for left < right { // CONVERGE on the items after i
+>             sum := nums[i] + nums[left] + nums[right]
+>             switch {
+>             case sum < 0:
+>                 left++ // the sum must grow
+>             case sum > 0:
+>                 right-- // the sum must shrink
+>             default:
+>                 res = append(res, []int{nums[i], nums[left], nums[right]})
+>                 left++
+>                 right--
+>                 // SKIP an equal second value. The third value then
+>                 // changes
+>                 // too.
+>                 for left < right && nums[left] == nums[left-1] {
+>                     left++
+>                 }
+>             }
+>         }
+>     }
+>     return res
+> }
+> ```
 
 ### 11. Container With Most Water
 
 [LeetCode 11](https://leetcode.com/problems/container-with-most-water/) · Medium
 
-- **Pattern:** Converging pointers
-- **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Converging pointers
+> - **Template:** [[#Template A: Converging pointers|A: Converging pointers]]
 
-**Idea.** Start with the widest container. The shorter line limits the water, so a move of the taller line can only make the area smaller. Move the shorter line each time.
+> [!tip]- Step 2: the idea
+> **Idea.** Start with the widest container. The shorter line limits the water, so a move of the taller line can only make the area smaller. Move the shorter line each time.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `min` and `max` are built-in functions from Go 1.21. They need no import.
 
-**Go lesson.** `min` and `max` are built-in functions from Go 1.21. They need no import.
-
-```go
-// maxArea solves LC 11. Time O(n), space O(1).
-// The area is the width times the shorter of the two lines.
-func maxArea(height []int) int {
-    left, right := 0, len(height)-1 // START with the widest container
-    best := 0
-    for left < right {
-        width := right - left
-        // RECORD this area
-        best = max(best, width*min(height[left], height[right]))
-        // MOVE the shorter line. With the taller line moved, the width
-        // decreases and the shorter line is still the limit.
-        if height[left] < height[right] {
-            left++
-        } else {
-            right--
-        }
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // maxArea solves LC 11. Time O(n), space O(1).
+> // The area is the width times the shorter of the two lines.
+> func maxArea(height []int) int {
+>     // START with the widest container
+>     left, right := 0, len(height)-1
+>     best := 0
+>     for left < right {
+>         width := right - left
+>         // RECORD this area
+>         best = max(best, width*min(height[left], height[right]))
+>         // MOVE the shorter line. With the taller line moved, the
+>         // width
+>         // decreases and the shorter line is still the limit.
+>         if height[left] < height[right] {
+>             left++
+>         } else {
+>             right--
+>         }
+>     }
+>     return best
+> }
+> ```
 
 ### 42. Trapping Rain Water
 
 [LeetCode 42](https://leetcode.com/problems/trapping-rain-water/) · Hard
 
-- **Pattern:** Two pointers with running maximums
-- **Template:** [[#Template C: Two pointers with a running maximum|C: Two pointers with a running maximum]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Two pointers with running maximums
+> - **Template:** [[#Template C: Two pointers with a running maximum|C: Two pointers with a running maximum]]
 
-**Idea.** The water above an index is the lower of the two highest walls around it, minus its own height. Work on the lower end first. The other end proves that a wall at least as high exists there, so the maximum of the lower side decides the water.
+> [!tip]- Step 2: the idea
+> **Idea.** The water above an index is the lower of the two highest walls around it, minus its own height. Work on the lower end first. The other end proves that a wall at least as high exists there, so the maximum of the lower side decides the water.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `left, right := 0, len(height)-1` declares two variables in one statement. On an empty slice `right` is -1, so the loop does not run.
 
-**Go lesson.** `left, right := 0, len(height)-1` declares two variables in one statement. On an empty slice `right` is -1, so the loop does not run.
-
-```go
-// trap solves LC 42. Time O(n), space O(1).
-// water at i = min(highest wall on the left, highest wall on the right) -
-// height[i].
-func trap(height []int) int {
-    left, right := 0, len(height)-1
-    leftMax, rightMax := 0, 0 // the highest wall seen from each end
-    water := 0
-    for left < right {
-        // COMPARE the ends: the left side is lower
-        if height[left] < height[right] {
-            // A wall at least as high as height[left] exists on the right,
-            // so leftMax alone decides the water above left.
-            // UPDATE the maximum of this side
-            leftMax = max(leftMax, height[left])
-            // ADD: 0 when this bar is the new maximum
-            water += leftMax - height[left]
-            left++ // MOVE this side
-        } else { // the same steps, seen from the right
-            rightMax = max(rightMax, height[right])
-            water += rightMax - height[right]
-            right--
-        }
-    }
-    return water
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // trap solves LC 42. Time O(n), space O(1).
+> // water at i = min(highest wall on the left, highest wall on the
+> // right) -
+> // height[i].
+> func trap(height []int) int {
+>     left, right := 0, len(height)-1
+>     leftMax, rightMax := 0, 0 // the highest wall seen from each end
+>     water := 0
+>     for left < right {
+>         // COMPARE the ends: the left side is lower
+>         if height[left] < height[right] {
+>             // A wall at least as high as height[left] exists on the
+>             // right,
+>             // so leftMax alone decides the water above left.
+>             // UPDATE the maximum of this side
+>             leftMax = max(leftMax, height[left])
+>             // ADD: 0 when this bar is the new maximum
+>             water += leftMax - height[left]
+>             left++ // MOVE this side
+>         } else { // the same steps, seen from the right
+>             rightMax = max(rightMax, height[right])
+>             water += rightMax - height[right]
+>             right--
+>         }
+>     }
+>     return water
+> }
+> ```
 
 ---
 

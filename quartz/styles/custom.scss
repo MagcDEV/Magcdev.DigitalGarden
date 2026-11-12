@@ -19,7 +19,8 @@ body:has(article.nubank-guides) {
   }
 }
 
-article.nubank-guides {
+article.nubank-guides,
+article.neetcode-150 {
   .guide-open {
     margin: 0 0 12px;
   }
@@ -51,4 +52,12 @@ article.nubank-guides {
     background: var(--light);
     margin: 0 0 3rem;
   }
+}
+
+// NeetCode 150 pattern drill: an interactive page inside the normal page
+// width, so the frame has a fixed height instead of the viewport height.
+article.neetcode-150 .guide-frame {
+  height: 900px;
+  min-height: 0;
+  margin-bottom: 2rem;
 }
