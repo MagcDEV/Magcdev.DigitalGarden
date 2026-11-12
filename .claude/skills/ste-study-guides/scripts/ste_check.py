@@ -170,6 +170,7 @@ def md_blocks(src):
         i += 1
     para, para_line, para_kind = [], None, None
     in_code = False
+    in_quote_code = False
     spoken_callout = False
 
     def clean(t):
@@ -203,6 +204,7 @@ def md_blocks(src):
         if not s:
             flush()
             spoken_callout = False
+            in_quote_code = False
             continue
         if re.match(r"\[[^\]]+\]:\s*\S+", s):
             flush()
@@ -214,6 +216,17 @@ def md_blocks(src):
             continue
         if s.startswith(">"):
             body = s.lstrip(">").strip()
+            # Inside a callout: a fenced code block is left out, and an empty
+            # quoted line ends the paragraph, as it does in the rendered page.
+            if body.startswith("```"):
+                flush()
+                in_quote_code = not in_quote_code
+                continue
+            if in_quote_code:
+                continue
+            if not body:
+                flush()
+                continue
             m = re.match(r"\[!(\w+)\][-+]?\s*(.*)", body)
             if m:
                 flush()

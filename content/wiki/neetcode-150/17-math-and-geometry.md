@@ -9,7 +9,7 @@ tags:
   - templates
   - math
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 17: Math and Geometry
@@ -264,374 +264,441 @@ The moves are COUNT, DIAGONAL, LOOK UP, then MULTIPLY. Two corners on a diagonal
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 48. Rotate Image
 
 [LeetCode 48](https://leetcode.com/problems/rotate-image/) · Medium
 
-- **Pattern:** Transpose, then reverse the rows
-- **Template:** [[#Template A: Transpose, then reverse|A: Transpose, then reverse]]
-- **Complexity:** time O(n²), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Transpose, then reverse the rows
+> - **Template:** [[#Template A: Transpose, then reverse|A: Transpose, then reverse]]
 
-**Idea.** A turn of 90 degrees to the right is two simple steps. First mirror the matrix on its main diagonal. Then reverse each row.
+> [!tip]- Step 2: the idea
+> **Idea.** A turn of 90 degrees to the right is two simple steps. First mirror the matrix on its main diagonal. Then reverse each row.
+>
+> **Complexity.** Time O(n²), space O(1).
+>
+> **Go lesson.** A tuple assignment such as `a, b = b, a` swaps two values with no temporary variable. A row is a slice that shares its memory with the matrix, so a write to `row` changes the matrix.
 
-**Go lesson.** A tuple assignment such as `a, b = b, a` swaps two values with no temporary variable. A row is a slice that shares its memory with the matrix, so a write to `row` changes the matrix.
-
-```go
-// rotate solves LC 48. Time O(n²), space O(1).
-// It changes the matrix in place, so it returns nothing.
-func rotate(matrix [][]int) {
-    n := len(matrix)
-    // TRANSPOSE: swap matrix[i][j] with matrix[j][i]. Rows become columns.
-    for i := 0; i < n; i++ {
-        // j starts at i+1: only the cells above the diagonal.
-        // With j from 0, each pair swaps two times and nothing changes.
-        for j := i + 1; j < n; j++ {
-            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
-        }
-    }
-    // REVERSE each row with two indexes that move to the middle.
-    for _, row := range matrix { // row shares its memory with the matrix
-        for l, r := 0, n-1; l < r; l, r = l+1, r-1 {
-            row[l], row[r] = row[r], row[l]
-        }
-    }
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // rotate solves LC 48. Time O(n²), space O(1).
+> // It changes the matrix in place, so it returns nothing.
+> func rotate(matrix [][]int) {
+>     n := len(matrix)
+>     // TRANSPOSE: swap matrix[i][j] with matrix[j][i]. Rows become
+>     // columns.
+>     for i := 0; i < n; i++ {
+>         // j starts at i+1: only the cells above the diagonal.
+>         // With j from 0, each pair swaps two times and nothing
+>         // changes.
+>         for j := i + 1; j < n; j++ {
+>             matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
+>         }
+>     }
+>     // REVERSE each row with two indexes that move to the middle.
+>     // row shares its memory with the matrix
+>     for _, row := range matrix {
+>         for l, r := 0, n-1; l < r; l, r = l+1, r-1 {
+>             row[l], row[r] = row[r], row[l]
+>         }
+>     }
+> }
+> ```
 
 ### 54. Spiral Matrix
 
 [LeetCode 54](https://leetcode.com/problems/spiral-matrix/) · Medium
 
-- **Pattern:** Four boundaries that shrink
-- **Template:** [[#Template B: Four boundaries that shrink|B: Four boundaries that shrink]]
-- **Complexity:** time O(m * n) for m rows and n columns, space O(1) without the result
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Four boundaries that shrink
+> - **Template:** [[#Template B: Four boundaries that shrink|B: Four boundaries that shrink]]
 
-**Idea.** Keep four boundaries: top, bottom, left and right. Walk one side of the rectangle, then move that boundary in. Stop when the boundaries cross.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep four boundaries: top, bottom, left and right. Walk one side of the rectangle, then move that boundary in. Stop when the boundaries cross.
+>
+> **Complexity.** Time O(m * n) for m rows and n columns, space O(1) without the result.
+>
+> **Go lesson.** `make([]int, 0, size)` gives length 0 and a known capacity, so `append` never copies the slice.
 
-**Go lesson.** `make([]int, 0, size)` gives length 0 and a known capacity, so `append` never copies the slice.
-
-```go
-// spiralOrder solves LC 54. Time O(m * n), space O(1) without the result.
-// Each turn of the loop walks one layer: right, down, left, then up.
-func spiralOrder(matrix [][]int) []int {
-    top, bottom := 0, len(matrix)-1
-    left, right := 0, len(matrix[0])-1
-    // length 0, capacity m*n
-    res := make([]int, 0, len(matrix)*len(matrix[0]))
-
-    for top <= bottom && left <= right { // some cells are left
-        for c := left; c <= right; c++ { // WALK RIGHT on the top row
-            res = append(res, matrix[top][c])
-        }
-        top++ // SHRINK: the top row is done
-
-        for r := top; r <= bottom; r++ { // WALK DOWN on the right column
-            res = append(res, matrix[r][right])
-        }
-        right-- // SHRINK: the right column is done
-
-        // CHECK AGAIN: top and right changed. If only one row or one column
-        // was left, the walk back must not read it a second time.
-        if top <= bottom {
-            for c := right; c >= left; c-- { // WALK LEFT on the bottom row
-                res = append(res, matrix[bottom][c])
-            }
-            bottom--
-        }
-        if left <= right {
-            for r := bottom; r >= top; r-- { // WALK UP on the left column
-                res = append(res, matrix[r][left])
-            }
-            left++
-        }
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // spiralOrder solves LC 54. Time O(m * n), space O(1) without the
+> // result.
+> // Each turn of the loop walks one layer: right, down, left, then
+> // up.
+> func spiralOrder(matrix [][]int) []int {
+>     top, bottom := 0, len(matrix)-1
+>     left, right := 0, len(matrix[0])-1
+>     // length 0, capacity m*n
+>     res := make([]int, 0, len(matrix)*len(matrix[0]))
+>
+>     for top <= bottom && left <= right { // some cells are left
+>         // WALK RIGHT on the top row
+>         for c := left; c <= right; c++ {
+>             res = append(res, matrix[top][c])
+>         }
+>         top++ // SHRINK: the top row is done
+>
+>         // WALK DOWN on the right column
+>         for r := top; r <= bottom; r++ {
+>             res = append(res, matrix[r][right])
+>         }
+>         right-- // SHRINK: the right column is done
+>
+>         // CHECK AGAIN: top and right changed. If only one row or
+>         // one column
+>         // was left, the walk back must not read it a second time.
+>         if top <= bottom {
+>             // WALK LEFT on the bottom row
+>             for c := right; c >= left; c-- {
+>                 res = append(res, matrix[bottom][c])
+>             }
+>             bottom--
+>         }
+>         if left <= right {
+>             // WALK UP on the left column
+>             for r := bottom; r >= top; r-- {
+>                 res = append(res, matrix[r][left])
+>             }
+>             left++
+>         }
+>     }
+>     return res
+> }
+> ```
 
 ### 73. Set Matrix Zeroes
 
 [LeetCode 73](https://leetcode.com/problems/set-matrix-zeroes/) · Medium
 
-- **Pattern:** First row and column as markers
-- **Template:** [[#Template C: Markers in the first row and column|C: Markers in the first row and column]]
-- **Complexity:** time O(m * n) for m rows and n columns, space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** First row and column as markers
+> - **Template:** [[#Template C: Markers in the first row and column|C: Markers in the first row and column]]
 
-**Idea.** Use the first row and the first column of the matrix as the marker memory. Save two flags first, because the markers overwrite those two lines. Set the first row and the first column last.
+> [!tip]- Step 2: the idea
+> **Idea.** Use the first row and the first column of the matrix as the marker memory. Save two flags first, because the markers overwrite those two lines. Set the first row and the first column last.
+>
+> **Complexity.** Time O(m * n) for m rows and n columns, space O(1).
 
-```go
-// setZeroes solves LC 73. Time O(m * n), space O(1).
-// matrix[r][0] == 0 means "set row r to zero".
-// matrix[0][c] == 0 means "set column c to zero".
-func setZeroes(matrix [][]int) {
-    rows, cols := len(matrix), len(matrix[0])
-
-    // SAVE: does the first row or the first column have a zero of its own?
-    // The markers overwrite these two lines, so read them before the marks.
-    firstRowZero, firstColZero := false, false
-    for c := 0; c < cols; c++ {
-        if matrix[0][c] == 0 {
-            firstRowZero = true
-        }
-    }
-    for r := 0; r < rows; r++ {
-        if matrix[r][0] == 0 {
-            firstColZero = true
-        }
-    }
-
-    // MARK: a zero in an inner cell marks the start of its row and its
-    // column.
-    for r := 1; r < rows; r++ {
-        for c := 1; c < cols; c++ {
-            if matrix[r][c] == 0 {
-                matrix[r][0] = 0
-                matrix[0][c] = 0
-            }
-        }
-    }
-
-    // APPLY: an inner cell becomes zero when its row or its column has a
-    // marker.
-    for r := 1; r < rows; r++ {
-        for c := 1; c < cols; c++ {
-            if matrix[r][0] == 0 || matrix[0][c] == 0 {
-                matrix[r][c] = 0
-            }
-        }
-    }
-
-    // LAST: the first row and the first column. If you set them earlier,
-    // the APPLY step reads them as markers and sets too many cells.
-    if firstRowZero {
-        for c := 0; c < cols; c++ {
-            matrix[0][c] = 0
-        }
-    }
-    if firstColZero {
-        for r := 0; r < rows; r++ {
-            matrix[r][0] = 0
-        }
-    }
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // setZeroes solves LC 73. Time O(m * n), space O(1).
+> // matrix[r][0] == 0 means "set row r to zero".
+> // matrix[0][c] == 0 means "set column c to zero".
+> func setZeroes(matrix [][]int) {
+>     rows, cols := len(matrix), len(matrix[0])
+>
+>     // SAVE: does the first row or the first column have a zero of
+>     // its own?
+>     // The markers overwrite these two lines, so read them before
+>     // the marks.
+>     firstRowZero, firstColZero := false, false
+>     for c := 0; c < cols; c++ {
+>         if matrix[0][c] == 0 {
+>             firstRowZero = true
+>         }
+>     }
+>     for r := 0; r < rows; r++ {
+>         if matrix[r][0] == 0 {
+>             firstColZero = true
+>         }
+>     }
+>
+>     // MARK: a zero in an inner cell marks the start of its row and
+>     // its
+>     // column.
+>     for r := 1; r < rows; r++ {
+>         for c := 1; c < cols; c++ {
+>             if matrix[r][c] == 0 {
+>                 matrix[r][0] = 0
+>                 matrix[0][c] = 0
+>             }
+>         }
+>     }
+>
+>     // APPLY: an inner cell becomes zero when its row or its column
+>     // has a
+>     // marker.
+>     for r := 1; r < rows; r++ {
+>         for c := 1; c < cols; c++ {
+>             if matrix[r][0] == 0 || matrix[0][c] == 0 {
+>                 matrix[r][c] = 0
+>             }
+>         }
+>     }
+>
+>     // LAST: the first row and the first column. If you set them
+>     // earlier,
+>     // the APPLY step reads them as markers and sets too many cells.
+>     if firstRowZero {
+>         for c := 0; c < cols; c++ {
+>             matrix[0][c] = 0
+>         }
+>     }
+>     if firstColZero {
+>         for r := 0; r < rows; r++ {
+>             matrix[r][0] = 0
+>         }
+>     }
+> }
+> ```
 
 ### 202. Happy Number
 
 [LeetCode 202](https://leetcode.com/problems/happy-number/) · Easy
 
-- **Pattern:** Digit loop with cycle detection
-- **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
-- **Complexity:** time O(log n), space O(log n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Digit loop with cycle detection
+> - **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
 
-**Idea.** Replace the number with the sum of the squares of its digits, again and again. The values either reach 1 or go around a cycle. A set of the values that you saw finds the cycle.
+> [!tip]- Step 2: the idea
+> **Idea.** Replace the number with the sum of the squares of its digits, again and again. The values either reach 1 or go around a cycle. A set of the values that you saw finds the cycle.
+>
+> **Complexity.** Time O(log n), space O(log n).
+>
+> **Go lesson.** Go has no set type. A `map[int]struct{}` is the set, and the "comma ok" form tests membership.
 
-**Go lesson.** Go has no set type. A `map[int]struct{}` is the set, and the "comma ok" form tests membership.
-
-```go
-// isHappy solves LC 202. Time O(log n), space O(log n).
-// For a 32-bit input the first sum is below 1000, so the set stays small.
-// The fast and slow pointers of the linked-list cycle problem also work,
-// with O(1) space.
-func isHappy(n int) bool {
-    // the values that the loop already visited
-    seen := make(map[int]struct{})
-    for n != 1 {
-        // CYCLE: this value came back, so 1 never comes
-        if _, ok := seen[n]; ok {
-            return false
-        }
-        seen[n] = struct{}{}
-        n = sumOfSquares(n) // NEXT value
-    }
-    return true
-}
-
-// sumOfSquares returns the sum of the squares of the digits of n.
-func sumOfSquares(n int) int {
-    sum := 0
-    for n > 0 {
-        digit := n % 10 // POP: the last digit
-        n /= 10         // DROP: remove the last digit
-        sum += digit * digit
-    }
-    return sum
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // isHappy solves LC 202. Time O(log n), space O(log n).
+> // For a 32-bit input the first sum is below 1000, so the set stays
+> // small.
+> // The fast and slow pointers of the linked-list cycle problem also
+> // work,
+> // with O(1) space.
+> func isHappy(n int) bool {
+>     // the values that the loop already visited
+>     seen := make(map[int]struct{})
+>     for n != 1 {
+>         // CYCLE: this value came back, so 1 never comes
+>         if _, ok := seen[n]; ok {
+>             return false
+>         }
+>         seen[n] = struct{}{}
+>         n = sumOfSquares(n) // NEXT value
+>     }
+>     return true
+> }
+>
+> // sumOfSquares returns the sum of the squares of the digits of n.
+> func sumOfSquares(n int) int {
+>     sum := 0
+>     for n > 0 {
+>         digit := n % 10 // POP: the last digit
+>         n /= 10         // DROP: remove the last digit
+>         sum += digit * digit
+>     }
+>     return sum
+> }
+> ```
 
 ### 66. Plus One
 
 [LeetCode 66](https://leetcode.com/problems/plus-one/) · Easy
 
-- **Pattern:** Digit loop with a carry
-- **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
-- **Complexity:** time O(n), space O(1), or O(n) when all the digits are 9
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Digit loop with a carry
+> - **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
 
-**Idea.** Add one at the last digit. A digit below 9 takes the one and the work stops. A 9 becomes 0 and the carry moves to the left. If all the digits are 9, the result is a 1 and then zeros.
+> [!tip]- Step 2: the idea
+> **Idea.** Add one at the last digit. A digit below 9 takes the one and the work stops. A 9 becomes 0 and the carry moves to the left. If all the digits are 9, the result is a 1 and then zeros.
+>
+> **Complexity.** Time O(n), space O(1), or O(n) when all the digits are 9.
+>
+> **Go lesson.** `make([]int, n)` gives a slice of `n` zeros. So the "all nines" result needs only one write.
 
-**Go lesson.** `make([]int, n)` gives a slice of `n` zeros. So the "all nines" result needs only one write.
-
-```go
-// plusOne solves LC 66. Time O(n), space O(1) when some digit is not 9.
-func plusOne(digits []int) []int {
-    // from the last digit to the first
-    for i := len(digits) - 1; i >= 0; i-- {
-        if digits[i] < 9 {
-            digits[i]++   // no carry: this digit takes the one
-            return digits // the digits on the left do not change
-        }
-        digits[i] = 0 // 9 + 1 = 10: KEEP 0 and CARRY 1 to the left
-    }
-    // The loop ended, so each digit was 9. For example 999 + 1 = 1000.
-    res := make([]int, len(digits)+1) // one more digit, all zeros
-    res[0] = 1
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // plusOne solves LC 66. Time O(n), space O(1) when some digit is
+> // not 9.
+> func plusOne(digits []int) []int {
+>     // from the last digit to the first
+>     for i := len(digits) - 1; i >= 0; i-- {
+>         if digits[i] < 9 {
+>             digits[i]++   // no carry: this digit takes the one
+>             return digits // the digits on the left do not change
+>         }
+>         digits[i] = 0 // 9 + 1 = 10: KEEP 0 and CARRY 1 to the left
+>     }
+>     // The loop ended, so each digit was 9. For example 999 + 1 =
+>     // 1000.
+>     res := make([]int, len(digits)+1) // one more digit, all zeros
+>     res[0] = 1
+>     return res
+> }
+> ```
 
 ### 50. Pow(x, n)
 
 [LeetCode 50](https://leetcode.com/problems/powx-n/) · Medium
 
-- **Pattern:** Fast power by squaring
-- **Template:** [[#Template E: Fast power by squaring|E: Fast power by squaring]]
-- **Complexity:** time O(log n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Fast power by squaring
+> - **Template:** [[#Template E: Fast power by squaring|E: Fast power by squaring]]
 
-**Idea.** Read the exponent bit by bit. Square x at each step to get x, x², x⁴ and so on. Multiply the result by the current power when the bit is 1. A negative exponent uses 1/x.
+> [!tip]- Step 2: the idea
+> **Idea.** Read the exponent bit by bit. Square x at each step to get x, x², x⁴ and so on. Multiply the result by the current power when the bit is 1. A negative exponent uses 1/x.
+>
+> **Complexity.** Time O(log n), space O(1).
+>
+> **Go lesson.** Go's `int` has 64 bits on LeetCode, so `-n` is safe for n = -2³¹. In a 32-bit language this line overflows.
 
-**Go lesson.** Go's `int` has 64 bits on LeetCode, so `-n` is safe for n = -2³¹. In a 32-bit language this line overflows.
-
-```go
-// myPow solves LC 50. Time O(log n), space O(1).
-// Example: x¹³ = x⁸ * x⁴ * x¹, because 13 is 1101 in binary.
-func myPow(x float64, n int) float64 {
-    if n < 0 { // NEGATIVE exponent: x^(-n) is (1/x)^n
-        x = 1 / x
-        n = -n // safe: int has 64 bits, and n is at least -2³¹
-    }
-    res := 1.0 // 1.0 is a float64 constant. x⁰ is 1
-    for n > 0 {
-        // USE: the lowest bit of n is 1, so this power is in the answer
-        if n&1 == 1 {
-            res *= x
-        }
-        x *= x  // SQUARE: the power for the next bit
-        n >>= 1 // HALVE: drop the lowest bit
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // myPow solves LC 50. Time O(log n), space O(1).
+> // Example: x¹³ = x⁸ * x⁴ * x¹, because 13 is 1101 in binary.
+> func myPow(x float64, n int) float64 {
+>     if n < 0 { // NEGATIVE exponent: x^(-n) is (1/x)^n
+>         x = 1 / x
+>         n = -n // safe: int has 64 bits, and n is at least -2³¹
+>     }
+>     res := 1.0 // 1.0 is a float64 constant. x⁰ is 1
+>     for n > 0 {
+>         // USE: the lowest bit of n is 1, so this power is in the
+>         // answer
+>         if n&1 == 1 {
+>             res *= x
+>         }
+>         x *= x  // SQUARE: the power for the next bit
+>         n >>= 1 // HALVE: drop the lowest bit
+>     }
+>     return res
+> }
+> ```
 
 ### 43. Multiply Strings
 
 [LeetCode 43](https://leetcode.com/problems/multiply-strings/) · Medium
 
-- **Pattern:** Grade-school multiplication with digits
-- **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
-- **Complexity:** time O(m * n) for m and n digits, space O(m + n)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Grade-school multiplication with digits
+> - **Template:** [[#Template D: Digit loop with a carry|D: Digit loop with a carry]]
 
-**Idea.** Multiply each pair of digits, as on paper. The product of the digits at i and j goes to the positions i+j and i+j+1 of the result. Keep one digit with % 10 and carry the rest with / 10.
+> [!tip]- Step 2: the idea
+> **Idea.** Multiply each pair of digits, as on paper. The product of the digits at i and j goes to the positions i+j and i+j+1 of the result. Keep one digit with % 10 and carry the rest with / 10.
+>
+> **Complexity.** Time O(m * n) for m and n digits, space O(m + n).
+>
+> **Go lesson.** `num1[i]` is a byte with the ASCII code of the digit. `int(num1[i]-'0')` gives its value. Build the result as a `[]byte` and convert it to a string one time at the end.
 
-**Go lesson.** `num1[i]` is a byte with the ASCII code of the digit. `int(num1[i]-'0')` gives its value. Build the result as a `[]byte` and convert it to a string one time at the end.
-
-```go
-// multiply solves LC 43. Time O(m * n), space O(m + n).
-// It never converts the full input to an integer: the inputs have up to 200
-// digits.
-func multiply(num1 string, num2 string) string {
-    if num1 == "0" || num2 == "0" { // without this, the result is "000"
-        return "0"
-    }
-    m, n := len(num1), len(num2)
-    // m digits times n digits has at most m+n digits
-    res := make([]int, m+n)
-
-    for i := m - 1; i >= 0; i-- { // from the last digit of each number
-        for j := n - 1; j >= 0; j-- {
-            product := int(num1[i]-'0') * int(num2[j]-'0')
-            // ADD what the low position already holds
-            sum := product + res[i+j+1]
-            // KEEP one digit in the low position
-            res[i+j+1] = sum % 10
-            // CARRY the rest to the position on the left
-            res[i+j] += sum / 10
-        }
-    }
-
-    start := 0
-    // SKIP: the product has only m+n-1 digits, so res[0] is a leading zero
-    if res[0] == 0 {
-        start = 1
-    }
-    out := make([]byte, 0, m+n)
-    for _, d := range res[start:] {
-        // the digit 7 becomes the character '7'
-        out = append(out, byte(d)+'0')
-    }
-    return string(out)
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // multiply solves LC 43. Time O(m * n), space O(m + n).
+> // It never converts the full input to an integer: the inputs have
+> // up to 200
+> // digits.
+> func multiply(num1 string, num2 string) string {
+>     // without this, the result is "000"
+>     if num1 == "0" || num2 == "0" {
+>         return "0"
+>     }
+>     m, n := len(num1), len(num2)
+>     // m digits times n digits has at most m+n digits
+>     res := make([]int, m+n)
+>
+>     // from the last digit of each number
+>     for i := m - 1; i >= 0; i-- {
+>         for j := n - 1; j >= 0; j-- {
+>             product := int(num1[i]-'0') * int(num2[j]-'0')
+>             // ADD what the low position already holds
+>             sum := product + res[i+j+1]
+>             // KEEP one digit in the low position
+>             res[i+j+1] = sum % 10
+>             // CARRY the rest to the position on the left
+>             res[i+j] += sum / 10
+>         }
+>     }
+>
+>     start := 0
+>     // SKIP: the product has only m+n-1 digits, so res[0] is a
+>     // leading zero
+>     if res[0] == 0 {
+>         start = 1
+>     }
+>     out := make([]byte, 0, m+n)
+>     for _, d := range res[start:] {
+>         // the digit 7 becomes the character '7'
+>         out = append(out, byte(d)+'0')
+>     }
+>     return string(out)
+> }
+> ```
 
 ### 2013. Detect Squares
 
 [LeetCode 2013](https://leetcode.com/problems/detect-squares/) · Medium
 
-- **Pattern:** Count map of points
-- **Template:** [[#Template F: Count map of points|F: Count map of points]]
-- **Complexity:** time O(1) for Add, O(p) for Count with p distinct points, space O(p)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Count map of points
+> - **Template:** [[#Template F: Count map of points|F: Count map of points]]
 
-**Idea.** Count how many times each point was added. For a query, each stored point on a diagonal fixes one square. Look up the other two corners and multiply the three counts.
+> [!tip]- Step 2: the idea
+> **Idea.** Count how many times each point was added. For a query, each stored point on a diagonal fixes one square. Look up the other two corners and multiply the three counts.
+>
+> **Complexity.** Time O(1) for Add, O(p) for Count with p distinct points, space O(p).
+>
+> **Go lesson.** An array such as `[2]int` can be a map key, and a slice cannot. A read of a missing key gives 0 and adds no entry, so it is safe inside a `range` over the map.
 
-**Go lesson.** An array such as `[2]int` can be a map key, and a slice cannot. A read of a missing key gives 0 and adds no entry, so it is safe inside a `range` over the map.
-
-```go
-// DetectSquares solves LC 2013. Add is O(1). Count is O(p) for p distinct
-// points.
-type DetectSquares struct {
-    count map[[2]int]int // the point (x, y) -> how many times it was added
-}
-
-func Constructor() DetectSquares {
-    // a nil map panics on a write
-    return DetectSquares{count: make(map[[2]int]int)}
-}
-
-// Add stores one more copy of the point.
-func (this *DetectSquares) Add(point []int) {
-    // COUNT: duplicates are different points
-    this.count[[2]int{point[0], point[1]}]++
-}
-
-// Count returns the number of squares with one corner at the query point.
-func (this *DetectSquares) Count(point []int) int {
-    x, y := point[0], point[1]
-    total := 0
-    // p is a candidate for the DIAGONAL corner
-    for p, c := range this.count {
-        px, py := p[0], p[1]
-        // The diagonal corner of a square is as far in x as in y.
-        // px == x gives a square with no area, so skip it.
-        if px == x || abs(px-x) != abs(py-y) {
-            continue
-        }
-        // LOOK UP the two other corners: (x, py) and (px, y).
-        // MULTIPLY: each copy of each corner gives a different square.
-        total += c * this.count[[2]int{x, py}] * this.count[[2]int{px, y}]
-    }
-    return total
-}
-
-// abs returns the absolute value. The math package has only a float64
-// version.
-func abs(a int) int {
-    if a < 0 {
-        return -a
-    }
-    return a
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // DetectSquares solves LC 2013. Add is O(1). Count is O(p) for p
+> // distinct
+> // points.
+> type DetectSquares struct {
+>     // the point (x, y) -> how many times it was added
+>     count map[[2]int]int
+> }
+>
+> func Constructor() DetectSquares {
+>     // a nil map panics on a write
+>     return DetectSquares{count: make(map[[2]int]int)}
+> }
+>
+> // Add stores one more copy of the point.
+> func (this *DetectSquares) Add(point []int) {
+>     // COUNT: duplicates are different points
+>     this.count[[2]int{point[0], point[1]}]++
+> }
+>
+> // Count returns the number of squares with one corner at the query
+> // point.
+> func (this *DetectSquares) Count(point []int) int {
+>     x, y := point[0], point[1]
+>     total := 0
+>     // p is a candidate for the DIAGONAL corner
+>     for p, c := range this.count {
+>         px, py := p[0], p[1]
+>         // The diagonal corner of a square is as far in x as in y.
+>         // px == x gives a square with no area, so skip it.
+>         if px == x || abs(px-x) != abs(py-y) {
+>             continue
+>         }
+>         // LOOK UP the two other corners: (x, py) and (px, y).
+>         // MULTIPLY: each copy of each corner gives a different
+>         // square.
+>         total += c * this.count[[2]int{x, py}] * this.count[[2]int{px, y}]
+>     }
+>     return total
+> }
+>
+> // abs returns the absolute value. The math package has only a
+> // float64
+> // version.
+> func abs(a int) int {
+>     if a < 0 {
+>         return -a
+>     }
+>     return a
+> }
+> ```
 
 ---
 

@@ -7,7 +7,7 @@ tags:
   - study-method
   - learning-path
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # LeetCode study method: fewer problems, repeated
@@ -55,7 +55,7 @@ Random practice hides the patterns. Six sliding window problems in one week show
 
 Read the problem and say the pattern aloud, with the reason. For example: "This is a sliding window, because the problem asks for the longest contiguous part with a condition."
 
-Then compare your guess with the **Pattern** column of the stage page. Most people fail an interview at this step, not at the code. So train this step each time.
+Then open step 1 of the problem on the stage page, and compare. Most people fail an interview at this step, not at the code. So train this step each time. The [[wiki/neetcode-150/pattern-drill|pattern drill]] trains only this step, with ten problems in five minutes.
 
 ### 6. Write one template from memory each day
 
@@ -88,16 +88,16 @@ One day each week, solve no new problem. Use that day for the repeats, the templ
 
 1. Open the LeetCode link. Read the problem and the examples.
 2. Say the pattern and the template aloud, with the reason.
-3. Compare your guess with the stage page. If the guess is wrong, read the signal of the correct template again.
+3. Open **step 1** of the problem on the stage page, and compare. If your guess is wrong, read the signal of the correct template again.
 4. Start the timer. Write the solution in Go, in your editor, with a test.
-5. If the timer ends and you are blocked, read the **Idea** line only. Try for five more minutes.
-6. If you are still blocked, read the code and each comment.
+5. If the timer ends and you are blocked, open **step 2**, the idea. Try for five more minutes.
+6. If you are still blocked, open **step 3**. Read the code and each comment.
 7. Close the page. Type the solution from memory. Run the tests.
 8. Say the idea in two sentences. Then say the time and the space complexity.
 9. Write the date in the tracker.
 
-> [!tip] Read the idea before the code
-> The idea is one to three sentences. Often it is enough, and then you write the code yourself. That is worth much more than a full read of the solution.
+> [!tip] Open the steps in order
+> Each problem on a stage page hides its answer in three steps: the pattern, the idea and the Go solution. The idea is one to three sentences. Often it is enough, and then you write the code yourself. That is worth much more than a full read of the solution.
 
 ## The repeat schedule
 
@@ -143,14 +143,16 @@ Mistakes have three types. Mark each one, so you see where your time goes:
 
 ## The naming drill
 
-Use this drill on a day when you are tired, or when you have 15 minutes.
+Use this drill on a day when you are tired, or when you have five minutes. The [[wiki/neetcode-150/pattern-drill|pattern drill]] does it for you.
 
-1. Open ten problems that you did not solve yet.
-2. Read each statement for one minute. Write no code.
-3. Write the pattern and the template that you think it uses.
-4. Compare your ten answers with the **Pattern** column in [[wiki/neetcode-150/index#All 150 problems|the list of all 150 problems]].
+1. Open the drill. Choose the stages that you studied.
+2. Read each statement. Write no code.
+3. Say the pattern aloud, with the reason. Then choose the family.
+4. Read the signal that the drill shows after each answer.
 
 Seven correct answers out of ten is a good result. For each wrong answer, read the signal of the correct template. This drill trains the step where people freeze.
+
+You can also do the drill on paper. Open ten problems that you did not solve yet, and write the pattern of each one. Then compare your answers with the **Pattern** column in [[wiki/neetcode-150/index#All 150 problems|the list of all 150 problems]].
 
 ## What to expect
 
@@ -177,5 +179,6 @@ Easy and medium problems of stages 1 to 7 cover most of what an interview asks. 
 
 - [[wiki/neetcode-150/index|NeetCode 150 in Go]]: the 18 stages, with all the problems, the patterns and the templates.
 - [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]]: one row for each problem, with the dates of the four sessions.
+- [[wiki/neetcode-150/pattern-drill|LeetCode pattern drill]]: read a problem, name the pattern, see the signal.
 - [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]]: the Go syntax for each pattern.
 - [[wiki/patterns/index|LeetCode Patterns]]: the pattern notes of the notebook.

@@ -9,7 +9,7 @@ tags:
   - templates
   - tries
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 8: Tries
@@ -164,212 +164,246 @@ The moves are PRUNE, COLLECT, MARK, EXPLORE, then UNMARK. The DFS moves in the g
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 208. Implement Trie (Prefix Tree)
 
 [LeetCode 208](https://leetcode.com/problems/implement-trie-prefix-tree/) · Medium
 
-- **Pattern:** Trie (prefix tree)
-- **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]]
-- **Complexity:** time O(L) for each operation on a word of L letters, space O(N) for N letters in all the inserted words
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Trie (prefix tree)
+> - **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]]
 
-**Idea.** Each node is one letter on a path from the root. Words with the same prefix share their first nodes. A flag marks each node where a word ends.
+> [!tip]- Step 2: the idea
+> **Idea.** Each node is one letter on a path from the root. Words with the same prefix share their first nodes. A flag marks each node where a word ends.
+>
+> **Complexity.** Time O(L) for each operation on a word of L letters, space O(N) for N letters in all the inserted words.
+>
+> **Go lesson.** A `[26]*trieNode` array starts as 26 `nil` pointers, so a new node needs no setup. `&trieNode{}` makes a node and gives its pointer.
 
-**Go lesson.** A `[26]*trieNode` array starts as 26 `nil` pointers, so a new node needs no setup. `&trieNode{}` makes a node and gives its pointer.
-
-```go
-// Trie solves LC 208. Each operation is O(L) time for a word of L letters.
-// The path from the root to a node spells a prefix. Each node has one slot
-// for each letter.
-type trieNode struct {
-    children [26]*trieNode // nil means "no child for this letter"
-    end      bool          // true when a word ends at this node
-}
-
-type Trie struct {
-    root *trieNode
-}
-
-func Constructor() Trie {
-    return Trie{root: &trieNode{}} // the root is the empty prefix
-}
-
-func (this *Trie) Insert(word string) {
-    node := this.root
-    for i := 0; i < len(word); i++ {
-        c := word[i] - 'a' // 'a' -> 0, 'b' -> 1, and so on
-        if node.children[c] == nil {
-            node.children[c] = &trieNode{} // CREATE the child on first use
-        }
-        node = node.children[c] // STEP down one letter
-    }
-    node.end = true // MARK: a word ends here
-}
-
-func (this *Trie) Search(word string) bool {
-    node := this.walk(word)
-    // the path must exist AND a word must end there
-    return node != nil && node.end
-}
-
-func (this *Trie) StartsWith(prefix string) bool {
-    return this.walk(prefix) != nil // the path alone is enough
-}
-
-// walk follows s from the root. It returns the last node, or nil when the
-// path stops.
-func (this *Trie) walk(s string) *trieNode {
-    node := this.root
-    for i := 0; i < len(s); i++ {
-        node = node.children[s[i]-'a'] // STEP down
-        if node == nil {
-            return nil // no word has this prefix
-        }
-    }
-    return node
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // Trie solves LC 208. Each operation is O(L) time for a word of L
+> // letters.
+> // The path from the root to a node spells a prefix. Each node has
+> // one slot
+> // for each letter.
+> type trieNode struct {
+>     children [26]*trieNode // nil means "no child for this letter"
+>     end      bool          // true when a word ends at this node
+> }
+>
+> type Trie struct {
+>     root *trieNode
+> }
+>
+> func Constructor() Trie {
+>     return Trie{root: &trieNode{}} // the root is the empty prefix
+> }
+>
+> func (this *Trie) Insert(word string) {
+>     node := this.root
+>     for i := 0; i < len(word); i++ {
+>         c := word[i] - 'a' // 'a' -> 0, 'b' -> 1, and so on
+>         if node.children[c] == nil {
+>             // CREATE the child on first use
+>             node.children[c] = &trieNode{}
+>         }
+>         node = node.children[c] // STEP down one letter
+>     }
+>     node.end = true // MARK: a word ends here
+> }
+>
+> func (this *Trie) Search(word string) bool {
+>     node := this.walk(word)
+>     // the path must exist AND a word must end there
+>     return node != nil && node.end
+> }
+>
+> func (this *Trie) StartsWith(prefix string) bool {
+>     return this.walk(prefix) != nil // the path alone is enough
+> }
+>
+> // walk follows s from the root. It returns the last node, or nil
+> // when the
+> // path stops.
+> func (this *Trie) walk(s string) *trieNode {
+>     node := this.root
+>     for i := 0; i < len(s); i++ {
+>         node = node.children[s[i]-'a'] // STEP down
+>         if node == nil {
+>             return nil // no word has this prefix
+>         }
+>     }
+>     return node
+> }
+> ```
 
 ### 211. Design Add and Search Words Data Structure
 
 [LeetCode 211](https://leetcode.com/problems/design-add-and-search-words-data-structure/) · Medium
 
-- **Pattern:** Trie with wildcard DFS
-- **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]], [[#Template B: DFS on the trie for wildcards|B: DFS on the trie for wildcards]]
-- **Complexity:** time O(L), or O(26^d * L) for a search with d dots, space O(N) for N stored letters
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Trie with wildcard DFS
+> - **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]], [[#Template B: DFS on the trie for wildcards|B: DFS on the trie for wildcards]]
 
-**Idea.** Store the words in a trie. A letter follows one child. A dot can be each letter, so the search tries all the children at that position.
+> [!tip]- Step 2: the idea
+> **Idea.** Store the words in a trie. A letter follows one child. A dot can be each letter, so the search tries all the children at that position.
+>
+> **Complexity.** Time O(L), or O(26^d * L) for a search with d dots, space O(N) for N stored letters.
+>
+> **Go lesson.** A `range` over an array gives each element in index order. Here it gives the 26 child pointers, and the `nil` ones stop in the first line of `match`.
 
-**Go lesson.** A `range` over an array gives each element in index order. Here it gives the 26 child pointers, and the `nil` ones stop in the first line of `match`.
-
-```go
-// WordDictionary solves LC 211. AddWord is O(L). Search is O(L) when the
-// word has no dot.
-// The words go into a trie. In a search, a '.' branches to all the children
-// of the node.
-type trieNode struct {
-    children [26]*trieNode // nil means "no child for this letter"
-    end      bool          // true when a word ends at this node
-}
-
-type WordDictionary struct {
-    root *trieNode
-}
-
-func Constructor() WordDictionary {
-    return WordDictionary{root: &trieNode{}}
-}
-
-func (this *WordDictionary) AddWord(word string) {
-    node := this.root
-    for i := 0; i < len(word); i++ {
-        c := word[i] - 'a'
-        if node.children[c] == nil {
-            node.children[c] = &trieNode{} // CREATE the child on first use
-        }
-        node = node.children[c] // STEP down one letter
-    }
-    node.end = true // MARK: a word ends here
-}
-
-func (this *WordDictionary) Search(word string) bool {
-    return match(this.root, word, 0)
-}
-
-// match reports if word[i:] matches a path that starts at node.
-func match(node *trieNode, word string, i int) bool {
-    if node == nil {
-        return false // the path stopped before the word ended
-    }
-    if i == len(word) {
-        return node.end // all the characters are used: a word must end here
-    }
-    if word[i] != '.' {
-        // a letter: ONE path
-        return match(node.children[word[i]-'a'], word, i+1)
-    }
-    for _, child := range node.children { // a dot: BRANCH to each child
-        if match(child, word, i+1) {
-            return true // one path that matches is enough
-        }
-    }
-    return false
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // WordDictionary solves LC 211. AddWord is O(L). Search is O(L)
+> // when the
+> // word has no dot.
+> // The words go into a trie. In a search, a '.' branches to all the
+> // children
+> // of the node.
+> type trieNode struct {
+>     children [26]*trieNode // nil means "no child for this letter"
+>     end      bool          // true when a word ends at this node
+> }
+>
+> type WordDictionary struct {
+>     root *trieNode
+> }
+>
+> func Constructor() WordDictionary {
+>     return WordDictionary{root: &trieNode{}}
+> }
+>
+> func (this *WordDictionary) AddWord(word string) {
+>     node := this.root
+>     for i := 0; i < len(word); i++ {
+>         c := word[i] - 'a'
+>         if node.children[c] == nil {
+>             // CREATE the child on first use
+>             node.children[c] = &trieNode{}
+>         }
+>         node = node.children[c] // STEP down one letter
+>     }
+>     node.end = true // MARK: a word ends here
+> }
+>
+> func (this *WordDictionary) Search(word string) bool {
+>     return match(this.root, word, 0)
+> }
+>
+> // match reports if word[i:] matches a path that starts at node.
+> func match(node *trieNode, word string, i int) bool {
+>     if node == nil {
+>         return false // the path stopped before the word ended
+>     }
+>     if i == len(word) {
+>         // all the characters are used: a word must end here
+>         return node.end
+>     }
+>     if word[i] != '.' {
+>         // a letter: ONE path
+>         return match(node.children[word[i]-'a'], word, i+1)
+>     }
+>     // a dot: BRANCH to each child
+>     for _, child := range node.children {
+>         if match(child, word, i+1) {
+>             return true // one path that matches is enough
+>         }
+>     }
+>     return false
+> }
+> ```
 
 ### 212. Word Search II
 
 [LeetCode 212](https://leetcode.com/problems/word-search-ii/) · Hard
 
-- **Pattern:** Trie plus grid backtracking
-- **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]], [[#Template C: Trie plus grid backtracking|C: Trie plus grid backtracking]]
-- **Complexity:** time O(R * C * 4 * 3^(L-1)) for words of L letters or fewer, space O(N) for N letters in the words
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Trie plus grid backtracking
+> - **Template:** [[#Template A: Trie node, insert and walk|A: Trie node, insert and walk]], [[#Template C: Trie plus grid backtracking|C: Trie plus grid backtracking]]
 
-**Idea.** A search for each word alone repeats the same walks. Put all the words in a trie. Then one DFS from each cell follows the board and the trie together, and it stops when the trie has no child.
+> [!tip]- Step 2: the idea
+> **Idea.** A search for each word alone repeats the same walks. Put all the words in a trie. Then one DFS from each cell follows the board and the trie together, and it stops when the trie has no child.
+>
+> **Complexity.** Time O(R * C * 4 * 3^(L-1)) for words of L letters or fewer, space O(N) for N letters in the words.
+>
+> **Go lesson.** A closure such as `dfs` reads and changes `board` and `res` from the outer function. Declare it with `var` first, so that it can call itself.
 
-**Go lesson.** A closure such as `dfs` reads and changes `board` and `res` from the outer function. Declare it with `var` first, so that it can call itself.
-
-```go
-// findWords solves LC 212. Time O(R * C * 4 * 3^(L-1)) for words of length
-// L or less.
-// The trie holds all the words, so one DFS from each cell searches for all
-// of them.
-type trieNode struct {
-    children [26]*trieNode
-    word     string // the full word when a word ends here, "" when not
-}
-
-func findWords(board [][]byte, words []string) []string {
-    root := &trieNode{}
-    for _, w := range words { // BUILD the trie
-        node := root
-        for i := 0; i < len(w); i++ {
-            c := w[i] - 'a'
-            if node.children[c] == nil {
-                node.children[c] = &trieNode{}
-            }
-            node = node.children[c]
-        }
-        // the node keeps the word, so the DFS does not build strings
-        node.word = w
-    }
-
-    rows, cols := len(board), len(board[0])
-    res := []string{}
-    var dfs func(r, c int, parent *trieNode)
-    dfs = func(r, c int, parent *trieNode) {
-        // Do the '#' check before the trie step: '#' is not a letter index.
-        if r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] == '#' {
-            return // out of the board, or the cell is already in this path
-        }
-        letter := board[r][c]
-        node := parent.children[letter-'a']
-        if node == nil {
-            return // PRUNE: no word continues with this letter
-        }
-        if node.word != "" {
-            res = append(res, node.word) // COLLECT
-            // clear it, so each word is in the result one time
-            node.word = ""
-        }
-        board[r][c] = '#' // MARK the cell as used in this path
-        dfs(r+1, c, node) // EXPLORE the four neighbors
-        dfs(r-1, c, node)
-        dfs(r, c+1, node)
-        dfs(r, c-1, node)
-        board[r][c] = letter // UNMARK: other paths can use the cell
-    }
-    for r := 0; r < rows; r++ {
-        for c := 0; c < cols; c++ {
-            dfs(r, c, root) // each cell can be the first letter
-        }
-    }
-    // A common speedup: remove a trie node when it has no children and no
-    // word.
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // findWords solves LC 212. Time O(R * C * 4 * 3^(L-1)) for words of
+> // length
+> // L or less.
+> // The trie holds all the words, so one DFS from each cell searches
+> // for all
+> // of them.
+> type trieNode struct {
+>     children [26]*trieNode
+>     // the full word when a word ends here, "" when not
+>     word string
+> }
+>
+> func findWords(board [][]byte, words []string) []string {
+>     root := &trieNode{}
+>     for _, w := range words { // BUILD the trie
+>         node := root
+>         for i := 0; i < len(w); i++ {
+>             c := w[i] - 'a'
+>             if node.children[c] == nil {
+>                 node.children[c] = &trieNode{}
+>             }
+>             node = node.children[c]
+>         }
+>         // the node keeps the word, so the DFS does not build
+>         // strings
+>         node.word = w
+>     }
+>
+>     rows, cols := len(board), len(board[0])
+>     res := []string{}
+>     var dfs func(r, c int, parent *trieNode)
+>     dfs = func(r, c int, parent *trieNode) {
+>         // Do the '#' check before the trie step: '#' is not a
+>         // letter index.
+>         if r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] == '#' {
+>             // out of the board, or the cell is already in this path
+>             return
+>         }
+>         letter := board[r][c]
+>         node := parent.children[letter-'a']
+>         if node == nil {
+>             return // PRUNE: no word continues with this letter
+>         }
+>         if node.word != "" {
+>             res = append(res, node.word) // COLLECT
+>             // clear it, so each word is in the result one time
+>             node.word = ""
+>         }
+>         board[r][c] = '#' // MARK the cell as used in this path
+>         dfs(r+1, c, node) // EXPLORE the four neighbors
+>         dfs(r-1, c, node)
+>         dfs(r, c+1, node)
+>         dfs(r, c-1, node)
+>         board[r][c] = letter // UNMARK: other paths can use the cell
+>     }
+>     for r := 0; r < rows; r++ {
+>         for c := 0; c < cols; c++ {
+>             dfs(r, c, root) // each cell can be the first letter
+>         }
+>     }
+>     // A common speedup: remove a trie node when it has no children
+>     // and no
+>     // word.
+>     return res
+> }
+> ```
 
 ---
 

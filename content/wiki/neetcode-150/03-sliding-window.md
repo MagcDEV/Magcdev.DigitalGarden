@@ -9,7 +9,7 @@ tags:
   - templates
   - sliding-window
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 3: Sliding Window
@@ -206,232 +206,278 @@ The moves are POP BACK, PUSH BACK, POP FRONT, then RECORD. Store indexes, not va
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 121. Best Time to Buy and Sell Stock
 
 [LeetCode 121](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/) · Easy
 
-- **Pattern:** Best so far, one pass
-- **Template:** [[#Template A: Best so far in one pass|A: Best so far in one pass]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Best so far, one pass
+> - **Template:** [[#Template A: Best so far in one pass|A: Best so far in one pass]]
 
-**Idea.** For each day, the best day to buy is the lowest price before it. Keep that lowest price while you scan, and record the best profit.
+> [!tip]- Step 2: the idea
+> **Idea.** For each day, the best day to buy is the lowest price before it. Keep that lowest price while you scan, and record the best profit.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `for _, price := range prices` gives the value of each item. The `_` drops the index.
 
-**Go lesson.** `for _, price := range prices` gives the value of each item. The `_` drops the index.
-
-```go
-// maxProfit solves LC 121. Time O(n), space O(1).
-// For each day: profit = price today - lowest price before today.
-func maxProfit(prices []int) int {
-    if len(prices) == 0 {
-        return 0
-    }
-    lowest := prices[0] // the lowest price before the current day
-    best := 0           // 0 is the answer when no trade makes a profit
-    for _, price := range prices {
-        // RECORD: sell today, buy at the lowest price
-        best = max(best, price-lowest)
-        // UPDATE the lowest price for the days after
-        lowest = min(lowest, price)
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // maxProfit solves LC 121. Time O(n), space O(1).
+> // For each day: profit = price today - lowest price before today.
+> func maxProfit(prices []int) int {
+>     if len(prices) == 0 {
+>         return 0
+>     }
+>     lowest := prices[0] // the lowest price before the current day
+>     // 0 is the answer when no trade makes a profit
+>     best := 0
+>     for _, price := range prices {
+>         // RECORD: sell today, buy at the lowest price
+>         best = max(best, price-lowest)
+>         // UPDATE the lowest price for the days after
+>         lowest = min(lowest, price)
+>     }
+>     return best
+> }
+> ```
 
 ### 3. Longest Substring Without Repeating Characters
 
 [LeetCode 3](https://leetcode.com/problems/longest-substring-without-repeating-characters/) · Medium
 
-- **Pattern:** Variable window, longest
-- **Template:** [[#Template B: Variable window, longest|B: Variable window, longest]]
-- **Complexity:** time O(n), space O(1), a fixed array of 256 counters
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Variable window, longest
+> - **Template:** [[#Template B: Variable window, longest|B: Variable window, longest]]
 
-**Idea.** Grow the window to the right. If the new byte is in the window two times, move the left side until it is there one time. The window is then valid, so record its length.
+> [!tip]- Step 2: the idea
+> **Idea.** Grow the window to the right. If the new byte is in the window two times, move the left side until it is there one time. The window is then valid, so record its length.
+>
+> **Complexity.** Time O(n), space O(1), a fixed array of 256 counters.
+>
+> **Go lesson.** `var count [256]int` is an array, not a slice. Its size is fixed, it starts with zeros, and a byte is always a valid index.
 
-**Go lesson.** `var count [256]int` is an array, not a slice. Its size is fixed, it starts with zeros, and a byte is always a valid index.
-
-```go
-// lengthOfLongestSubstring solves LC 3. Time O(n), space O(1).
-// The window s[left..right] never has a byte two times when its length is
-// recorded.
-func lengthOfLongestSubstring(s string) int {
-    var count [256]int // count[c]: how many times byte c is in the window
-    best, left := 0, 0
-    for right := 0; right < len(s); right++ {
-        count[s[right]]++         // GROW: s[right] enters the window
-        for count[s[right]] > 1 { // SHRINK while the new byte is a repeat
-            count[s[left]]-- // s[left] leaves the window
-            left++
-        }
-        // RECORD: the window has no repeat here
-        best = max(best, right-left+1)
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // lengthOfLongestSubstring solves LC 3. Time O(n), space O(1).
+> // The window s[left..right] never has a byte two times when its
+> // length is
+> // recorded.
+> func lengthOfLongestSubstring(s string) int {
+>     // count[c]: how many times byte c is in the window
+>     var count [256]int
+>     best, left := 0, 0
+>     for right := 0; right < len(s); right++ {
+>         // GROW: s[right] enters the window
+>         count[s[right]]++
+>         // SHRINK while the new byte is a repeat
+>         for count[s[right]] > 1 {
+>             count[s[left]]-- // s[left] leaves the window
+>             left++
+>         }
+>         // RECORD: the window has no repeat here
+>         best = max(best, right-left+1)
+>     }
+>     return best
+> }
+> ```
 
 ### 424. Longest Repeating Character Replacement
 
 [LeetCode 424](https://leetcode.com/problems/longest-repeating-character-replacement/) · Medium
 
-- **Pattern:** Variable window, longest
-- **Template:** [[#Template B: Variable window, longest|B: Variable window, longest]]
-- **Complexity:** time O(n), space O(1), an array of 26 counters
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Variable window, longest
+> - **Template:** [[#Template B: Variable window, longest|B: Variable window, longest]]
 
-**Idea.** A window is valid when its length minus the count of its most frequent letter is k or less. Those other letters are the ones that you replace. Grow the window, and shrink it when it needs more than k replacements.
+> [!tip]- Step 2: the idea
+> **Idea.** A window is valid when its length minus the count of its most frequent letter is k or less. Those other letters are the ones that you replace. Grow the window, and shrink it when it needs more than k replacements.
+>
+> **Complexity.** Time O(n), space O(1), an array of 26 counters.
+>
+> **Go lesson.** `s[right]-'A'` changes an upper-case letter to an index from 0 to 25. Byte arithmetic needs no conversion.
 
-**Go lesson.** `s[right]-'A'` changes an upper-case letter to an index from 0 to 25. Byte arithmetic needs no conversion.
-
-```go
-// characterReplacement solves LC 424. Time O(n), space O(1).
-// Valid window: (length of the window) - (count of its most frequent
-// letter) <= k.
-func characterReplacement(s string, k int) int {
-    var count [26]int // count of each letter in the window
-    best, left := 0, 0
-    maxCount := 0 // the largest count of one letter that a window had
-    for right := 0; right < len(s); right++ {
-        count[s[right]-'A']++ // GROW: s[right] enters
-        maxCount = max(maxCount, count[s[right]-'A'])
-        // SHRINK while the window needs more than k replacements.
-        // maxCount does not decrease here, so it can be too high. That is
-        // safe: only a larger maxCount can give a longer answer.
-        for right-left+1-maxCount > k {
-            count[s[left]-'A']--
-            left++
-        }
-        best = max(best, right-left+1) // RECORD
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // characterReplacement solves LC 424. Time O(n), space O(1).
+> // Valid window: (length of the window) - (count of its most
+> // frequent
+> // letter) <= k.
+> func characterReplacement(s string, k int) int {
+>     var count [26]int // count of each letter in the window
+>     best, left := 0, 0
+>     // the largest count of one letter that a window had
+>     maxCount := 0
+>     for right := 0; right < len(s); right++ {
+>         count[s[right]-'A']++ // GROW: s[right] enters
+>         maxCount = max(maxCount, count[s[right]-'A'])
+>         // SHRINK while the window needs more than k replacements.
+>         // maxCount does not decrease here, so it can be too high.
+>         // That is
+>         // safe: only a larger maxCount can give a longer answer.
+>         for right-left+1-maxCount > k {
+>             count[s[left]-'A']--
+>             left++
+>         }
+>         best = max(best, right-left+1) // RECORD
+>     }
+>     return best
+> }
+> ```
 
 ### 567. Permutation in String
 
 [LeetCode 567](https://leetcode.com/problems/permutation-in-string/) · Medium
 
-- **Pattern:** Fixed window with letter counts
-- **Template:** [[#Template C: Fixed window|C: Fixed window]]
-- **Complexity:** time O(n) for n = len(s2), with 26 comparisons for each window, space O(1), two arrays of 26 counters
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Fixed window with letter counts
+> - **Template:** [[#Template C: Fixed window|C: Fixed window]]
 
-**Idea.** A permutation of s1 has the same letter counts as s1 and the same length. Slide a window of that length across s2 and compare the counts.
+> [!tip]- Step 2: the idea
+> **Idea.** A permutation of s1 has the same letter counts as s1 and the same length. Slide a window of that length across s2 and compare the counts.
+>
+> **Complexity.** Time O(n) for n = len(s2), with 26 comparisons for each window, space O(1), two arrays of 26 counters.
+>
+> **Go lesson.** Arrays compare with `==`, so `window == need` compares all 26 counters. Slices and maps do not compare that way.
 
-**Go lesson.** Arrays compare with `==`, so `window == need` compares all 26 counters. Slices and maps do not compare that way.
-
-```go
-// checkInclusion solves LC 567. Time O(n), space O(1).
-// A window of len(s1) letters in s2 is a permutation of s1 when the counts
-// are equal.
-func checkInclusion(s1 string, s2 string) bool {
-    k := len(s1) // the fixed size of the window
-    if k > len(s2) {
-        return false
-    }
-    // need: the counts of s1. window: the counts of the window
-    var need, window [26]int
-    for i := 0; i < k; i++ {
-        need[s1[i]-'a']++
-    }
-    for right := 0; right < len(s2); right++ {
-        window[s2[right]-'a']++ // ADD the letter that enters
-        if right >= k {
-            window[s2[right-k]-'a']-- // REMOVE the letter that leaves
-        }
-        if right >= k-1 && window == need { // CHECK when the window is full
-            return true
-        }
-    }
-    return false
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // checkInclusion solves LC 567. Time O(n), space O(1).
+> // A window of len(s1) letters in s2 is a permutation of s1 when the
+> // counts
+> // are equal.
+> func checkInclusion(s1 string, s2 string) bool {
+>     k := len(s1) // the fixed size of the window
+>     if k > len(s2) {
+>         return false
+>     }
+>     // need: the counts of s1. window: the counts of the window
+>     var need, window [26]int
+>     for i := 0; i < k; i++ {
+>         need[s1[i]-'a']++
+>     }
+>     for right := 0; right < len(s2); right++ {
+>         window[s2[right]-'a']++ // ADD the letter that enters
+>         if right >= k {
+>             // REMOVE the letter that leaves
+>             window[s2[right-k]-'a']--
+>         }
+>         // CHECK when the window is full
+>         if right >= k-1 && window == need {
+>             return true
+>         }
+>     }
+>     return false
+> }
+> ```
 
 ### 76. Minimum Window Substring
 
 [LeetCode 76](https://leetcode.com/problems/minimum-window-substring/) · Hard
 
-- **Pattern:** Shortest window with a need counter
-- **Template:** [[#Template D: Shortest window with a need counter|D: Shortest window with a need counter]]
-- **Complexity:** time O(m + n) for m = len(s) and n = len(t), space O(1), a fixed array of 256 counters
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Shortest window with a need counter
+> - **Template:** [[#Template D: Shortest window with a need counter|D: Shortest window with a need counter]]
 
-**Idea.** Count what t needs. Grow the window until it has all of t. Then shrink it from the left while it stays valid, and record each valid window. One integer, `missing`, tells if the window is valid.
+> [!tip]- Step 2: the idea
+> **Idea.** Count what t needs. Grow the window until it has all of t. Then shrink it from the left while it stays valid, and record each valid window. One integer, `missing`, tells if the window is valid.
+>
+> **Complexity.** Time O(m + n) for m = len(s) and n = len(t), space O(1), a fixed array of 256 counters.
+>
+> **Go lesson.** `s[start : start+length]` is a substring that shares the memory of `s`. It makes no copy.
 
-**Go lesson.** `s[start : start+length]` is a substring that shares the memory of `s`. It makes no copy.
-
-```go
-// minWindow solves LC 76. Time O(m + n), space O(1).
-// need[c] > 0 means that the window still needs byte c that many times.
-func minWindow(s string, t string) string {
-    var need [256]int // one counter for each byte value
-    for i := 0; i < len(t); i++ {
-        need[t[i]]++
-    }
-    // how many letters of t the window still needs
-    missing := len(t)
-    bestStart, bestLen := 0, len(s)+1 // len(s)+1 means "no window found"
-    left := 0
-    for right := 0; right < len(s); right++ {
-        if need[s[right]] > 0 { // GROW: this letter fills a need
-            missing--
-        }
-        // below 0: the window has more of it than t needs
-        need[s[right]]--
-        for missing == 0 { // the window has all of t
-            if right-left+1 < bestLen { // RECORD each valid window
-                bestStart, bestLen = left, right-left+1
-            }
-            need[s[left]]++ // SHRINK: s[left] leaves the window
-            if need[s[left]] > 0 {
-                missing++ // the window needs that letter again
-            }
-            left++
-        }
-    }
-    if bestLen > len(s) {
-        return ""
-    }
-    return s[bestStart : bestStart+bestLen]
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // minWindow solves LC 76. Time O(m + n), space O(1).
+> // need[c] > 0 means that the window still needs byte c that many
+> // times.
+> func minWindow(s string, t string) string {
+>     var need [256]int // one counter for each byte value
+>     for i := 0; i < len(t); i++ {
+>         need[t[i]]++
+>     }
+>     // how many letters of t the window still needs
+>     missing := len(t)
+>     // len(s)+1 means "no window found"
+>     bestStart, bestLen := 0, len(s)+1
+>     left := 0
+>     for right := 0; right < len(s); right++ {
+>         if need[s[right]] > 0 { // GROW: this letter fills a need
+>             missing--
+>         }
+>         // below 0: the window has more of it than t needs
+>         need[s[right]]--
+>         for missing == 0 { // the window has all of t
+>             if right-left+1 < bestLen { // RECORD each valid window
+>                 bestStart, bestLen = left, right-left+1
+>             }
+>             need[s[left]]++ // SHRINK: s[left] leaves the window
+>             if need[s[left]] > 0 {
+>                 missing++ // the window needs that letter again
+>             }
+>             left++
+>         }
+>     }
+>     if bestLen > len(s) {
+>         return ""
+>     }
+>     return s[bestStart : bestStart+bestLen]
+> }
+> ```
 
 ### 239. Sliding Window Maximum
 
 [LeetCode 239](https://leetcode.com/problems/sliding-window-maximum/) · Hard
 
-- **Pattern:** Monotonic deque
-- **Template:** [[#Template E: Monotonic deque|E: Monotonic deque]]
-- **Complexity:** time O(n), space O(k)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Monotonic deque
+> - **Template:** [[#Template E: Monotonic deque|E: Monotonic deque]]
 
-**Idea.** Keep a deque of indexes whose values decrease from front to back. A new value removes each smaller value at the back, because that value can never be a maximum again. The front is always the maximum of the window.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep a deque of indexes whose values decrease from front to back. A new value removes each smaller value at the back, because that value can never be a maximum again. The front is always the maximum of the window.
+>
+> **Complexity.** Time O(n), space O(k).
+>
+> **Go lesson.** A slice is the deque. `deque[1:]` removes the front and `deque[:len(deque)-1]` removes the back. The two operations move a slice border and copy nothing.
 
-**Go lesson.** A slice is the deque. `deque[1:]` removes the front and `deque[:len(deque)-1]` removes the back. The two operations move a slice border and copy nothing.
-
-```go
-// maxSlidingWindow solves LC 239. Time O(n), space O(k).
-// The deque holds indexes. Each index enters one time and leaves one time.
-func maxSlidingWindow(nums []int, k int) []int {
-    res := make([]int, 0, len(nums)-k+1) // one answer for each full window
-    // indexes: their values decrease from front to back
-    deque := []int{}
-    for right := 0; right < len(nums); right++ {
-        // POP BACK: an older value that is not larger than nums[right]
-        // leaves the window first, so it cannot be a maximum again.
-        for len(deque) > 0 && nums[deque[len(deque)-1]] <= nums[right] {
-            deque = deque[:len(deque)-1]
-        }
-        deque = append(deque, right) // PUSH BACK the new index
-        // POP FRONT: that index left the window
-        if deque[0] <= right-k {
-            deque = deque[1:]
-        }
-        // RECORD when the window is full: the front is the maximum
-        if right >= k-1 {
-            res = append(res, nums[deque[0]])
-        }
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // maxSlidingWindow solves LC 239. Time O(n), space O(k).
+> // The deque holds indexes. Each index enters one time and leaves
+> // one time.
+> func maxSlidingWindow(nums []int, k int) []int {
+>     // one answer for each full window
+>     res := make([]int, 0, len(nums)-k+1)
+>     // indexes: their values decrease from front to back
+>     deque := []int{}
+>     for right := 0; right < len(nums); right++ {
+>         // POP BACK: an older value that is not larger than
+>         // nums[right]
+>         // leaves the window first, so it cannot be a maximum again.
+>         for len(deque) > 0 && nums[deque[len(deque)-1]] <= nums[right] {
+>             deque = deque[:len(deque)-1]
+>         }
+>         deque = append(deque, right) // PUSH BACK the new index
+>         // POP FRONT: that index left the window
+>         if deque[0] <= right-k {
+>             deque = deque[1:]
+>         }
+>         // RECORD when the window is full: the front is the maximum
+>         if right >= k-1 {
+>             res = append(res, nums[deque[0]])
+>         }
+>     }
+>     return res
+> }
+> ```
 
 ---
 

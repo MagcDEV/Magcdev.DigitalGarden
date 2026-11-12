@@ -9,7 +9,7 @@ tags:
   - templates
   - backtracking
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 10: Backtracking
@@ -267,438 +267,527 @@ The moves are CHECK, PLACE, EXPLORE, then REMOVE. The DFS index is the position,
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 78. Subsets
 
 [LeetCode 78](https://leetcode.com/problems/subsets/) · Medium
 
-- **Pattern:** Backtracking with a start index
-- **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]]
-- **Complexity:** time O(n * 2^n), space O(n) for the path and the recursion, without the output
-- **Imports for a local file:** `slices`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking with a start index
+> - **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]]
 
-**Idea.** Build each subset one item at a time. Each call saves the current path, then adds one of the later items and goes deeper. The start index makes sure that an item only joins items that come before it.
+> [!tip]- Step 2: the idea
+> **Idea.** Build each subset one item at a time. Each call saves the current path, then adds one of the later items and goes deeper. The start index makes sure that an item only joins items that come before it.
+>
+> **Complexity.** Time O(n * 2^n), space O(n) for the path and the recursion, without the output.
+>
+> **Go lesson.** `append(res, path)` saves the slice header, not the items. All the saved subsets would share one backing array, so save `slices.Clone(path)`.
 
-**Go lesson.** `append(res, path)` saves the slice header, not the items. All the saved subsets would share one backing array, so save `slices.Clone(path)`.
-
-```go
-// subsets solves LC 78. Time O(n * 2^n), space O(n) without the output.
-// Each node of the recursion tree is one subset: the path from the root to
-// that node.
-func subsets(nums []int) [][]int {
-    res := [][]int{}
-    path := []int{} // the items chosen so far
-    var dfs func(start int)
-    dfs = func(start int) {
-        // SAVE a copy. The path changes after this line, and a saved slice
-        // shares its backing array with the path. Without the copy, the
-        // later
-        // appends write over the subsets that are already in res.
-        res = append(res, slices.Clone(path))
-        for i := start; i < len(nums); i++ {
-            path = append(path, nums[i]) // CHOOSE nums[i]
-            // EXPLORE with the items after i only
-            dfs(i + 1)
-            path = path[:len(path)-1] // UNDO: remove the last item
-        }
-    }
-    dfs(0)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`
+>
+> ```go
+> // subsets solves LC 78. Time O(n * 2^n), space O(n) without the
+> // output.
+> // Each node of the recursion tree is one subset: the path from the
+> // root to
+> // that node.
+> func subsets(nums []int) [][]int {
+>     res := [][]int{}
+>     path := []int{} // the items chosen so far
+>     var dfs func(start int)
+>     dfs = func(start int) {
+>         // SAVE a copy. The path changes after this line, and a
+>         // saved slice
+>         // shares its backing array with the path. Without the copy,
+>         // the
+>         // later
+>         // appends write over the subsets that are already in res.
+>         res = append(res, slices.Clone(path))
+>         for i := start; i < len(nums); i++ {
+>             path = append(path, nums[i]) // CHOOSE nums[i]
+>             // EXPLORE with the items after i only
+>             dfs(i + 1)
+>             path = path[:len(path)-1] // UNDO: remove the last item
+>         }
+>     }
+>     dfs(0)
+>     return res
+> }
+> ```
 
 ### 39. Combination Sum
 
 [LeetCode 39](https://leetcode.com/problems/combination-sum/) · Medium
 
-- **Pattern:** Backtracking with reuse
-- **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]]
-- **Complexity:** time O(n^(T/m)) for target T and smallest candidate m, space O(T/m) for the path and the recursion, without the output
-- **Imports for a local file:** `slices`, `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking with reuse
+> - **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]]
 
-**Idea.** Choose a candidate, subtract it from the target and go deeper. The next call starts at the same index, so the same candidate can repeat. It never goes back to an earlier index, so each combination appears one time.
+> [!tip]- Step 2: the idea
+> **Idea.** Choose a candidate, subtract it from the target and go deeper. The next call starts at the same index, so the same candidate can repeat. It never goes back to an earlier index, so each combination appears one time.
+>
+> **Complexity.** Time O(n^(T/m)) for target T and smallest candidate m, space O(T/m) for the path and the recursion, without the output.
+>
+> **Go lesson.** `sort.Ints` sorts a slice in place. After the sort, `break` stops the loop at the first candidate that is too large, because all the later ones are larger.
 
-**Go lesson.** `sort.Ints` sorts a slice in place. After the sort, `break` stops the loop at the first candidate that is too large, because all the later ones are larger.
-
-```go
-// combinationSum solves LC 39. Time O(n^(T/m)) for target T and smallest
-// candidate m.
-// The start index stays at i after a choice, so a candidate can repeat.
-func combinationSum(candidates []int, target int) [][]int {
-    sort.Ints(candidates) // sorted, so the loop can stop early
-    res := [][]int{}
-    path := []int{}
-    var dfs func(start, remain int)
-    dfs = func(start, remain int) {
-        if remain == 0 { // GOAL: the path adds up to the target
-            // SAVE a copy: the path changes later, and res must not share
-            // its memory.
-            res = append(res, slices.Clone(path))
-            return
-        }
-        for i := start; i < len(candidates); i++ {
-            if candidates[i] > remain {
-                // PRUNE: this candidate and all the later ones are too
-                // large
-                break
-            }
-            path = append(path, candidates[i]) // CHOOSE
-            // EXPLORE from i, not i+1: reuse is allowed
-            dfs(i, remain-candidates[i])
-            path = path[:len(path)-1] // UNDO
-        }
-    }
-    dfs(0, target)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`, `sort`
+>
+> ```go
+> // combinationSum solves LC 39. Time O(n^(T/m)) for target T and
+> // smallest
+> // candidate m.
+> // The start index stays at i after a choice, so a candidate can
+> // repeat.
+> func combinationSum(candidates []int, target int) [][]int {
+>     sort.Ints(candidates) // sorted, so the loop can stop early
+>     res := [][]int{}
+>     path := []int{}
+>     var dfs func(start, remain int)
+>     dfs = func(start, remain int) {
+>         if remain == 0 { // GOAL: the path adds up to the target
+>             // SAVE a copy: the path changes later, and res must not
+>             // share
+>             // its memory.
+>             res = append(res, slices.Clone(path))
+>             return
+>         }
+>         for i := start; i < len(candidates); i++ {
+>             if candidates[i] > remain {
+>                 // PRUNE: this candidate and all the later ones are
+>                 // too
+>                 // large
+>                 break
+>             }
+>             path = append(path, candidates[i]) // CHOOSE
+>             // EXPLORE from i, not i+1: reuse is allowed
+>             dfs(i, remain-candidates[i])
+>             path = path[:len(path)-1] // UNDO
+>         }
+>     }
+>     dfs(0, target)
+>     return res
+> }
+> ```
 
 ### 46. Permutations
 
 [LeetCode 46](https://leetcode.com/problems/permutations/) · Medium
 
-- **Pattern:** Backtracking with a used slice
-- **Template:** [[#Template C: Permutations with a used slice|C: Permutations with a used slice]]
-- **Complexity:** time O(n * n!), space O(n) for the path, the used slice and the recursion, without the output
-- **Imports for a local file:** `slices`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking with a used slice
+> - **Template:** [[#Template C: Permutations with a used slice|C: Permutations with a used slice]]
 
-**Idea.** A permutation uses each item one time, in any order. So each call can choose each item that is not in the path. A slice of booleans records the items that the path uses.
+> [!tip]- Step 2: the idea
+> **Idea.** A permutation uses each item one time, in any order. So each call can choose each item that is not in the path. A slice of booleans records the items that the path uses.
+>
+> **Complexity.** Time O(n * n!), space O(n) for the path, the used slice and the recursion, without the output.
+>
+> **Go lesson.** `make([]bool, n)` gives n values that are all `false`. Go sets new memory to the zero value, so no loop is necessary.
 
-**Go lesson.** `make([]bool, n)` gives n values that are all `false`. Go sets new memory to the zero value, so no loop is necessary.
-
-```go
-// permute solves LC 46. Time O(n * n!), space O(n) without the output.
-// The order matters, so each call looks at all the items, not only the
-// later ones.
-func permute(nums []int) [][]int {
-    res := [][]int{}
-    path := make([]int, 0, len(nums))
-    // used[i] is true when nums[i] is in the path
-    used := make([]bool, len(nums))
-    var dfs func()
-    dfs = func() {
-        if len(path) == len(nums) { // GOAL: each item is in the path
-            // SAVE a copy: all the permutations would share the memory of
-            // the path.
-            res = append(res, slices.Clone(path))
-            return
-        }
-        for i := 0; i < len(nums); i++ {
-            if used[i] {
-                continue // nums[i] is already in the path
-            }
-            used[i] = true // CHOOSE nums[i]
-            path = append(path, nums[i])
-            dfs()                     // EXPLORE the next position
-            path = path[:len(path)-1] // UNDO the two changes
-            used[i] = false
-        }
-    }
-    dfs()
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`
+>
+> ```go
+> // permute solves LC 46. Time O(n * n!), space O(n) without the
+> // output.
+> // The order matters, so each call looks at all the items, not only
+> // the
+> // later ones.
+> func permute(nums []int) [][]int {
+>     res := [][]int{}
+>     path := make([]int, 0, len(nums))
+>     // used[i] is true when nums[i] is in the path
+>     used := make([]bool, len(nums))
+>     var dfs func()
+>     dfs = func() {
+>         // GOAL: each item is in the path
+>         if len(path) == len(nums) {
+>             // SAVE a copy: all the permutations would share the
+>             // memory of
+>             // the path.
+>             res = append(res, slices.Clone(path))
+>             return
+>         }
+>         for i := 0; i < len(nums); i++ {
+>             if used[i] {
+>                 continue // nums[i] is already in the path
+>             }
+>             used[i] = true // CHOOSE nums[i]
+>             path = append(path, nums[i])
+>             dfs()                     // EXPLORE the next position
+>             path = path[:len(path)-1] // UNDO the two changes
+>             used[i] = false
+>         }
+>     }
+>     dfs()
+>     return res
+> }
+> ```
 
 ### 90. Subsets II
 
 [LeetCode 90](https://leetcode.com/problems/subsets-ii/) · Medium
 
-- **Pattern:** Backtracking, skip duplicates
-- **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]], [[#Template B: Skip duplicates after a sort|B: Skip duplicates after a sort]]
-- **Complexity:** time O(n * 2^n), space O(n) for the path and the recursion, without the output
-- **Imports for a local file:** `slices`, `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking, skip duplicates
+> - **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]], [[#Template B: Skip duplicates after a sort|B: Skip duplicates after a sort]]
 
-**Idea.** Sort the input, so equal values are neighbors. In one loop, each value can open a branch only one time. A second equal value in the same loop would build the same subsets again, so skip it.
+> [!tip]- Step 2: the idea
+> **Idea.** Sort the input, so equal values are neighbors. In one loop, each value can open a branch only one time. A second equal value in the same loop would build the same subsets again, so skip it.
+>
+> **Complexity.** Time O(n * 2^n), space O(n) for the path and the recursion, without the output.
+>
+> **Go lesson.** The test is `i > start`, not `i > 0`, so it skips an equal value only in the same loop. A deeper call can still take the next equal value.
 
-**Go lesson.** The test is `i > start`, not `i > 0`, so it skips an equal value only in the same loop. A deeper call can still take the next equal value.
-
-```go
-// subsetsWithDup solves LC 90. Time O(n * 2^n), space O(n) without the
-// output.
-// It is LC 78 plus two lines: a sort, and a skip of equal values in the
-// same loop.
-func subsetsWithDup(nums []int) [][]int {
-    sort.Ints(nums) // SORT: equal values become neighbors
-    res := [][]int{}
-    path := []int{}
-    var dfs func(start int)
-    dfs = func(start int) {
-        // SAVE a copy: the path changes later, and res must not share its
-        // memory.
-        res = append(res, slices.Clone(path))
-        for i := start; i < len(nums); i++ {
-            // SKIP: nums[i-1] already opened a branch in this loop. The
-            // same value
-            // here gives the same subsets. i > start keeps the first one of
-            // a group.
-            if i > start && nums[i] == nums[i-1] {
-                continue
-            }
-            path = append(path, nums[i]) // CHOOSE
-            dfs(i + 1)                   // EXPLORE with the items after i
-            path = path[:len(path)-1]    // UNDO
-        }
-    }
-    dfs(0)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`, `sort`
+>
+> ```go
+> // subsetsWithDup solves LC 90. Time O(n * 2^n), space O(n) without
+> // the
+> // output.
+> // It is LC 78 plus two lines: a sort, and a skip of equal values in
+> // the
+> // same loop.
+> func subsetsWithDup(nums []int) [][]int {
+>     sort.Ints(nums) // SORT: equal values become neighbors
+>     res := [][]int{}
+>     path := []int{}
+>     var dfs func(start int)
+>     dfs = func(start int) {
+>         // SAVE a copy: the path changes later, and res must not
+>         // share its
+>         // memory.
+>         res = append(res, slices.Clone(path))
+>         for i := start; i < len(nums); i++ {
+>             // SKIP: nums[i-1] already opened a branch in this loop.
+>             // The
+>             // same value
+>             // here gives the same subsets. i > start keeps the
+>             // first one of
+>             // a group.
+>             if i > start && nums[i] == nums[i-1] {
+>                 continue
+>             }
+>             path = append(path, nums[i]) // CHOOSE
+>             // EXPLORE with the items after i
+>             dfs(i + 1)
+>             path = path[:len(path)-1] // UNDO
+>         }
+>     }
+>     dfs(0)
+>     return res
+> }
+> ```
 
 ### 40. Combination Sum II
 
 [LeetCode 40](https://leetcode.com/problems/combination-sum-ii/) · Medium
 
-- **Pattern:** Backtracking, skip duplicates
-- **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]], [[#Template B: Skip duplicates after a sort|B: Skip duplicates after a sort]]
-- **Complexity:** time O(n * 2^n), space O(n) for the path and the recursion, without the output
-- **Imports for a local file:** `slices`, `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking, skip duplicates
+> - **Template:** [[#Template A: Choose, explore, undo with a start index|A: Choose, explore, undo with a start index]], [[#Template B: Skip duplicates after a sort|B: Skip duplicates after a sort]]
 
-**Idea.** A combination can use each candidate one time, so the next call starts at i+1. The input can have equal values. Sort it, then skip a value that is equal to the one before it in the same loop.
+> [!tip]- Step 2: the idea
+> **Idea.** A combination can use each candidate one time, so the next call starts at i+1. The input can have equal values. Sort it, then skip a value that is equal to the one before it in the same loop.
+>
+> **Complexity.** Time O(n * 2^n), space O(n) for the path and the recursion, without the output.
+>
+> **Go lesson.** `continue` goes to the next loop pass and `break` stops the loop. The skip of a duplicate uses `continue`, and the prune of a large value uses `break`.
 
-**Go lesson.** `continue` goes to the next loop pass and `break` stops the loop. The skip of a duplicate uses `continue`, and the prune of a large value uses `break`.
-
-```go
-// combinationSum2 solves LC 40. Time O(n * 2^n), space O(n) without the
-// output.
-// It differs from LC 39 in two places: no reuse (i+1), and a skip of equal
-// values.
-func combinationSum2(candidates []int, target int) [][]int {
-    // SORT: equal values become neighbors, and the loop can stop early
-    sort.Ints(candidates)
-    res := [][]int{}
-    path := []int{}
-    var dfs func(start, remain int)
-    dfs = func(start, remain int) {
-        if remain == 0 { // GOAL: the path adds up to the target
-            // SAVE a copy: the path changes later, and res must not share
-            // its memory.
-            res = append(res, slices.Clone(path))
-            return
-        }
-        for i := start; i < len(candidates); i++ {
-            if candidates[i] > remain {
-                // PRUNE: this value and all the later ones are too large
-                break
-            }
-            if i > start && candidates[i] == candidates[i-1] {
-                // SKIP: the same value already opened a branch in this loop
-                continue
-            }
-            path = append(path, candidates[i]) // CHOOSE
-            // EXPLORE from i+1: each item one time
-            dfs(i+1, remain-candidates[i])
-            path = path[:len(path)-1] // UNDO
-        }
-    }
-    dfs(0, target)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`, `sort`
+>
+> ```go
+> // combinationSum2 solves LC 40. Time O(n * 2^n), space O(n) without
+> // the
+> // output.
+> // It differs from LC 39 in two places: no reuse (i+1), and a skip
+> // of equal
+> // values.
+> func combinationSum2(candidates []int, target int) [][]int {
+>     // SORT: equal values become neighbors, and the loop can stop
+>     // early
+>     sort.Ints(candidates)
+>     res := [][]int{}
+>     path := []int{}
+>     var dfs func(start, remain int)
+>     dfs = func(start, remain int) {
+>         if remain == 0 { // GOAL: the path adds up to the target
+>             // SAVE a copy: the path changes later, and res must not
+>             // share
+>             // its memory.
+>             res = append(res, slices.Clone(path))
+>             return
+>         }
+>         for i := start; i < len(candidates); i++ {
+>             if candidates[i] > remain {
+>                 // PRUNE: this value and all the later ones are too
+>                 // large
+>                 break
+>             }
+>             if i > start && candidates[i] == candidates[i-1] {
+>                 // SKIP: the same value already opened a branch in
+>                 // this loop
+>                 continue
+>             }
+>             path = append(path, candidates[i]) // CHOOSE
+>             // EXPLORE from i+1: each item one time
+>             dfs(i+1, remain-candidates[i])
+>             path = path[:len(path)-1] // UNDO
+>         }
+>     }
+>     dfs(0, target)
+>     return res
+> }
+> ```
 
 ### 79. Word Search
 
 [LeetCode 79](https://leetcode.com/problems/word-search/) · Medium
 
-- **Pattern:** Grid backtracking, mark and unmark
-- **Template:** [[#Template D: Grid path with mark and unmark|D: Grid path with mark and unmark]]
-- **Complexity:** time O(R * C * 4 * 3^(L-1)) for an R x C board and a word of L letters, space O(L) for the recursion
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Grid backtracking, mark and unmark
+> - **Template:** [[#Template D: Grid path with mark and unmark|D: Grid path with mark and unmark]]
 
-**Idea.** Start a DFS at each cell. Each step must match the next letter of the word. Mark the cell while it is in the path, so the path cannot use it again, and restore it when the DFS comes back.
+> [!tip]- Step 2: the idea
+> **Idea.** Start a DFS at each cell. Each step must match the next letter of the word. Mark the cell while it is in the path, so the path cannot use it again, and restore it when the DFS comes back.
+>
+> **Complexity.** Time O(R * C * 4 * 3^(L-1)) for an R x C board and a word of L letters, space O(L) for the recursion.
+>
+> **Go lesson.** The logical OR operator stops at the first `true` value. So the chain of four DFS calls stops when one direction finds the word.
 
-**Go lesson.** The logical OR operator stops at the first `true` value. So the chain of four DFS calls stops when one direction finds the word.
-
-```go
-// exist solves LC 79. Time O(R * C * 4 * 3^(L-1)), space O(L) for the
-// recursion.
-// The board itself records the cells of the current path, so no visited set
-// is necessary.
-func exist(board [][]byte, word string) bool {
-    rows, cols := len(board), len(board[0])
-    var dfs func(r, c, k int) bool // k is the index of the letter to match
-    dfs = func(r, c, k int) bool {
-        if k == len(word) {
-            return true // GOAL: all the letters matched
-        }
-        if r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] != word[k] {
-            // out of the board, a different letter, or a marked cell
-            return false
-        }
-        board[r][c] = '#' // MARK: '#' is not a letter, so it never matches
-        // EXPLORE the four neighbors. The || operator stops at the first
-        // true.
-        found := dfs(r+1, c, k+1) || dfs(r-1, c, k+1) ||
-            dfs(r, c+1, k+1) || dfs(r, c-1, k+1)
-        // UNMARK: put the letter back for the other paths
-        board[r][c] = word[k]
-        return found
-    }
-    for r := 0; r < rows; r++ {
-        for c := 0; c < cols; c++ {
-            if dfs(r, c, 0) { // each cell can be the first letter
-                return true
-            }
-        }
-    }
-    return false
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // exist solves LC 79. Time O(R * C * 4 * 3^(L-1)), space O(L) for
+> // the
+> // recursion.
+> // The board itself records the cells of the current path, so no
+> // visited set
+> // is necessary.
+> func exist(board [][]byte, word string) bool {
+>     rows, cols := len(board), len(board[0])
+>     // k is the index of the letter to match
+>     var dfs func(r, c, k int) bool
+>     dfs = func(r, c, k int) bool {
+>         if k == len(word) {
+>             return true // GOAL: all the letters matched
+>         }
+>         if r < 0 || r >= rows || c < 0 || c >= cols || board[r][c] != word[k] {
+>             // out of the board, a different letter, or a marked
+>             // cell
+>             return false
+>         }
+>         // MARK: '#' is not a letter, so it never matches
+>         board[r][c] = '#'
+>         // EXPLORE the four neighbors. The || operator stops at the
+>         // first
+>         // true.
+>         found := dfs(r+1, c, k+1) || dfs(r-1, c, k+1) ||
+>             dfs(r, c+1, k+1) || dfs(r, c-1, k+1)
+>         // UNMARK: put the letter back for the other paths
+>         board[r][c] = word[k]
+>         return found
+>     }
+>     for r := 0; r < rows; r++ {
+>         for c := 0; c < cols; c++ {
+>             if dfs(r, c, 0) { // each cell can be the first letter
+>                 return true
+>             }
+>         }
+>     }
+>     return false
+> }
+> ```
 
 ### 131. Palindrome Partitioning
 
 [LeetCode 131](https://leetcode.com/problems/palindrome-partitioning/) · Medium
 
-- **Pattern:** Backtracking, cut a string
-- **Template:** [[#Template E: Cut a string into parts|E: Cut a string into parts]]
-- **Complexity:** time O(n * 2^n), space O(n) for the path and the recursion, without the output
-- **Imports for a local file:** `slices`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking, cut a string
+> - **Template:** [[#Template E: Cut a string into parts|E: Cut a string into parts]]
 
-**Idea.** Choose where the first part ends. If that part is a palindrome, keep it and cut the rest of the string in the same way. When the start index is at the end of the string, the path is one full answer.
+> [!tip]- Step 2: the idea
+> **Idea.** Choose where the first part ends. If that part is a palindrome, keep it and cut the rest of the string in the same way. When the start index is at the end of the string, the path is one full answer.
+>
+> **Complexity.** Time O(n * 2^n), space O(n) for the path and the recursion, without the output.
+>
+> **Go lesson.** `s[start:end]` is a substring that shares the memory of `s`, so the slice operation is O(1). The end index is exclusive, so `end` goes up to `len(s)`.
 
-**Go lesson.** `s[start:end]` is a substring that shares the memory of `s`, so the slice operation is O(1). The end index is exclusive, so `end` goes up to `len(s)`.
-
-```go
-// partition solves LC 131. Time O(n * 2^n), space O(n) without the output.
-// Each call chooses the end of the next part. The part must be a
-// palindrome.
-func partition(s string) [][]string {
-    res := [][]string{}
-    path := []string{} // the parts chosen so far
-    var dfs func(start int)
-    dfs = func(start int) {
-        if start == len(s) { // GOAL: the parts cover the full string
-            // SAVE a copy: the path changes later, and res must not share
-            // its memory.
-            res = append(res, slices.Clone(path))
-            return
-        }
-        // the part is s[start:end]
-        for end := start + 1; end <= len(s); end++ {
-            if !isPalindrome(s[start:end]) {
-                continue // CHECK: only a valid part can open a branch
-            }
-            path = append(path, s[start:end]) // CHOOSE this part
-            // EXPLORE: cut the rest, from end
-            dfs(end)
-            path = path[:len(path)-1] // UNDO
-        }
-    }
-    dfs(0)
-    return res
-}
-
-// isPalindrome compares the two ends and moves to the middle.
-func isPalindrome(s string) bool {
-    for l, r := 0, len(s)-1; l < r; l, r = l+1, r-1 {
-        if s[l] != s[r] {
-            return false
-        }
-    }
-    return true
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `slices`
+>
+> ```go
+> // partition solves LC 131. Time O(n * 2^n), space O(n) without the
+> // output.
+> // Each call chooses the end of the next part. The part must be a
+> // palindrome.
+> func partition(s string) [][]string {
+>     res := [][]string{}
+>     path := []string{} // the parts chosen so far
+>     var dfs func(start int)
+>     dfs = func(start int) {
+>         // GOAL: the parts cover the full string
+>         if start == len(s) {
+>             // SAVE a copy: the path changes later, and res must not
+>             // share
+>             // its memory.
+>             res = append(res, slices.Clone(path))
+>             return
+>         }
+>         // the part is s[start:end]
+>         for end := start + 1; end <= len(s); end++ {
+>             if !isPalindrome(s[start:end]) {
+>                 // CHECK: only a valid part can open a branch
+>                 continue
+>             }
+>             path = append(path, s[start:end]) // CHOOSE this part
+>             // EXPLORE: cut the rest, from end
+>             dfs(end)
+>             path = path[:len(path)-1] // UNDO
+>         }
+>     }
+>     dfs(0)
+>     return res
+> }
+>
+> // isPalindrome compares the two ends and moves to the middle.
+> func isPalindrome(s string) bool {
+>     for l, r := 0, len(s)-1; l < r; l, r = l+1, r-1 {
+>         if s[l] != s[r] {
+>             return false
+>         }
+>     }
+>     return true
+> }
+> ```
 
 ### 17. Letter Combinations of a Phone Number
 
 [LeetCode 17](https://leetcode.com/problems/letter-combinations-of-a-phone-number/) · Medium
 
-- **Pattern:** Backtracking, one choice for each position
-- **Template:** [[#Template F: One choice for each position, with sets|F: One choice for each position, with sets]]
-- **Complexity:** time O(n * 4^n) for n digits, space O(n) for the path and the recursion, without the output
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking, one choice for each position
+> - **Template:** [[#Template F: One choice for each position, with sets|F: One choice for each position, with sets]]
 
-**Idea.** Each digit is one position, and its letters are the choices for that position. Choose a letter, go to the next digit, then undo. No rule connects two positions, so this problem needs no check before a choice.
+> [!tip]- Step 2: the idea
+> **Idea.** Each digit is one position, and its letters are the choices for that position. Choose a letter, go to the next digit, then undo. No rule connects two positions, so this problem needs no check before a choice.
+>
+> **Complexity.** Time O(n * 4^n) for n digits, space O(n) for the path and the recursion, without the output.
+>
+> **Go lesson.** `string(path)` copies the bytes into a new string. So a save of `string(path)` is safe, and it does not need `slices.Clone`.
 
-**Go lesson.** `string(path)` copies the bytes into a new string. So a save of `string(path)` is safe, and it does not need `slices.Clone`.
-
-```go
-// letterCombinations solves LC 17. Time O(n * 4^n) for n digits.
-// Position pos of the answer comes from digit pos. A digit has 3 or 4
-// letters.
-func letterCombinations(digits string) []string {
-    if digits == "" {
-        return []string{} // LeetCode wants an empty list here, not [""]
-    }
-    // The index is the digit. Digits 0 and 1 have no letters.
-    letters := []string{"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"}
-    res := []string{}
-    path := make([]byte, 0, len(digits)) // the letters chosen so far
-    var dfs func(pos int)
-    dfs = func(pos int) {
-        if pos == len(digits) { // GOAL: one letter for each digit
-            // SAVE: string(path) makes a copy of the bytes
-            res = append(res, string(path))
-            return
-        }
-        options := letters[digits[pos]-'0'] // '2' - '0' = 2
-        for i := 0; i < len(options); i++ {
-            // CHOOSE a letter for this position
-            path = append(path, options[i])
-            dfs(pos + 1)              // EXPLORE the next digit
-            path = path[:len(path)-1] // UNDO
-        }
-    }
-    dfs(0)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // letterCombinations solves LC 17. Time O(n * 4^n) for n digits.
+> // Position pos of the answer comes from digit pos. A digit has 3 or
+> // 4
+> // letters.
+> func letterCombinations(digits string) []string {
+>     if digits == "" {
+>         // LeetCode wants an empty list here, not [""]
+>         return []string{}
+>     }
+>     // The index is the digit. Digits 0 and 1 have no letters.
+>     letters := []string{"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"}
+>     res := []string{}
+>     // the letters chosen so far
+>     path := make([]byte, 0, len(digits))
+>     var dfs func(pos int)
+>     dfs = func(pos int) {
+>         if pos == len(digits) { // GOAL: one letter for each digit
+>             // SAVE: string(path) makes a copy of the bytes
+>             res = append(res, string(path))
+>             return
+>         }
+>         options := letters[digits[pos]-'0'] // '2' - '0' = 2
+>         for i := 0; i < len(options); i++ {
+>             // CHOOSE a letter for this position
+>             path = append(path, options[i])
+>             dfs(pos + 1)              // EXPLORE the next digit
+>             path = path[:len(path)-1] // UNDO
+>         }
+>     }
+>     dfs(0)
+>     return res
+> }
+> ```
 
 ### 51. N-Queens
 
 [LeetCode 51](https://leetcode.com/problems/n-queens/) · Hard
 
-- **Pattern:** Backtracking with constraint sets
-- **Template:** [[#Template F: One choice for each position, with sets|F: One choice for each position, with sets]]
-- **Complexity:** time O(n!), space O(n²) for the board, without the output
-- **Imports for a local file:** `strings`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Backtracking with constraint sets
+> - **Template:** [[#Template F: One choice for each position, with sets|F: One choice for each position, with sets]]
 
-**Idea.** Put one queen in each row, from the top row down. A column is free when no queen is in that column or on its two diagonals. Three sets answer that question in O(1): the column c, the diagonal r+c and the diagonal r-c.
+> [!tip]- Step 2: the idea
+> **Idea.** Put one queen in each row, from the top row down. A column is free when no queen is in that column or on its two diagonals. Three sets answer that question in O(1): the column c, the diagonal r+c and the diagonal r-c.
+>
+> **Complexity.** Time O(n!), space O(n²) for the board, without the output.
+>
+> **Go lesson.** A string cannot change, so the board is a `[][]byte`. `string(board[r])` copies one row into a new string when a solution is complete.
 
-**Go lesson.** A string cannot change, so the board is a `[][]byte`. `string(board[r])` copies one row into a new string when a solution is complete.
-
-```go
-// solveNQueens solves LC 51. Time O(n!), space O(n²) without the output.
-// Each row gets one queen. Three sets tell in O(1) if a cell is attacked.
-func solveNQueens(n int) [][]string {
-    board := make([][]byte, n)
-    for r := 0; r < n; r++ {
-        // one row of n dots, as bytes
-        board[r] = []byte(strings.Repeat(".", n))
-    }
-    cols := make([]bool, n) // cols[c]: a queen is in column c
-    // diag[r+c]: r+c is the same for all the cells of one "/" line
-    diag := make([]bool, 2*n)
-    // anti[r-c+n]: r-c is the same for one "\" line; +n keeps it >= 0
-    anti := make([]bool, 2*n)
-    res := [][]string{}
-
-    var dfs func(r int)
-    dfs = func(r int) {
-        if r == n { // GOAL: each row has a queen
-            rows := make([]string, n)
-            for i := 0; i < n; i++ {
-                // SAVE: string() copies the bytes of the row
-                rows[i] = string(board[i])
-            }
-            res = append(res, rows)
-            return
-        }
-        for c := 0; c < n; c++ {
-            if cols[c] || diag[r+c] || anti[r-c+n] {
-                continue // CHECK: a queen attacks this cell
-            }
-            // PLACE the queen
-            cols[c], diag[r+c], anti[r-c+n] = true, true, true
-            board[r][c] = 'Q'
-            dfs(r + 1) // EXPLORE the next row
-            board[r][c] = '.'
-            // REMOVE the queen
-            cols[c], diag[r+c], anti[r-c+n] = false, false, false
-        }
-    }
-    dfs(0)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `strings`
+>
+> ```go
+> // solveNQueens solves LC 51. Time O(n!), space O(n²) without the
+> // output.
+> // Each row gets one queen. Three sets tell in O(1) if a cell is
+> // attacked.
+> func solveNQueens(n int) [][]string {
+>     board := make([][]byte, n)
+>     for r := 0; r < n; r++ {
+>         // one row of n dots, as bytes
+>         board[r] = []byte(strings.Repeat(".", n))
+>     }
+>     cols := make([]bool, n) // cols[c]: a queen is in column c
+>     // diag[r+c]: r+c is the same for all the cells of one "/" line
+>     diag := make([]bool, 2*n)
+>     // anti[r-c+n]: r-c is the same for one "\" line; +n keeps it >=
+>     // 0
+>     anti := make([]bool, 2*n)
+>     res := [][]string{}
+>
+>     var dfs func(r int)
+>     dfs = func(r int) {
+>         if r == n { // GOAL: each row has a queen
+>             rows := make([]string, n)
+>             for i := 0; i < n; i++ {
+>                 // SAVE: string() copies the bytes of the row
+>                 rows[i] = string(board[i])
+>             }
+>             res = append(res, rows)
+>             return
+>         }
+>         for c := 0; c < n; c++ {
+>             if cols[c] || diag[r+c] || anti[r-c+n] {
+>                 continue // CHECK: a queen attacks this cell
+>             }
+>             // PLACE the queen
+>             cols[c], diag[r+c], anti[r-c+n] = true, true, true
+>             board[r][c] = 'Q'
+>             dfs(r + 1) // EXPLORE the next row
+>             board[r][c] = '.'
+>             // REMOVE the queen
+>             cols[c], diag[r+c], anti[r-c+n] = false, false, false
+>         }
+>     }
+>     dfs(0)
+>     return res
+> }
+> ```
 
 ---
 

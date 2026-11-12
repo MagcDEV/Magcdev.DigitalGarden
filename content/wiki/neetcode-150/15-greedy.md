@@ -9,7 +9,7 @@ tags:
   - templates
   - greedy
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 15: Greedy
@@ -269,301 +269,363 @@ The moves are WIDEN, FAIL, then CLAMP. Keep the smallest and the largest possibl
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 53. Maximum Subarray
 
 [LeetCode 53](https://leetcode.com/problems/maximum-subarray/) · Medium
 
-- **Pattern:** Kadane's running sum
-- **Template:** [[#Template A: Running sum with a reset|A: Running sum with a reset]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Kadane's running sum
+> - **Template:** [[#Template A: Running sum with a reset|A: Running sum with a reset]]
 
-**Idea.** Keep the best sum of a subarray that ends at the current item. If the running sum is negative, it cannot help the next item, so start again from zero.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep the best sum of a subarray that ends at the current item. If the running sum is negative, it cannot help the next item, so start again from zero.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** The built-in `max` (Go 1.21) replaces the `if` that updates the best value.
 
-**Go lesson.** The built-in `max` (Go 1.21) replaces the `if` that updates the best value.
-
-```go
-// maxSubArray solves LC 53. Time O(n), space O(1).
-// This is Kadane's algorithm: a negative running sum never helps, so drop
-// it.
-func maxSubArray(nums []int) int {
-    // not 0: when all the values are negative, the answer is negative
-    best := nums[0]
-    // the best sum of a subarray that ends at the previous item
-    sum := 0
-    for _, x := range nums {
-        // RESET: a negative prefix makes each later sum smaller
-        if sum < 0 {
-            sum = 0
-        }
-        sum += x              // ADD: the subarray now ends at x
-        best = max(best, sum) // KEEP the best sum
-    }
-    return best
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // maxSubArray solves LC 53. Time O(n), space O(1).
+> // This is Kadane's algorithm: a negative running sum never helps,
+> // so drop
+> // it.
+> func maxSubArray(nums []int) int {
+>     // not 0: when all the values are negative, the answer is
+>     // negative
+>     best := nums[0]
+>     // the best sum of a subarray that ends at the previous item
+>     sum := 0
+>     for _, x := range nums {
+>         // RESET: a negative prefix makes each later sum smaller
+>         if sum < 0 {
+>             sum = 0
+>         }
+>         sum += x              // ADD: the subarray now ends at x
+>         best = max(best, sum) // KEEP the best sum
+>     }
+>     return best
+> }
+> ```
 
 ### 55. Jump Game
 
 [LeetCode 55](https://leetcode.com/problems/jump-game/) · Medium
 
-- **Pattern:** Greedy farthest reach
-- **Template:** [[#Template B: Farthest reach|B: Farthest reach]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Greedy farthest reach
+> - **Template:** [[#Template B: Farthest reach|B: Farthest reach]]
 
-**Idea.** Keep the farthest index that you can reach. If the loop arrives at an index after that reach, the end is not reachable.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep the farthest index that you can reach. If the loop arrives at an index after that reach, the end is not reachable.
+>
+> **Complexity.** Time O(n), space O(1).
 
-```go
-// canJump solves LC 55. Time O(n), space O(1).
-// You do not need the path. You only need the farthest index that some path
-// reaches.
-func canJump(nums []int) bool {
-    farthest := 0 // the farthest index that is reachable so far
-    for i := 0; i < len(nums); i++ {
-        // CHECK: no jump reaches index i, so the end is out of reach
-        if i > farthest {
-            return false
-        }
-        // EXTEND: the best jump from index i
-        farthest = max(farthest, i+nums[i])
-    }
-    return true // the loop reached each index, the last one included
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // canJump solves LC 55. Time O(n), space O(1).
+> // You do not need the path. You only need the farthest index that
+> // some path
+> // reaches.
+> func canJump(nums []int) bool {
+>     farthest := 0 // the farthest index that is reachable so far
+>     for i := 0; i < len(nums); i++ {
+>         // CHECK: no jump reaches index i, so the end is out of
+>         // reach
+>         if i > farthest {
+>             return false
+>         }
+>         // EXTEND: the best jump from index i
+>         farthest = max(farthest, i+nums[i])
+>     }
+>     // the loop reached each index, the last one included
+>     return true
+> }
+> ```
 
 ### 45. Jump Game II
 
 [LeetCode 45](https://leetcode.com/problems/jump-game-ii/) · Medium
 
-- **Pattern:** Greedy levels, as in BFS
-- **Template:** [[#Template B: Farthest reach|B: Farthest reach]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Greedy levels, as in BFS
+> - **Template:** [[#Template B: Farthest reach|B: Farthest reach]]
 
-**Idea.** The indexes that k jumps can reach make one level, as in BFS. Scan a level, keep the farthest index of the next level, and count one jump at the end of each level.
+> [!tip]- Step 2: the idea
+> **Idea.** The indexes that k jumps can reach make one level, as in BFS. Scan a level, keep the farthest index of the next level, and count one jump at the end of each level.
+>
+> **Complexity.** Time O(n), space O(1).
 
-```go
-// jump solves LC 45. Time O(n), space O(1).
-// The indexes up to end are the level that the current number of jumps
-// reaches.
-// The problem guarantees that the last index is reachable.
-func jump(nums []int) int {
-    jumps := 0
-    end := 0      // the last index of the current level
-    farthest := 0 // the farthest index that one more jump reaches
-    // Stop before the last index: a jump from the last index is not
-    // necessary.
-    for i := 0; i < len(nums)-1; i++ {
-        farthest = max(farthest, i+nums[i]) // EXTEND the next level
-        // LEVEL DONE: all its indexes are scanned
-        if i == end {
-            jumps++        // one more jump is necessary
-            end = farthest // the next level ends here
-        }
-    }
-    return jumps
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // jump solves LC 45. Time O(n), space O(1).
+> // The indexes up to end are the level that the current number of
+> // jumps
+> // reaches.
+> // The problem guarantees that the last index is reachable.
+> func jump(nums []int) int {
+>     jumps := 0
+>     end := 0      // the last index of the current level
+>     farthest := 0 // the farthest index that one more jump reaches
+>     // Stop before the last index: a jump from the last index is not
+>     // necessary.
+>     for i := 0; i < len(nums)-1; i++ {
+>         farthest = max(farthest, i+nums[i]) // EXTEND the next level
+>         // LEVEL DONE: all its indexes are scanned
+>         if i == end {
+>             jumps++        // one more jump is necessary
+>             end = farthest // the next level ends here
+>         }
+>     }
+>     return jumps
+> }
+> ```
 
 ### 134. Gas Station
 
 [LeetCode 134](https://leetcode.com/problems/gas-station/) · Medium
 
-- **Pattern:** Greedy running total with a reset
-- **Template:** [[#Template A: Running sum with a reset|A: Running sum with a reset]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Greedy running total with a reset
+> - **Template:** [[#Template A: Running sum with a reset|A: Running sum with a reset]]
 
-**Idea.** If the total gas is less than the total cost, there is no answer. If not, an answer exists. When the tank goes below zero at station i, no station from the start to i can be the start, so try i+1.
+> [!tip]- Step 2: the idea
+> **Idea.** If the total gas is less than the total cost, there is no answer. If not, an answer exists. When the tank goes below zero at station i, no station from the start to i can be the start, so try i+1.
+>
+> **Complexity.** Time O(n), space O(1).
 
-```go
-// canCompleteCircuit solves LC 134. Time O(n), space O(1).
-// One pass keeps two sums: the total for the full circle and the tank since
-// the start.
-func canCompleteCircuit(gas []int, cost []int) int {
-    total := 0 // gas minus cost for the full circle
-    tank := 0  // gas minus cost since the candidate start
-    start := 0 // the candidate start
-    for i := 0; i < len(gas); i++ {
-        // what station i adds after the drive to i+1
-        gain := gas[i] - cost[i]
-        total += gain
-        tank += gain  // ADD
-        if tank < 0 { // RESET: the car stops between i and i+1
-            // A start between the old start and i arrives at i with less
-            // gas,
-            // so it also fails. The next candidate is i+1.
-            start = i + 1
-            tank = 0
-        }
-    }
-    if total < 0 { // the circle costs more gas than the stations give
-        return -1
-    }
-    return start // total >= 0, so the last candidate completes the circle
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // canCompleteCircuit solves LC 134. Time O(n), space O(1).
+> // One pass keeps two sums: the total for the full circle and the
+> // tank since
+> // the start.
+> func canCompleteCircuit(gas []int, cost []int) int {
+>     total := 0 // gas minus cost for the full circle
+>     tank := 0  // gas minus cost since the candidate start
+>     start := 0 // the candidate start
+>     for i := 0; i < len(gas); i++ {
+>         // what station i adds after the drive to i+1
+>         gain := gas[i] - cost[i]
+>         total += gain
+>         tank += gain  // ADD
+>         if tank < 0 { // RESET: the car stops between i and i+1
+>             // A start between the old start and i arrives at i with
+>             // less
+>             // gas,
+>             // so it also fails. The next candidate is i+1.
+>             start = i + 1
+>             tank = 0
+>         }
+>     }
+>     // the circle costs more gas than the stations give
+>     if total < 0 {
+>         return -1
+>     }
+>     // total >= 0, so the last candidate completes the circle
+>     return start
+> }
+> ```
 
 ### 846. Hand of Straights
 
 [LeetCode 846](https://leetcode.com/problems/hand-of-straights/) · Medium
 
-- **Pattern:** Sort, then take the smallest first
-- **Template:** [[#Template C: Sort, then take the smallest first|C: Sort, then take the smallest first]]
-- **Complexity:** time O(n log n), space O(n)
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort, then take the smallest first
+> - **Template:** [[#Template C: Sort, then take the smallest first|C: Sort, then take the smallest first]]
 
-**Idea.** The smallest card that is left can only be the first card of a group. So sort the cards, and for each card that is left, take the full run that starts there.
+> [!tip]- Step 2: the idea
+> **Idea.** The smallest card that is left can only be the first card of a group. So sort the cards, and for each card that is left, take the full run that starts there.
+>
+> **Complexity.** Time O(n log n), space O(n).
+>
+> **Go lesson.** `sort.Ints` sorts the slice in place. A count map reads 0 for a missing key, so `count[v] == 0` also means "not there".
 
-**Go lesson.** `sort.Ints` sorts the slice in place. A count map reads 0 for a missing key, so `count[v] == 0` also means "not there".
-
-```go
-// isNStraightHand solves LC 846. Time O(n log n), space O(n).
-// A min-heap of the distinct values also works. The sort is shorter to
-// write.
-func isNStraightHand(hand []int, groupSize int) bool {
-    if len(hand)%groupSize != 0 { // the groups cannot use all the cards
-        return false
-    }
-    // COUNT: card value -> copies that are left
-    count := make(map[int]int, len(hand))
-    for _, card := range hand {
-        count[card]++
-    }
-    // SORT: the loop sees the smallest card that is left first
-    sort.Ints(hand)
-
-    for _, card := range hand {
-        // earlier groups used all the copies of this card
-        if count[card] == 0 {
-            continue
-        }
-        // TAKE the run card, card+1, ... card+groupSize-1.
-        // The smallest card has no smaller neighbor, so it must start a
-        // group.
-        for v := card; v < card+groupSize; v++ {
-            if count[v] == 0 { // the run has a gap
-                return false
-            }
-            count[v]--
-        }
-    }
-    return true
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // isNStraightHand solves LC 846. Time O(n log n), space O(n).
+> // A min-heap of the distinct values also works. The sort is shorter
+> // to
+> // write.
+> func isNStraightHand(hand []int, groupSize int) bool {
+>     // the groups cannot use all the cards
+>     if len(hand)%groupSize != 0 {
+>         return false
+>     }
+>     // COUNT: card value -> copies that are left
+>     count := make(map[int]int, len(hand))
+>     for _, card := range hand {
+>         count[card]++
+>     }
+>     // SORT: the loop sees the smallest card that is left first
+>     sort.Ints(hand)
+>
+>     for _, card := range hand {
+>         // earlier groups used all the copies of this card
+>         if count[card] == 0 {
+>             continue
+>         }
+>         // TAKE the run card, card+1, ... card+groupSize-1.
+>         // The smallest card has no smaller neighbor, so it must
+>         // start a
+>         // group.
+>         for v := card; v < card+groupSize; v++ {
+>             if count[v] == 0 { // the run has a gap
+>                 return false
+>             }
+>             count[v]--
+>         }
+>     }
+>     return true
+> }
+> ```
 
 ### 1899. Merge Triplets to Form Target Triplet
 
 [LeetCode 1899](https://leetcode.com/problems/merge-triplets-to-form-target-triplet/) · Medium
 
-- **Pattern:** Greedy filter, then combine
-- **Template:** [[#Template D: Filter, then combine|D: Filter, then combine]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Greedy filter, then combine
+> - **Template:** [[#Template D: Filter, then combine|D: Filter, then combine]]
 
-**Idea.** A merge takes the maximum, so a value never goes down. Drop each triplet that has a value above the target. Then the target is possible when the other triplets give each of its three values.
+> [!tip]- Step 2: the idea
+> **Idea.** A merge takes the maximum, so a value never goes down. Drop each triplet that has a value above the target. Then the target is possible when the other triplets give each of its three values.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `[3]bool` is an array, not a slice. It has a fixed size, starts as three `false` values, and needs no `make`.
 
-**Go lesson.** `[3]bool` is an array, not a slice. It has a fixed size, starts as three `false` values, and needs no `make`.
-
-```go
-// mergeTriplets solves LC 1899. Time O(n), space O(1).
-// The triplets that pass the filter are all safe to merge together.
-func mergeTriplets(triplets [][]int, target []int) bool {
-    // found[k]: a safe triplet has the value target[k] at position k
-    var found [3]bool
-    for _, t := range triplets {
-        // FILTER: max never makes a value smaller. A triplet with a value
-        // above the target puts the result above the target for good.
-        if t[0] > target[0] || t[1] > target[1] || t[2] > target[2] {
-            continue
-        }
-        // COMBINE: this triplet is safe. Record the positions where it is
-        // equal.
-        for k := 0; k < 3; k++ {
-            if t[k] == target[k] {
-                found[k] = true
-            }
-        }
-    }
-    // CHECK: each position has a source
-    return found[0] && found[1] && found[2]
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // mergeTriplets solves LC 1899. Time O(n), space O(1).
+> // The triplets that pass the filter are all safe to merge together.
+> func mergeTriplets(triplets [][]int, target []int) bool {
+>     // found[k]: a safe triplet has the value target[k] at position
+>     // k
+>     var found [3]bool
+>     for _, t := range triplets {
+>         // FILTER: max never makes a value smaller. A triplet with a
+>         // value
+>         // above the target puts the result above the target for
+>         // good.
+>         if t[0] > target[0] || t[1] > target[1] || t[2] > target[2] {
+>             continue
+>         }
+>         // COMBINE: this triplet is safe. Record the positions where
+>         // it is
+>         // equal.
+>         for k := 0; k < 3; k++ {
+>             if t[k] == target[k] {
+>                 found[k] = true
+>             }
+>         }
+>     }
+>     // CHECK: each position has a source
+>     return found[0] && found[1] && found[2]
+> }
+> ```
 
 ### 763. Partition Labels
 
 [LeetCode 763](https://leetcode.com/problems/partition-labels/) · Medium
 
-- **Pattern:** Last index, then extend the end
-- **Template:** [[#Template E: Last index, then extend the end|E: Last index, then extend the end]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Last index, then extend the end
+> - **Template:** [[#Template E: Last index, then extend the end|E: Last index, then extend the end]]
 
-**Idea.** A part must contain the last occurrence of each letter in it. Record the last index of each letter. Then scan and move the end of the part to the farthest last index. Cut when the scan reaches the end.
+> [!tip]- Step 2: the idea
+> **Idea.** A part must contain the last occurrence of each letter in it. Record the last index of each letter. Then scan and move the end of the part to the farthest last index. Cut when the scan reaches the end.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** `s[i]` is a byte, and `s[i]-'a'` is an index from 0 to 25. A `[26]int` array replaces a map for lower-case letters.
 
-**Go lesson.** `s[i]` is a byte, and `s[i]-'a'` is an index from 0 to 25. A `[26]int` array replaces a map for lower-case letters.
-
-```go
-// partitionLabels solves LC 763. Time O(n), space O(1) without the result.
-// To cut as early as possible gives the largest number of parts.
-func partitionLabels(s string) []int {
-    var last [26]int // LAST INDEX: the last position of each letter
-    for i := 0; i < len(s); i++ {
-        last[s[i]-'a'] = i // a later position overwrites an earlier one
-    }
-
-    var sizes []int    // a nil slice: append makes the memory
-    start, end := 0, 0 // the current part is s[start..end]
-    for i := 0; i < len(s); i++ {
-        // EXTEND: the part must include this letter's last index
-        end = max(end, last[s[i]-'a'])
-        // CUT: no letter of the part appears after i
-        if i == end {
-            sizes = append(sizes, end-start+1)
-            start = i + 1 // the next part starts after the cut
-        }
-    }
-    return sizes
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // partitionLabels solves LC 763. Time O(n), space O(1) without the
+> // result.
+> // To cut as early as possible gives the largest number of parts.
+> func partitionLabels(s string) []int {
+>     var last [26]int // LAST INDEX: the last position of each letter
+>     for i := 0; i < len(s); i++ {
+>         // a later position overwrites an earlier one
+>         last[s[i]-'a'] = i
+>     }
+>
+>     var sizes []int    // a nil slice: append makes the memory
+>     start, end := 0, 0 // the current part is s[start..end]
+>     for i := 0; i < len(s); i++ {
+>         // EXTEND: the part must include this letter's last index
+>         end = max(end, last[s[i]-'a'])
+>         // CUT: no letter of the part appears after i
+>         if i == end {
+>             sizes = append(sizes, end-start+1)
+>             start = i + 1 // the next part starts after the cut
+>         }
+>     }
+>     return sizes
+> }
+> ```
 
 ### 678. Valid Parenthesis String
 
 [LeetCode 678](https://leetcode.com/problems/valid-parenthesis-string/) · Medium
 
-- **Pattern:** Greedy range of open counts
-- **Template:** [[#Template F: Range of possible counts|F: Range of possible counts]]
-- **Complexity:** time O(n), space O(1)
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Greedy range of open counts
+> - **Template:** [[#Template F: Range of possible counts|F: Range of possible counts]]
 
-**Idea.** A star gives three choices, so the number of open brackets is a range, not one number. Keep the smallest and the largest possible count. The string is valid when the largest never goes below zero and the smallest can end at zero.
+> [!tip]- Step 2: the idea
+> **Idea.** A star gives three choices, so the number of open brackets is a range, not one number. Keep the smallest and the largest possible count. The string is valid when the largest never goes below zero and the smallest can end at zero.
+>
+> **Complexity.** Time O(n), space O(1).
+>
+> **Go lesson.** A `switch` on a byte needs no `break`. Each `case` stops by itself, and `default` takes the star.
 
-**Go lesson.** A `switch` on a byte needs no `break`. Each `case` stops by itself, and `default` takes the star.
-
-```go
-// checkValidString solves LC 678. Time O(n), space O(1).
-// low and high are the smallest and the largest possible number of open
-// brackets.
-func checkValidString(s string) bool {
-    low, high := 0, 0
-    for i := 0; i < len(s); i++ {
-        switch s[i] {
-        case '(':
-            low++ // one more open bracket in each case
-            high++
-        case ')':
-            low-- // one open bracket less in each case
-            high--
-        default: // '*' WIDENS the range:
-            low--  // as ')' it closes one bracket
-            high++ // as '(' it opens one bracket
-        }
-        if high < 0 { // FAIL: too many ')' even when each star is '('
-            return false
-        }
-        if low < 0 { // CLAMP: a count below zero is not a valid choice
-            low = 0
-        }
-    }
-    return low == 0 // zero open brackets must be one of the possible counts
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // checkValidString solves LC 678. Time O(n), space O(1).
+> // low and high are the smallest and the largest possible number of
+> // open
+> // brackets.
+> func checkValidString(s string) bool {
+>     low, high := 0, 0
+>     for i := 0; i < len(s); i++ {
+>         switch s[i] {
+>         case '(':
+>             low++ // one more open bracket in each case
+>             high++
+>         case ')':
+>             low-- // one open bracket less in each case
+>             high--
+>         default: // '*' WIDENS the range:
+>             low--  // as ')' it closes one bracket
+>             high++ // as '(' it opens one bracket
+>         }
+>         // FAIL: too many ')' even when each star is '('
+>         if high < 0 {
+>             return false
+>         }
+>         // CLAMP: a count below zero is not a valid choice
+>         if low < 0 {
+>             low = 0
+>         }
+>     }
+>     // zero open brackets must be one of the possible counts
+>     return low == 0
+> }
+> ```
 
 ---
 

@@ -9,7 +9,7 @@ tags:
   - templates
   - intervals
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 16: Intervals
@@ -226,282 +226,341 @@ The moves are SORT THE QUERIES, ADD, DROP, then ANSWER. Because the queries arri
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 57. Insert Interval
 
 [LeetCode 57](https://leetcode.com/problems/insert-interval/) · Medium
 
-- **Pattern:** Three-phase insert
-- **Template:** [[#Template B: Three-phase insert|B: Three-phase insert]]
-- **Complexity:** time O(n), space O(n) for the output
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Three-phase insert
+> - **Template:** [[#Template B: Three-phase insert|B: Three-phase insert]]
 
-**Idea.** The input is already sorted, so one pass is enough. Copy the intervals that end before the new one starts, merge each interval that overlaps the new one, then copy the rest.
+> [!tip]- Step 2: the idea
+> **Idea.** The input is already sorted, so one pass is enough. Copy the intervals that end before the new one starts, merge each interval that overlaps the new one, then copy the rest.
+>
+> **Complexity.** Time O(n), space O(n) for the output.
+>
+> **Go lesson.** `append(res, intervals[i:]...)` adds all the items of a slice in one call. The three dots spread the slice into separate arguments.
 
-**Go lesson.** `append(res, intervals[i:]...)` adds all the items of a slice in one call. The three dots spread the slice into separate arguments.
-
-```go
-// insert solves LC 57. Time O(n), space O(n) for the output.
-// The intervals are sorted and do not overlap, so the pass has three
-// phases.
-func insert(intervals [][]int, newInterval []int) [][]int {
-    res := make([][]int, 0, len(intervals)+1)
-    start, end := newInterval[0], newInterval[1]
-    i, n := 0, len(intervals)
-
-    // 1. BEFORE: these intervals end before the new one starts.
-    for i < n && intervals[i][1] < start {
-        res = append(res, intervals[i])
-        i++
-    }
-    // 2. MERGE: these intervals start before the new one ends, so they
-    // overlap it.
-    // <= because [1,3] and [3,5] touch, and LeetCode merges them.
-    for i < n && intervals[i][0] <= end {
-        // grow the new interval to cover both
-        start = min(start, intervals[i][0])
-        end = max(end, intervals[i][1])
-        i++
-    }
-    res = append(res, []int{start, end})
-    // 3. AFTER: the rest starts after the new interval ends.
-    res = append(res, intervals[i:]...)
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> ```go
+> // insert solves LC 57. Time O(n), space O(n) for the output.
+> // The intervals are sorted and do not overlap, so the pass has
+> // three
+> // phases.
+> func insert(intervals [][]int, newInterval []int) [][]int {
+>     res := make([][]int, 0, len(intervals)+1)
+>     start, end := newInterval[0], newInterval[1]
+>     i, n := 0, len(intervals)
+>
+>     // 1. BEFORE: these intervals end before the new one starts.
+>     for i < n && intervals[i][1] < start {
+>         res = append(res, intervals[i])
+>         i++
+>     }
+>     // 2. MERGE: these intervals start before the new one ends, so
+>     // they
+>     // overlap it.
+>     // <= because [1,3] and [3,5] touch, and LeetCode merges them.
+>     for i < n && intervals[i][0] <= end {
+>         // grow the new interval to cover both
+>         start = min(start, intervals[i][0])
+>         end = max(end, intervals[i][1])
+>         i++
+>     }
+>     res = append(res, []int{start, end})
+>     // 3. AFTER: the rest starts after the new interval ends.
+>     res = append(res, intervals[i:]...)
+>     return res
+> }
+> ```
 
 ### 56. Merge Intervals
 
 [LeetCode 56](https://leetcode.com/problems/merge-intervals/) · Medium
 
-- **Pattern:** Sort by start, then merge
-- **Template:** [[#Template A: Sort by start, then merge|A: Sort by start, then merge]]
-- **Complexity:** time O(n log n), space O(n) for the output
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort by start, then merge
+> - **Template:** [[#Template A: Sort by start, then merge|A: Sort by start, then merge]]
 
-**Idea.** Sort the intervals by start. Then each interval can overlap only the last interval of the result. If it overlaps, extend that last interval, and if not, append the interval.
+> [!tip]- Step 2: the idea
+> **Idea.** Sort the intervals by start. Then each interval can overlap only the last interval of the result. If it overlaps, extend that last interval, and if not, append the interval.
+>
+> **Complexity.** Time O(n log n), space O(n) for the output.
+>
+> **Go lesson.** `sort.Slice` sorts any slice with a function that says if item i comes before item j. The function reads the slice from the outer scope.
 
-**Go lesson.** `sort.Slice` sorts any slice with a function that says if item i comes before item j. The function reads the slice from the outer scope.
-
-```go
-// merge solves LC 56. Time O(n log n) for the sort, space O(n) for the
-// output.
-// After the sort by start, an interval can overlap only the last interval
-// of the result.
-func merge(intervals [][]int) [][]int {
-    // SORT by start. The function returns true when item i must come before
-    // item j.
-    sort.Slice(intervals, func(i, j int) bool {
-        return intervals[i][0] < intervals[j][0]
-    })
-    res := [][]int{}
-    for _, cur := range intervals {
-        last := len(res) - 1
-        // COMPARE with the last result. <= because [1,4] and [4,5] touch
-        // and merge.
-        if last >= 0 && cur[0] <= res[last][1] {
-            // EXTEND: max, cur can be inside last
-            res[last][1] = max(res[last][1], cur[1])
-        } else {
-            // APPEND a copy, the input row stays
-            res = append(res, []int{cur[0], cur[1]})
-        }
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // merge solves LC 56. Time O(n log n) for the sort, space O(n) for
+> // the
+> // output.
+> // After the sort by start, an interval can overlap only the last
+> // interval
+> // of the result.
+> func merge(intervals [][]int) [][]int {
+>     // SORT by start. The function returns true when item i must
+>     // come before
+>     // item j.
+>     sort.Slice(intervals, func(i, j int) bool {
+>         return intervals[i][0] < intervals[j][0]
+>     })
+>     res := [][]int{}
+>     for _, cur := range intervals {
+>         last := len(res) - 1
+>         // COMPARE with the last result. <= because [1,4] and [4,5]
+>         // touch
+>         // and merge.
+>         if last >= 0 && cur[0] <= res[last][1] {
+>             // EXTEND: max, cur can be inside last
+>             res[last][1] = max(res[last][1], cur[1])
+>         } else {
+>             // APPEND a copy, the input row stays
+>             res = append(res, []int{cur[0], cur[1]})
+>         }
+>     }
+>     return res
+> }
+> ```
 
 ### 435. Non-overlapping Intervals
 
 [LeetCode 435](https://leetcode.com/problems/non-overlapping-intervals/) · Medium
 
-- **Pattern:** Sort by end, greedy keep
-- **Template:** [[#Template C: Sort by end, then greedy keep|C: Sort by end, then greedy keep]]
-- **Complexity:** time O(n log n), space O(1) without the sort
-- **Imports for a local file:** `math`, `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort by end, greedy keep
+> - **Template:** [[#Template C: Sort by end, then greedy keep|C: Sort by end, then greedy keep]]
 
-**Idea.** Count the largest set of intervals that do not overlap. The answer is the total minus that count. To keep the most, always keep the interval that ends first, because it leaves the most room for the others.
+> [!tip]- Step 2: the idea
+> **Idea.** Count the largest set of intervals that do not overlap. The answer is the total minus that count. To keep the most, always keep the interval that ends first, because it leaves the most room for the others.
+>
+> **Complexity.** Time O(n log n), space O(1) without the sort.
+>
+> **Go lesson.** The loop keeps only one `int`, the end of the last interval that stays. Start it at `math.MinInt`, the smallest `int`, so the first interval always passes the test.
 
-**Go lesson.** The loop keeps only one `int`, the end of the last interval that stays. Start it at `math.MinInt`, the smallest `int`, so the first interval always passes the test.
-
-```go
-// eraseOverlapIntervals solves LC 435. Time O(n log n), space O(1).
-// Greedy: keep the interval that ends first, and remove each one that
-// overlaps it.
-func eraseOverlapIntervals(intervals [][]int) int {
-    // SORT by end. The interval that ends first leaves the most room.
-    sort.Slice(intervals, func(i, j int) bool {
-        return intervals[i][1] < intervals[j][1]
-    })
-    removed := 0
-    prevEnd := math.MinInt // the end of the last interval that stays
-    for _, cur := range intervals {
-        // >= because [1,2] and [2,3] only touch: no overlap
-        if cur[0] >= prevEnd {
-            prevEnd = cur[1] // KEEP cur
-        } else {
-            removed++ // REMOVE cur: it starts before the kept interval ends
-        }
-    }
-    return removed
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `math`, `sort`
+>
+> ```go
+> // eraseOverlapIntervals solves LC 435. Time O(n log n), space O(1).
+> // Greedy: keep the interval that ends first, and remove each one
+> // that
+> // overlaps it.
+> func eraseOverlapIntervals(intervals [][]int) int {
+>     // SORT by end. The interval that ends first leaves the most
+>     // room.
+>     sort.Slice(intervals, func(i, j int) bool {
+>         return intervals[i][1] < intervals[j][1]
+>     })
+>     removed := 0
+>     // the end of the last interval that stays
+>     prevEnd := math.MinInt
+>     for _, cur := range intervals {
+>         // >= because [1,2] and [2,3] only touch: no overlap
+>         if cur[0] >= prevEnd {
+>             prevEnd = cur[1] // KEEP cur
+>         } else {
+>             // REMOVE cur: it starts before the kept interval ends
+>             removed++
+>         }
+>     }
+>     return removed
+> }
+> ```
 
 ### 252. Meeting Rooms
 
 [LeetCode 252](https://leetcode.com/problems/meeting-rooms/) (premium) · [free on NeetCode](https://neetcode.io/problems/meeting-schedule) · Easy
 
-- **Pattern:** Sort by start, compare neighbors
-- **Template:** [[#Template A: Sort by start, then merge|A: Sort by start, then merge]]
-- **Complexity:** time O(n log n), space O(1) without the sort
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sort by start, compare neighbors
+> - **Template:** [[#Template A: Sort by start, then merge|A: Sort by start, then merge]]
 
-**Idea.** Sort the meetings by start time. If two meetings overlap, then two neighbors in the sorted order also overlap. So compare each meeting only with the one before it.
+> [!tip]- Step 2: the idea
+> **Idea.** Sort the meetings by start time. If two meetings overlap, then two neighbors in the sorted order also overlap. So compare each meeting only with the one before it.
+>
+> **Complexity.** Time O(n log n), space O(1) without the sort.
+>
+> **Go lesson.** The loop starts at index 1, so `intervals[i-1]` is always valid. With zero or one meeting the loop does not run, and the answer is `true`.
 
-**Go lesson.** The loop starts at index 1, so `intervals[i-1]` is always valid. With zero or one meeting the loop does not run, and the answer is `true`.
-
-```go
-// canAttendMeetings solves LC 252. Time O(n log n), space O(1).
-// After the sort by start, an overlap always shows between two neighbors.
-func canAttendMeetings(intervals [][]int) bool {
-    // SORT by start time.
-    sort.Slice(intervals, func(i, j int) bool {
-        return intervals[i][0] < intervals[j][0]
-    })
-    for i := 1; i < len(intervals); i++ {
-        // COMPARE with the meeting before. < because a meeting can start
-        // at the time when the one before ends.
-        if intervals[i][0] < intervals[i-1][1] {
-            return false // this meeting starts before the last one ends
-        }
-    }
-    return true
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // canAttendMeetings solves LC 252. Time O(n log n), space O(1).
+> // After the sort by start, an overlap always shows between two
+> // neighbors.
+> func canAttendMeetings(intervals [][]int) bool {
+>     // SORT by start time.
+>     sort.Slice(intervals, func(i, j int) bool {
+>         return intervals[i][0] < intervals[j][0]
+>     })
+>     for i := 1; i < len(intervals); i++ {
+>         // COMPARE with the meeting before. < because a meeting can
+>         // start
+>         // at the time when the one before ends.
+>         if intervals[i][0] < intervals[i-1][1] {
+>             // this meeting starts before the last one ends
+>             return false
+>         }
+>     }
+>     return true
+> }
+> ```
 
 ### 253. Meeting Rooms II
 
 [LeetCode 253](https://leetcode.com/problems/meeting-rooms-ii/) (premium) · [free on NeetCode](https://neetcode.io/problems/meeting-schedule-ii) · Medium
 
-- **Pattern:** Sweep of sorted starts and ends
-- **Template:** [[#Template D: Sweep of sorted starts and ends|D: Sweep of sorted starts and ends]]
-- **Complexity:** time O(n log n), space O(n)
-- **Imports for a local file:** `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Sweep of sorted starts and ends
+> - **Template:** [[#Template D: Sweep of sorted starts and ends|D: Sweep of sorted starts and ends]]
 
-**Idea.** Sort the start times and the end times separately, because only the times matter. Walk the two slices in time order: a start opens a room and an end frees a room. The answer is the largest number of open rooms.
+> [!tip]- Step 2: the idea
+> **Idea.** Sort the start times and the end times separately, because only the times matter. Walk the two slices in time order: a start opens a room and an end frees a room. The answer is the largest number of open rooms.
+>
+> **Complexity.** Time O(n log n), space O(n).
+>
+> **Go lesson.** `sort.Ints` sorts a slice of `int` in place. `make([]int, n)` gives a slice with n zeros that the loop fills by index.
 
-**Go lesson.** `sort.Ints` sorts a slice of `int` in place. `make([]int, n)` gives a slice with n zeros that the loop fills by index.
-
-```go
-// minMeetingRooms solves LC 253. Time O(n log n), space O(n).
-// A sweep in time order: each start opens a room, each end frees a room.
-// The other standard answer sorts by start and keeps a min-heap of end
-// times.
-func minMeetingRooms(intervals [][]int) int {
-    n := len(intervals)
-    starts := make([]int, n)
-    ends := make([]int, n)
-    for i, iv := range intervals {
-        starts[i] = iv[0]
-        ends[i] = iv[1]
-    }
-    sort.Ints(starts) // SORT the two slices separately
-    sort.Ints(ends)
-
-    open, most := 0, 0 // the rooms in use now, and the largest value so far
-    s, e := 0, 0       // the next start and the next end
-    for s < n {        // after the last start, the count can only go down
-        if starts[s] < ends[e] {
-            open++ // START: a meeting begins before the next one ends
-            s++
-            most = max(most, open)
-        } else {
-            open-- // END: a room is free. On a tie the end goes first,
-            e++    // so a meeting can start when another one ends
-        }
-    }
-    return most
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `sort`
+>
+> ```go
+> // minMeetingRooms solves LC 253. Time O(n log n), space O(n).
+> // A sweep in time order: each start opens a room, each end frees a
+> // room.
+> // The other standard answer sorts by start and keeps a min-heap of
+> // end
+> // times.
+> func minMeetingRooms(intervals [][]int) int {
+>     n := len(intervals)
+>     starts := make([]int, n)
+>     ends := make([]int, n)
+>     for i, iv := range intervals {
+>         starts[i] = iv[0]
+>         ends[i] = iv[1]
+>     }
+>     sort.Ints(starts) // SORT the two slices separately
+>     sort.Ints(ends)
+>
+>     // the rooms in use now, and the largest value so far
+>     open, most := 0, 0
+>     s, e := 0, 0 // the next start and the next end
+>     // after the last start, the count can only go down
+>     for s < n {
+>         if starts[s] < ends[e] {
+>             // START: a meeting begins before the next one ends
+>             open++
+>             s++
+>             most = max(most, open)
+>         } else {
+>             // END: a room is free. On a tie the end goes first,
+>             open--
+>             e++ // so a meeting can start when another one ends
+>         }
+>     }
+>     return most
+> }
+> ```
 
 ### 1851. Minimum Interval to Include Each Query
 
 [LeetCode 1851](https://leetcode.com/problems/minimum-interval-to-include-each-query/) · Hard
 
-- **Pattern:** Offline queries, sort plus min-heap
-- **Template:** [[#Template E: Offline queries with a sort and a min-heap|E: Offline queries with a sort and a min-heap]]
-- **Complexity:** time O(n log n + q log q) for n intervals and q queries, space O(n + q)
-- **Imports for a local file:** `container/heap`, `sort`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Offline queries, sort plus min-heap
+> - **Template:** [[#Template E: Offline queries with a sort and a min-heap|E: Offline queries with a sort and a min-heap]]
 
-**Idea.** Answer the queries from the smallest to the largest. For each query, push the intervals that start at or before it into a min-heap by size, and pop the ones that end before it. The top is then the smallest interval that contains the query.
+> [!tip]- Step 2: the idea
+> **Idea.** Answer the queries from the smallest to the largest. For each query, push the intervals that start at or before it into a min-heap by size, and pop the ones that end before it. The top is then the smallest interval that contains the query.
+>
+> **Complexity.** Time O(n log n + q log q) for n intervals and q queries, space O(n + q).
+>
+> **Go lesson.** To sort the queries and keep their positions, sort a slice of indexes. The function of `sort.Slice` compares `queries[order[a]]` with `queries[order[b]]`.
 
-**Go lesson.** To sort the queries and keep their positions, sort a slice of indexes. The function of `sort.Slice` compares `queries[order[a]]` with `queries[order[b]]`.
-
-```go
-// minInterval solves LC 1851. Time O(n log n + q log q), space O(n + q).
-// The loop answers the queries in sorted order, so each interval enters the
-// heap
-// one time and leaves it one time.
-type span struct{ size, end int }
-
-// sizeHeap is a min-heap of spans: the smallest size is on top.
-type sizeHeap []span
-
-func (h sizeHeap) Len() int           { return len(h) }
-func (h sizeHeap) Less(i, j int) bool { return h[i].size < h[j].size }
-func (h sizeHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *sizeHeap) Push(x any)        { *h = append(*h, x.(span)) }
-func (h *sizeHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-func minInterval(intervals [][]int, queries []int) []int {
-    // SORT the intervals by start.
-    sort.Slice(intervals, func(i, j int) bool {
-        return intervals[i][0] < intervals[j][0]
-    })
-    // SORT THE QUERIES by value, but keep their positions: order holds
-    // indexes.
-    order := make([]int, len(queries))
-    for i := range order {
-        order[i] = i
-    }
-    sort.Slice(order, func(a, b int) bool {
-        return queries[order[a]] < queries[order[b]]
-    })
-
-    res := make([]int, len(queries))
-    h := sizeHeap{}
-    next := 0 // the first interval that is not in the heap yet
-    for _, qi := range order {
-        q := queries[qi]
-        // ADD each interval that starts at or before q.
-        for next < len(intervals) && intervals[next][0] <= q {
-            left, right := intervals[next][0], intervals[next][1]
-            heap.Push(&h, span{right - left + 1, right})
-            next++
-        }
-        // DROP the intervals that end before q. They also end before all
-        // the later queries.
-        for len(h) > 0 && h[0].end < q {
-            heap.Pop(&h)
-        }
-        // ANSWER at the original index. All the spans in the heap start at
-        // or before q,
-        // and the top ends at or after q, so the top contains q.
-        if len(h) > 0 {
-            res[qi] = h[0].size
-        } else {
-            res[qi] = -1
-        }
-    }
-    return res
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`, `sort`
+>
+> ```go
+> // minInterval solves LC 1851. Time O(n log n + q log q), space O(n
+> // + q).
+> // The loop answers the queries in sorted order, so each interval
+> // enters the
+> // heap
+> // one time and leaves it one time.
+> type span struct{ size, end int }
+>
+> // sizeHeap is a min-heap of spans: the smallest size is on top.
+> type sizeHeap []span
+>
+> func (h sizeHeap) Len() int           { return len(h) }
+> func (h sizeHeap) Less(i, j int) bool { return h[i].size < h[j].size }
+> func (h sizeHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *sizeHeap) Push(x any)        { *h = append(*h, x.(span)) }
+> func (h *sizeHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> func minInterval(intervals [][]int, queries []int) []int {
+>     // SORT the intervals by start.
+>     sort.Slice(intervals, func(i, j int) bool {
+>         return intervals[i][0] < intervals[j][0]
+>     })
+>     // SORT THE QUERIES by value, but keep their positions: order
+>     // holds
+>     // indexes.
+>     order := make([]int, len(queries))
+>     for i := range order {
+>         order[i] = i
+>     }
+>     sort.Slice(order, func(a, b int) bool {
+>         return queries[order[a]] < queries[order[b]]
+>     })
+>
+>     res := make([]int, len(queries))
+>     h := sizeHeap{}
+>     next := 0 // the first interval that is not in the heap yet
+>     for _, qi := range order {
+>         q := queries[qi]
+>         // ADD each interval that starts at or before q.
+>         for next < len(intervals) && intervals[next][0] <= q {
+>             left, right := intervals[next][0], intervals[next][1]
+>             heap.Push(&h, span{right - left + 1, right})
+>             next++
+>         }
+>         // DROP the intervals that end before q. They also end
+>         // before all
+>         // the later queries.
+>         for len(h) > 0 && h[0].end < q {
+>             heap.Pop(&h)
+>         }
+>         // ANSWER at the original index. All the spans in the heap
+>         // start at
+>         // or before q,
+>         // and the top ends at or after q, so the top contains q.
+>         if len(h) > 0 {
+>             res[qi] = h[0].size
+>         } else {
+>             res[qi] = -1
+>         }
+>     }
+>     return res
+> }
+> ```
 
 ---
 

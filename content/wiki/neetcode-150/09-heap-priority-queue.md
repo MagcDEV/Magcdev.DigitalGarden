@@ -9,7 +9,7 @@ tags:
   - templates
   - heap
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150, stage 9: Heap and Priority Queue
@@ -274,479 +274,545 @@ The moves are START with the first item of each list, POP the best item, then AD
 
 ## Solved with comments
 
+Each problem hides its answer in three steps, so the page works as a test. Read the problem on LeetCode first. Then open the steps in order, and only as far as you need:
+
+1. **Which pattern?** Say the pattern and the template aloud. Then open step 1 to check.
+2. **The idea.** If you are blocked, open step 2. It has the key idea and the complexity, and no code.
+3. **The Go solution.** Open step 3 last. Then close it and type the solution from memory.
+
 Each solution has the function name and the signature that LeetCode gives you. The code does not show the given types (`ListNode`, `TreeNode`, `Node`) or the imports. LeetCode adds the standard library imports for you. For a local file, each solution lists the imports that it needs.
 
 ### 703. Kth Largest Element in a Stream
 
 [LeetCode 703](https://leetcode.com/problems/kth-largest-element-in-a-stream/) · Easy
 
-- **Pattern:** Min-heap of size K
-- **Template:** [[#Template A: The five heap methods|A: The five heap methods]], [[#Template B: Heap of size K|B: Heap of size K]]
-- **Complexity:** time O(log k) for each Add, O(n log k) for the constructor, space O(k)
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Min-heap of size K
+> - **Template:** [[#Template A: The five heap methods|A: The five heap methods]], [[#Template B: Heap of size K|B: Heap of size K]]
 
-**Idea.** Keep only the k largest values in a min-heap. The top of the heap is the smallest of them, and that value is the kth largest of the stream.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep only the k largest values in a min-heap. The top of the heap is the smallest of them, and that value is the kth largest of the stream.
+>
+> **Complexity.** Time O(log k) for each Add, O(n log k) for the constructor, space O(k).
+>
+> **Go lesson.** Go has no priority queue type. You write five methods on your type, and the functions `heap.Push` and `heap.Pop` of `container/heap` keep the order.
 
-**Go lesson.** Go has no priority queue type. You write five methods on your type, and the functions `heap.Push` and `heap.Pop` of `container/heap` keep the order.
-
-```go
-// KthLargest solves LC 703. Add is O(log k) time. The space is O(k).
-// The min-heap holds the k largest values. Its top is the kth largest
-// value.
-type minHeap []int
-
-func (h minHeap) Len() int { return len(h) }
-
-// min-heap: smallest on top
-func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-
-// Push and Pop change the length of the slice, so they need a pointer
-// receiver.
-// x.(int): from any back to int
-func (h *minHeap) Push(x any) { *h = append(*h, x.(int)) }
-func (h *minHeap) Pop() any {
-    old := *h
-    n := len(old)
-    // container/heap moves the top to the end before it calls Pop
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-type KthLargest struct {
-    k int
-    h minHeap
-}
-
-func Constructor(k int, nums []int) KthLargest {
-    this := KthLargest{k: k}
-    for _, x := range nums {
-        this.Add(x) // the same rule for the first values and for the stream
-    }
-    return this
-}
-
-func (this *KthLargest) Add(val int) int {
-    heap.Push(&this.h, val) // PUSH: call heap.Push, not this.h.Push
-    if len(this.h) > this.k {
-        // TRIM: remove the smallest, it cannot be the kth largest
-        heap.Pop(&this.h)
-    }
-    return this.h[0] // PEEK: index 0 is always the top of the heap
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // KthLargest solves LC 703. Add is O(log k) time. The space is
+> // O(k).
+> // The min-heap holds the k largest values. Its top is the kth
+> // largest
+> // value.
+> type minHeap []int
+>
+> func (h minHeap) Len() int { return len(h) }
+>
+> // min-heap: smallest on top
+> func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
+> func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+>
+> // Push and Pop change the length of the slice, so they need a
+> // pointer
+> // receiver.
+> // x.(int): from any back to int
+> func (h *minHeap) Push(x any) { *h = append(*h, x.(int)) }
+> func (h *minHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     // container/heap moves the top to the end before it calls Pop
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> type KthLargest struct {
+>     k int
+>     h minHeap
+> }
+>
+> func Constructor(k int, nums []int) KthLargest {
+>     this := KthLargest{k: k}
+>     for _, x := range nums {
+>         // the same rule for the first values and for the stream
+>         this.Add(x)
+>     }
+>     return this
+> }
+>
+> func (this *KthLargest) Add(val int) int {
+>     heap.Push(&this.h, val) // PUSH: call heap.Push, not this.h.Push
+>     if len(this.h) > this.k {
+>         // TRIM: remove the smallest, it cannot be the kth largest
+>         heap.Pop(&this.h)
+>     }
+>     return this.h[0] // PEEK: index 0 is always the top of the heap
+> }
+> ```
 
 ### 1046. Last Stone Weight
 
 [LeetCode 1046](https://leetcode.com/problems/last-stone-weight/) · Easy
 
-- **Pattern:** Max-heap simulation
-- **Template:** [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]]
-- **Complexity:** time O(n log n), space O(n)
-- **Imports for a local file:** `container/heap`, `slices`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Max-heap simulation
+> - **Template:** [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]]
 
-**Idea.** Each turn needs the two heaviest stones. A max-heap gives them in O(log n). Push the difference back when it is not zero.
+> [!tip]- Step 2: the idea
+> **Idea.** Each turn needs the two heaviest stones. A max-heap gives them in O(log n). Push the difference back when it is not zero.
+>
+> **Complexity.** Time O(n log n), space O(n).
+>
+> **Go lesson.** `maxHeap(x)` is a type conversion, not a function call. It works because `maxHeap` and `[]int` have the same underlying type.
 
-**Go lesson.** `maxHeap(x)` is a type conversion, not a function call. It works because `maxHeap` and `[]int` have the same underlying type.
-
-```go
-// lastStoneWeight solves LC 1046. Time O(n log n), space O(n).
-// A max-heap is the min-heap with the opposite Less.
-type maxHeap []int
-
-func (h maxHeap) Len() int { return len(h) }
-
-// max-heap: largest on top
-func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
-func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
-func (h *maxHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-func lastStoneWeight(stones []int) int {
-    // a copy, so the input keeps its order
-    h := maxHeap(slices.Clone(stones))
-    heap.Init(&h) // BUILD the heap in O(n)
-    for len(h) > 1 {
-        // POP the heaviest stone. .(int) converts from any
-        a := heap.Pop(&h).(int)
-        b := heap.Pop(&h).(int) // POP the second heaviest stone
-        if a != b {
-            // PUSH the rest back. a >= b, so a-b is positive
-            heap.Push(&h, a-b)
-        }
-    }
-    if len(h) == 0 {
-        return 0 // all the stones are gone
-    }
-    return h[0]
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`, `slices`
+>
+> ```go
+> // lastStoneWeight solves LC 1046. Time O(n log n), space O(n).
+> // A max-heap is the min-heap with the opposite Less.
+> type maxHeap []int
+>
+> func (h maxHeap) Len() int { return len(h) }
+>
+> // max-heap: largest on top
+> func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
+> func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
+> func (h *maxHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> func lastStoneWeight(stones []int) int {
+>     // a copy, so the input keeps its order
+>     h := maxHeap(slices.Clone(stones))
+>     heap.Init(&h) // BUILD the heap in O(n)
+>     for len(h) > 1 {
+>         // POP the heaviest stone. .(int) converts from any
+>         a := heap.Pop(&h).(int)
+>         b := heap.Pop(&h).(int) // POP the second heaviest stone
+>         if a != b {
+>             // PUSH the rest back. a >= b, so a-b is positive
+>             heap.Push(&h, a-b)
+>         }
+>     }
+>     if len(h) == 0 {
+>         return 0 // all the stones are gone
+>     }
+>     return h[0]
+> }
+> ```
 
 ### 973. K Closest Points to Origin
 
 [LeetCode 973](https://leetcode.com/problems/k-closest-points-to-origin/) · Medium
 
-- **Pattern:** Max-heap of size K
-- **Template:** [[#Template B: Heap of size K|B: Heap of size K]], [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]]
-- **Complexity:** time O(n log k), space O(k)
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Max-heap of size K
+> - **Template:** [[#Template B: Heap of size K|B: Heap of size K]], [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]]
 
-**Idea.** Keep the k closest points in a max-heap by distance. When the heap has more than k points, remove the farthest one. Compare squared distances, so no square root is necessary.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep the k closest points in a max-heap by distance. When the heap has more than k points, remove the farthest one. Compare squared distances, so no square root is necessary.
+>
+> **Complexity.** Time O(n log k), space O(k).
+>
+> **Go lesson.** `Less` can compare any property of the items. Here the heap holds `[]int` points, and `Less` compares their squared distances.
 
-**Go lesson.** `Less` can compare any property of the items. Here the heap holds `[]int` points, and `Less` compares their squared distances.
-
-```go
-// kClosest solves LC 973. Time O(n log k), space O(k).
-// A max-heap of size k keeps the k closest points. Its top is the farthest
-// of them.
-type pointHeap [][]int
-
-// dist is the squared distance to the origin. The order is the same as for
-// the real distance.
-func dist(p []int) int { return p[0]*p[0] + p[1]*p[1] }
-
-func (h pointHeap) Len() int { return len(h) }
-
-// farthest on top
-func (h pointHeap) Less(i, j int) bool { return dist(h[i]) > dist(h[j]) }
-func (h pointHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *pointHeap) Push(x any)        { *h = append(*h, x.([]int)) }
-func (h *pointHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-func kClosest(points [][]int, k int) [][]int {
-    h := pointHeap{}
-    for _, p := range points {
-        heap.Push(&h, p) // PUSH each point
-        if len(h) > k {
-            heap.Pop(&h) // TRIM: the farthest point cannot be in the answer
-        }
-    }
-    return h // the k points that stay. LeetCode accepts any order
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // kClosest solves LC 973. Time O(n log k), space O(k).
+> // A max-heap of size k keeps the k closest points. Its top is the
+> // farthest
+> // of them.
+> type pointHeap [][]int
+>
+> // dist is the squared distance to the origin. The order is the same
+> // as for
+> // the real distance.
+> func dist(p []int) int { return p[0]*p[0] + p[1]*p[1] }
+>
+> func (h pointHeap) Len() int { return len(h) }
+>
+> // farthest on top
+> func (h pointHeap) Less(i, j int) bool { return dist(h[i]) > dist(h[j]) }
+> func (h pointHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *pointHeap) Push(x any)        { *h = append(*h, x.([]int)) }
+> func (h *pointHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> func kClosest(points [][]int, k int) [][]int {
+>     h := pointHeap{}
+>     for _, p := range points {
+>         heap.Push(&h, p) // PUSH each point
+>         if len(h) > k {
+>             // TRIM: the farthest point cannot be in the answer
+>             heap.Pop(&h)
+>         }
+>     }
+>     return h // the k points that stay. LeetCode accepts any order
+> }
+> ```
 
 ### 215. Kth Largest Element in an Array
 
 [LeetCode 215](https://leetcode.com/problems/kth-largest-element-in-an-array/) · Medium
 
-- **Pattern:** Min-heap of size K
-- **Template:** [[#Template A: The five heap methods|A: The five heap methods]], [[#Template B: Heap of size K|B: Heap of size K]]
-- **Complexity:** time O(n log k), space O(k)
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Min-heap of size K
+> - **Template:** [[#Template A: The five heap methods|A: The five heap methods]], [[#Template B: Heap of size K|B: Heap of size K]]
 
-**Idea.** Keep the k largest values in a min-heap. After the last value, the top of the heap is the smallest of the k largest. That value is the answer.
+> [!tip]- Step 2: the idea
+> **Idea.** Keep the k largest values in a min-heap. After the last value, the top of the heap is the smallest of the k largest. That value is the answer.
+>
+> **Complexity.** Time O(n log k), space O(k).
+>
+> **Go lesson.** `h[0]` reads the top of the heap with no pop. The heap is a slice, and `container/heap` keeps the smallest item at index 0.
 
-**Go lesson.** `h[0]` reads the top of the heap with no pop. The heap is a slice, and `container/heap` keeps the smallest item at index 0.
-
-```go
-// findKthLargest solves LC 215. Time O(n log k), space O(k).
-// A min-heap of size k holds the k largest values. Its top is the kth
-// largest.
-// Quickselect is the other standard answer: O(n) average time, O(n²) in the
-// worst case.
-type minHeap []int
-
-func (h minHeap) Len() int { return len(h) }
-
-// min-heap: smallest on top
-func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *minHeap) Push(x any)        { *h = append(*h, x.(int)) }
-func (h *minHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-func findKthLargest(nums []int, k int) int {
-    h := minHeap{}
-    for _, x := range nums {
-        heap.Push(&h, x) // PUSH each value
-        if len(h) > k {
-            // TRIM: remove the smallest, so only the k largest stay
-            heap.Pop(&h)
-        }
-    }
-    return h[0] // PEEK: the smallest of the k largest values
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // findKthLargest solves LC 215. Time O(n log k), space O(k).
+> // A min-heap of size k holds the k largest values. Its top is the
+> // kth
+> // largest.
+> // Quickselect is the other standard answer: O(n) average time,
+> // O(n²) in the
+> // worst case.
+> type minHeap []int
+>
+> func (h minHeap) Len() int { return len(h) }
+>
+> // min-heap: smallest on top
+> func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
+> func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *minHeap) Push(x any)        { *h = append(*h, x.(int)) }
+> func (h *minHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> func findKthLargest(nums []int, k int) int {
+>     h := minHeap{}
+>     for _, x := range nums {
+>         heap.Push(&h, x) // PUSH each value
+>         if len(h) > k {
+>             // TRIM: remove the smallest, so only the k largest stay
+>             heap.Pop(&h)
+>         }
+>     }
+>     return h[0] // PEEK: the smallest of the k largest values
+> }
+> ```
 
 ### 621. Task Scheduler
 
 [LeetCode 621](https://leetcode.com/problems/task-scheduler/) · Medium
 
-- **Pattern:** Max-heap plus cooldown queue
-- **Template:** [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]], [[#Template E: Max-heap plus cooldown queue|E: Max-heap plus cooldown queue]]
-- **Complexity:** time O(m) for m tasks, space O(1)
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Max-heap plus cooldown queue
+> - **Template:** [[#Template C: Max-heap by a different Less|C: Max-heap by a different Less]], [[#Template E: Max-heap plus cooldown queue|E: Max-heap plus cooldown queue]]
 
-**Idea.** Always run the task type that has the most tasks left, so the frequent types do not pile up at the end. After a run, the type waits in a queue until its cooldown ends. Then it goes back into the heap.
+> [!tip]- Step 2: the idea
+> **Idea.** Always run the task type that has the most tasks left, so the frequent types do not pile up at the end. After a run, the type waits in a queue until its cooldown ends. Then it goes back into the heap.
+>
+> **Complexity.** Time O(m) for m tasks, space O(1).
+>
+> **Go lesson.** A type declared inside a function, such as `waiting`, is visible only in that function. A slice is the queue: `append` adds at the back and `queue[1:]` removes the front.
 
-**Go lesson.** A type declared inside a function, such as `waiting`, is visible only in that function. A slice is the queue: `append` adds at the back and `queue[1:]` removes the front.
-
-```go
-// leastInterval solves LC 621. Time O(m) for m tasks, space O(1): 26 types
-// or fewer.
-// The max-heap holds the counts of the task types that can run now.
-// The queue holds the types that wait for their cooldown, in the order they
-// become ready.
-// There is also an O(m) formula with no heap: max(m, (maxCount-1)*(n+1) +
-// typesWithMaxCount).
-type maxHeap []int
-
-func (h maxHeap) Len() int { return len(h) }
-
-// max-heap: largest count on top
-func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
-func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
-func (h *maxHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-func leastInterval(tasks []byte, n int) int {
-    var count [26]int
-    for _, t := range tasks {
-        count[t-'A']++ // COUNT the tasks of each type
-    }
-    h := maxHeap{}
-    for _, c := range count {
-        if c > 0 {
-            h = append(h, c) // only the count matters, not the letter
-        }
-    }
-    heap.Init(&h)
-
-    // tasks left, and the last time unit of the wait
-    type waiting struct{ left, readyAt int }
-    queue := []waiting{}
-    now := 0 // the number of time units used so far
-    for len(h) > 0 || len(queue) > 0 {
-        if len(h) == 0 {
-            // IDLE: no type can run, so jump to the end of the wait
-            now = queue[0].readyAt
-        } else {
-            now++
-            // RUN the type with the most tasks left
-            left := heap.Pop(&h).(int) - 1
-            if left > 0 {
-                // COOL DOWN for n units
-                queue = append(queue, waiting{left, now + n})
-            }
-        }
-        if len(queue) > 0 && queue[0].readyAt == now {
-            heap.Push(&h, queue[0].left) // RELEASE: the wait is over
-            queue = queue[1:]
-        }
-    }
-    return now
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // leastInterval solves LC 621. Time O(m) for m tasks, space O(1):
+> // 26 types
+> // or fewer.
+> // The max-heap holds the counts of the task types that can run now.
+> // The queue holds the types that wait for their cooldown, in the
+> // order they
+> // become ready.
+> // There is also an O(m) formula with no heap: max(m,
+> // (maxCount-1)*(n+1) +
+> // typesWithMaxCount).
+> type maxHeap []int
+>
+> func (h maxHeap) Len() int { return len(h) }
+>
+> // max-heap: largest count on top
+> func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
+> func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
+> func (h *maxHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> func leastInterval(tasks []byte, n int) int {
+>     var count [26]int
+>     for _, t := range tasks {
+>         count[t-'A']++ // COUNT the tasks of each type
+>     }
+>     h := maxHeap{}
+>     for _, c := range count {
+>         if c > 0 {
+>             // only the count matters, not the letter
+>             h = append(h, c)
+>         }
+>     }
+>     heap.Init(&h)
+>
+>     // tasks left, and the last time unit of the wait
+>     type waiting struct{ left, readyAt int }
+>     queue := []waiting{}
+>     now := 0 // the number of time units used so far
+>     for len(h) > 0 || len(queue) > 0 {
+>         if len(h) == 0 {
+>             // IDLE: no type can run, so jump to the end of the wait
+>             now = queue[0].readyAt
+>         } else {
+>             now++
+>             // RUN the type with the most tasks left
+>             left := heap.Pop(&h).(int) - 1
+>             if left > 0 {
+>                 // COOL DOWN for n units
+>                 queue = append(queue, waiting{left, now + n})
+>             }
+>         }
+>         if len(queue) > 0 && queue[0].readyAt == now {
+>             // RELEASE: the wait is over
+>             heap.Push(&h, queue[0].left)
+>             queue = queue[1:]
+>         }
+>     }
+>     return now
+> }
+> ```
 
 ### 355. Design Twitter
 
 [LeetCode 355](https://leetcode.com/problems/design-twitter/) · Medium
 
-- **Pattern:** K-way merge with a heap
-- **Template:** [[#Template F: K-way merge with a heap|F: K-way merge with a heap]]
-- **Complexity:** time O(F + 10 log F) for a feed of F users, O(1) for the rest, space O(P + T) for P follow pairs and T tweets
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** K-way merge with a heap
+> - **Template:** [[#Template F: K-way merge with a heap|F: K-way merge with a heap]]
 
-**Idea.** Each user has a list of tweets in time order, so a feed is a merge of sorted lists. Put the newest tweet of each list in a max-heap. Pop a tweet, push the tweet before it from the same list, and stop after 10 tweets.
+> [!tip]- Step 2: the idea
+> **Idea.** Each user has a list of tweets in time order, so a feed is a merge of sorted lists. Put the newest tweet of each list in a max-heap. Pop a tweet, push the tweet before it from the same list, and stop after 10 tweets.
+>
+> **Complexity.** Time O(F + 10 log F) for a feed of F users, O(1) for the rest, space O(P + T) for P follow pairs and T tweets.
+>
+> **Go lesson.** A read of a missing map key gives the zero value. So `append` to a missing key and `delete` on a missing inner map are safe, but a write to a `nil` inner map panics.
 
-**Go lesson.** A read of a missing map key gives the zero value. So `append` to a missing key and `delete` on a missing inner map are safe, but a write to a `nil` inner map panics.
-
-```go
-// Twitter solves LC 355. A feed is O(F + 10 log F) time for F followed
-// users.
-// A feed is a K-way merge: each user's tweets are one list in time order.
-type tweet struct{ time, id int }
-
-// feedItem is one tweet in the heap, with the list and the index that it
-// came from.
-type feedItem struct{ time, id, user, index int }
-
-type feedHeap []feedItem
-
-func (h feedHeap) Len() int { return len(h) }
-
-// newest on top
-func (h feedHeap) Less(i, j int) bool { return h[i].time > h[j].time }
-func (h feedHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *feedHeap) Push(x any)        { *h = append(*h, x.(feedItem)) }
-func (h *feedHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-type Twitter struct {
-    clock int // goes up by one for each tweet
-    // user -> the tweets of that user, oldest first
-    tweets map[int][]tweet
-    // user -> the set of users that this user follows
-    following map[int]map[int]struct{}
-}
-
-func Constructor() Twitter {
-    return Twitter{tweets: map[int][]tweet{}, following: map[int]map[int]struct{}{}}
-}
-
-func (this *Twitter) PostTweet(userId int, tweetId int) {
-    this.clock++
-    // append works on a missing key: the zero value of a slice is nil.
-    this.tweets[userId] = append(this.tweets[userId], tweet{this.clock, tweetId})
-}
-
-func (this *Twitter) GetNewsFeed(userId int) []int {
-    h := feedHeap{}
-    start := func(user int) { // START: take the newest tweet of one list
-        list := this.tweets[user]
-        if last := len(list) - 1; last >= 0 {
-            h = append(h, feedItem{list[last].time, list[last].id, user, last})
-        }
-    }
-    start(userId) // a user also sees their own tweets
-    for followee := range this.following[userId] {
-        if followee != userId {
-            start(followee)
-        }
-    }
-    heap.Init(&h)
-
-    feed := []int{}
-    for len(h) > 0 && len(feed) < 10 {
-        // POP the newest tweet of all the lists
-        top := heap.Pop(&h).(feedItem)
-        feed = append(feed, top.id)
-        // ADVANCE: push the tweet before it from the same list
-        if top.index > 0 {
-            prev := this.tweets[top.user][top.index-1]
-            heap.Push(&h, feedItem{prev.time, prev.id, top.user, top.index - 1})
-        }
-    }
-    return feed
-}
-
-func (this *Twitter) Follow(followerId int, followeeId int) {
-    if this.following[followerId] == nil {
-        // make the inner set on first use
-        this.following[followerId] = map[int]struct{}{}
-    }
-    this.following[followerId][followeeId] = struct{}{}
-}
-
-func (this *Twitter) Unfollow(followerId int, followeeId int) {
-    // delete on a nil map does nothing
-    delete(this.following[followerId], followeeId)
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // Twitter solves LC 355. A feed is O(F + 10 log F) time for F
+> // followed
+> // users.
+> // A feed is a K-way merge: each user's tweets are one list in time
+> // order.
+> type tweet struct{ time, id int }
+>
+> // feedItem is one tweet in the heap, with the list and the index
+> // that it
+> // came from.
+> type feedItem struct{ time, id, user, index int }
+>
+> type feedHeap []feedItem
+>
+> func (h feedHeap) Len() int { return len(h) }
+>
+> // newest on top
+> func (h feedHeap) Less(i, j int) bool { return h[i].time > h[j].time }
+> func (h feedHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *feedHeap) Push(x any)        { *h = append(*h, x.(feedItem)) }
+> func (h *feedHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> type Twitter struct {
+>     clock int // goes up by one for each tweet
+>     // user -> the tweets of that user, oldest first
+>     tweets map[int][]tweet
+>     // user -> the set of users that this user follows
+>     following map[int]map[int]struct{}
+> }
+>
+> func Constructor() Twitter {
+>     return Twitter{tweets: map[int][]tweet{}, following: map[int]map[int]struct{}{}}
+> }
+>
+> func (this *Twitter) PostTweet(userId int, tweetId int) {
+>     this.clock++
+>     // append works on a missing key: the zero value of a slice is
+>     // nil.
+>     this.tweets[userId] = append(this.tweets[userId], tweet{this.clock, tweetId})
+> }
+>
+> func (this *Twitter) GetNewsFeed(userId int) []int {
+>     h := feedHeap{}
+>     // START: take the newest tweet of one list
+>     start := func(user int) {
+>         list := this.tweets[user]
+>         if last := len(list) - 1; last >= 0 {
+>             h = append(h, feedItem{list[last].time, list[last].id, user, last})
+>         }
+>     }
+>     start(userId) // a user also sees their own tweets
+>     for followee := range this.following[userId] {
+>         if followee != userId {
+>             start(followee)
+>         }
+>     }
+>     heap.Init(&h)
+>
+>     feed := []int{}
+>     for len(h) > 0 && len(feed) < 10 {
+>         // POP the newest tweet of all the lists
+>         top := heap.Pop(&h).(feedItem)
+>         feed = append(feed, top.id)
+>         // ADVANCE: push the tweet before it from the same list
+>         if top.index > 0 {
+>             prev := this.tweets[top.user][top.index-1]
+>             heap.Push(&h, feedItem{prev.time, prev.id, top.user, top.index - 1})
+>         }
+>     }
+>     return feed
+> }
+>
+> func (this *Twitter) Follow(followerId int, followeeId int) {
+>     if this.following[followerId] == nil {
+>         // make the inner set on first use
+>         this.following[followerId] = map[int]struct{}{}
+>     }
+>     this.following[followerId][followeeId] = struct{}{}
+> }
+>
+> func (this *Twitter) Unfollow(followerId int, followeeId int) {
+>     // delete on a nil map does nothing
+>     delete(this.following[followerId], followeeId)
+> }
+> ```
 
 ### 295. Find Median from Data Stream
 
 [LeetCode 295](https://leetcode.com/problems/find-median-from-data-stream/) · Hard
 
-- **Pattern:** Two heaps
-- **Template:** [[#Template D: Two heaps for the median|D: Two heaps for the median]]
-- **Complexity:** time O(log n) for AddNum, O(1) for FindMedian, space O(n)
-- **Imports for a local file:** `container/heap`
+> [!question]- Step 1: which pattern, which template?
+> - **Pattern:** Two heaps
+> - **Template:** [[#Template D: Two heaps for the median|D: Two heaps for the median]]
 
-**Idea.** Split the values into a small half and a large half. A max-heap holds the small half and a min-heap holds the large half, so the two tops are the middle values. Keep the sizes equal, or give the small half one more.
+> [!tip]- Step 2: the idea
+> **Idea.** Split the values into a small half and a large half. A max-heap holds the small half and a min-heap holds the large half, so the two tops are the middle values. Keep the sizes equal, or give the small half one more.
+>
+> **Complexity.** Time O(log n) for AddNum, O(1) for FindMedian, space O(n).
+>
+> **Go lesson.** `heap.Pop` returns `any` and `heap.Push` accepts `any`. So a value moves from one heap to the other with no type assertion.
 
-**Go lesson.** `heap.Pop` returns `any` and `heap.Push` accepts `any`. So a value moves from one heap to the other with no type assertion.
-
-```go
-// MedianFinder solves LC 295. AddNum is O(log n) time, FindMedian is O(1).
-// small is a max-heap with the smaller half. large is a min-heap with the
-// larger half.
-// The median is the top of small, or the average of the two tops.
-type minHeap []int
-
-func (h minHeap) Len() int { return len(h) }
-
-// min-heap: smallest on top
-func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
-func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *minHeap) Push(x any)        { *h = append(*h, x.(int)) }
-func (h *minHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-// maxHeap is the same type with the opposite Less.
-type maxHeap []int
-
-func (h maxHeap) Len() int { return len(h) }
-
-// max-heap: largest on top
-func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
-func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
-func (h *maxHeap) Pop() any {
-    old := *h
-    n := len(old)
-    x := old[n-1]
-    *h = old[:n-1]
-    return x
-}
-
-type MedianFinder struct {
-    // the smaller half: its top is the largest value of this half
-    small maxHeap
-    // the larger half: its top is the smallest value of this half
-    large minHeap
-}
-
-func Constructor() MedianFinder {
-    return MedianFinder{} // the zero value of a slice is an empty heap
-}
-
-func (this *MedianFinder) AddNum(num int) {
-    heap.Push(&this.small, num) // 1. ADD to the small half
-    // 2. MOVE the largest value of small to large.
-    // Now each value in small is less than or equal to each value in large.
-    heap.Push(&this.large, heap.Pop(&this.small))
-    if len(this.large) > len(this.small) {
-        // 3. BALANCE: small has the same size as large, or one more.
-        heap.Push(&this.small, heap.Pop(&this.large))
-    }
-}
-
-func (this *MedianFinder) FindMedian() float64 {
-    if len(this.small) > len(this.large) {
-        // odd count: the middle value is the top of small
-        return float64(this.small[0])
-    }
-    // Even count: the average of the two middle values. Convert before you
-    // divide,
-    // because int division drops the fraction.
-    return float64(this.small[0]+this.large[0]) / 2
-}
-```
+> [!example]- Step 3: the Go solution
+> **Imports for a local file:** `container/heap`
+>
+> ```go
+> // MedianFinder solves LC 295. AddNum is O(log n) time, FindMedian
+> // is O(1).
+> // small is a max-heap with the smaller half. large is a min-heap
+> // with the
+> // larger half.
+> // The median is the top of small, or the average of the two tops.
+> type minHeap []int
+>
+> func (h minHeap) Len() int { return len(h) }
+>
+> // min-heap: smallest on top
+> func (h minHeap) Less(i, j int) bool { return h[i] < h[j] }
+> func (h minHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *minHeap) Push(x any)        { *h = append(*h, x.(int)) }
+> func (h *minHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> // maxHeap is the same type with the opposite Less.
+> type maxHeap []int
+>
+> func (h maxHeap) Len() int { return len(h) }
+>
+> // max-heap: largest on top
+> func (h maxHeap) Less(i, j int) bool { return h[i] > h[j] }
+> func (h maxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+> func (h *maxHeap) Push(x any)        { *h = append(*h, x.(int)) }
+> func (h *maxHeap) Pop() any {
+>     old := *h
+>     n := len(old)
+>     x := old[n-1]
+>     *h = old[:n-1]
+>     return x
+> }
+>
+> type MedianFinder struct {
+>     // the smaller half: its top is the largest value of this half
+>     small maxHeap
+>     // the larger half: its top is the smallest value of this half
+>     large minHeap
+> }
+>
+> func Constructor() MedianFinder {
+>     // the zero value of a slice is an empty heap
+>     return MedianFinder{}
+> }
+>
+> func (this *MedianFinder) AddNum(num int) {
+>     heap.Push(&this.small, num) // 1. ADD to the small half
+>     // 2. MOVE the largest value of small to large.
+>     // Now each value in small is less than or equal to each value
+>     // in large.
+>     heap.Push(&this.large, heap.Pop(&this.small))
+>     if len(this.large) > len(this.small) {
+>         // 3. BALANCE: small has the same size as large, or one
+>         // more.
+>         heap.Push(&this.small, heap.Pop(&this.large))
+>     }
+> }
+>
+> func (this *MedianFinder) FindMedian() float64 {
+>     if len(this.small) > len(this.large) {
+>         // odd count: the middle value is the top of small
+>         return float64(this.small[0])
+>     }
+>     // Even count: the average of the two middle values. Convert
+>     // before you
+>     // divide,
+>     // because int division drops the fraction.
+>     return float64(this.small[0]+this.large[0]) / 2
+> }
+> ```
 
 ---
 

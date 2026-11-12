@@ -9,14 +9,14 @@ tags:
   - patterns
   - templates
 date_created: 2026-11-11
-date_modified: 2026-11-11
+date_modified: 2026-11-12
 ---
 
 # NeetCode 150 in Go: a learning path
 
 This path solves the 150 problems of the [NeetCode 150](https://neetcode.io/practice?tab=neetcode150) list in Go. It follows the same idea as [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode]]. You memorize a small number of templates, and each problem is one more use of a template.
 
-Each problem has the same five parts:
+Each problem has the same five parts. On a stage page, parts 2 to 5 are closed until you open them, so each page works as a test:
 
 1. **The link to LeetCode**, so you can read the statement and submit your answer.
 2. **The pattern**: the name of the technique that solves the problem.
@@ -302,7 +302,7 @@ The **Go** column opens the commented solution. The **Template** column opens th
 ## How to use this path
 
 > [!tip] The method and the tracker
-> [[wiki/neetcode-150/study-method|LeetCode study method]] has the full method: the seven rules, the daily hour, the repeat schedule and the mistake list. [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]] has one row for each problem, for the dates of your four sessions.
+> [[wiki/neetcode-150/study-method|LeetCode study method]] has the full method: the seven rules, the daily hour, the repeat schedule and the mistake list. [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]] has one row for each problem, for the dates of your four sessions. [[wiki/neetcode-150/pattern-drill|LeetCode pattern drill]] shows you a problem and asks for its pattern.
 
 ### The order
 
@@ -320,9 +320,9 @@ One new problem for each day needs about one hour, with the repeats. Two new pro
 ### The loop for each problem
 
 1. Open the LeetCode link. Read the problem. Name the pattern and the template before you write code.
-2. Compare your guess with the **Pattern** and **Template** columns. A wrong guess is useful: read the signal of the correct template again.
+2. Open step 1 of the problem on the stage page, and compare your guess. A wrong guess is useful: read the signal of the correct template again.
 3. Set a timer for 20 minutes for an easy or medium problem, and 35 minutes for a hard problem. Write the solution in Go, in your editor.
-4. If you are blocked, read the idea first. Read the code only if the idea is not enough.
+4. If you are blocked, open step 2, the idea. Open step 3, the code, only if the idea is not enough.
 5. Close the page. Type the solution from memory. Do not paste it.
 6. Say the idea aloud in two sentences. Then say the time and the space complexity.
 7. Write the solution again after 1 day, 3 days and 7 days.
@@ -391,6 +391,7 @@ A stage is complete when these three things are true:
 
 - [[wiki/neetcode-150/study-method|LeetCode study method]]: how to practice so that the problems stay in memory.
 - [[wiki/neetcode-150/repeat-tracker|LeetCode repeat tracker]]: one row for each problem, with the dates of the four sessions.
+- [[wiki/neetcode-150/pattern-drill|LeetCode pattern drill]]: read a problem, name the pattern, see the signal.
 - [[wiki/go/go-leetcode-learning-path|Learn Go with LeetCode: a learning path]]: the Go syntax for each pattern, in 12 stages.
 - [[wiki/go/leetcode-snippets|Go LeetCode Snippets & Templates]]: short pieces of code to copy.
 - [[wiki/patterns/index|LeetCode Patterns]]: the pattern notes and the progress tracker.
